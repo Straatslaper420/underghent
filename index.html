@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EventGhent</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif}
+
+/* ── THEME VARIABLES ─────────────────────────────────────── */
+body.event {
+  --bg:        #f5f2eb;
+  --panel:     #fffdf8;
+  --ctrl:      #edeae3;
+  --text:      #1c1a16;
+  --muted:     #7a7870;
+  --faint:     #b8b5ae;
+  --border:    rgba(0,0,0,0.09);
+  --accent:    #2b6b3d;
+  --accent2:   #1f5230;
+  --accenttxt: #ffffff;
+  --marker:    #2b6b3d;
+  --markertxt: #ffffff;
+  --clusterbg: rgba(43,107,61,0.15);
+  --clusterdot:#2b6b3d;
+  --popbg:     #fffdf8;
+  --popbdr:    rgba(43,107,61,0.25);
+  --poptext:   #2a2820;
+  --poplink:   #2b6b3d;
+  --radius:    5px;
+  --mono:      'Helvetica Neue',sans-serif;
+}
+
+body.under {
+  --bg:        #0b0b0b;
+  --panel:     #101010;
+  --ctrl:      #0b0b0b;
+  --text:      #ddd9d0;
+  --muted:     #5a5855;
+  --faint:     #2e2c2a;
+  --border:    rgba(255,255,255,0.06);
+  --accent:    #9d88f0;
+  --accent2:   #7c66e0;
+  --accenttxt: #0b0b0b;
+  --marker:    #0b0b0b;
+  --markertxt: #9d88f0;
+  --clusterbg: rgba(157,136,240,0.10);
+  --clusterdot:#9d88f0;
+  --popbg:     #141414;
+  --popbdr:    rgba(157,136,240,0.18);
+  --poptext:   #aaa59e;
+  --poplink:   #9d88f0;
+  --radius:    2px;
+  --mono:      'Courier New',monospace;
+}
+
+/* ── MAP ────────────────────────────────────────────────────*/
+#map {
+  position:fixed; inset:0; z-index:1;
+  transition: filter 0.7s ease;
+}
+body.under #map { filter: brightness(0.8) saturate(0.25); }
+
+/* ── CHROME ─────────────────────────────────────────────────*/
+#chrome {
+  position:fixed; top:0; left:0; right:0;
+  z-index:100; pointer-events:none;
+}
+
+/* HEADER */
+#header {
+  pointer-events:auto;
+  height:46px;
+  background:var(--panel);
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 14px;
+  transition: background 0.7s, border-color 0.7s;
+}
+
+#wordmark {
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:0.20em;
+  color:var(--text);
+  font-family:var(--mono);
+  transition: all 0.7s;
+  user-select:none;
+}
+
+body.under #wordmark { letter-spacing:0.32em; font-size:12px; }
+
+/* Hidden mode switch — small, top-right, subtle */
+#mode-switch {
+  width:28px; height:28px;
+  border:1px solid var(--faint);
+  border-radius:50%;
+  background:none;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition: border-color 0.3s, opacity 0.3s;
+  opacity:0.35;
+  padding:0;
+}
+#mode-switch:hover { opacity:1; border-color:var(--accent); }
+#mode-dot {
+  width:7px; height:7px;
+  border-radius:50%;
+  background:var(--accent);
+  transition: background 0.7s;
+}
+
+/* CONTROLS */
+#controls {
+  pointer-events:auto;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:4px;
+  padding:6px 12px;
+  background:var(--ctrl);
+  border-bottom:1px solid var(--border);
+  transition: background 0.7s, border-color 0.7s;
+}
+
+input[type="date"] {
+  padding:5px 8px;
+  background:var(--panel);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  font-size:11px;
+  font-family:inherit;
+  outline:none;
+  transition: all 0.3s;
+}
+input[type="date"]:focus { border-color:var(--accent); }
+
+.btn {
+  padding:5px 10px;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  background:var(--panel);
+  color:var(--muted);
+  font-size:11px;
+  font-family:inherit;
+  cursor:pointer;
+  letter-spacing:0.04em;
+  transition: all 0.2s;
+}
+.btn:hover { border-color:var(--accent); color:var(--accent); }
+.btn-go { background:var(--accent); color:var(--accenttxt); border-color:var(--accent); }
+.btn-go:hover { background:var(--accent2); border-color:var(--accent2); color:var(--accenttxt); }
+
+.sep { width:1px; height:18px; background:var(--border); margin:0 3px; }
+
+.tg-label {
+  font-size:9px; letter-spacing:0.16em;
+  color:var(--faint); text-transform:uppercase;
+  margin-right:2px;
+}
+.toggle {
+  padding:4px 8px;
+  font-size:10px; font-family:inherit;
+  letter-spacing:0.06em; text-transform:uppercase;
+  border:1px solid transparent;
+  border-radius:var(--radius);
+  background:none; color:var(--faint);
+  cursor:pointer; transition: all 0.15s;
+}
+.toggle.on { border-color:var(--accent); color:var(--accent); }
+
+#counter { font-size:10px; color:var(--faint); margin-left:2px; letter-spacing:0.08em; }
+
+/* ── SCENE PORTALS ──────────────────────────────────────────*/
+#portals-btn {
+  position:fixed; bottom:18px; right:16px;
+  z-index:200;
+  background:var(--panel);
+  border:1px solid var(--border);
+  color:var(--muted);
+  font-size:10px; letter-spacing:0.12em;
+  padding:6px 12px;
+  border-radius:var(--radius);
+  cursor:pointer; font-family:inherit;
+  transition: all 0.3s;
+  pointer-events:auto;
+}
+#portals-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+#portals-panel {
+  position:fixed; bottom:52px; right:16px;
+  z-index:200;
+  width:200px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  display:none;
+  transition: background 0.7s;
+}
+#portals-panel.open { display:block; }
+.p-section { margin-bottom:12px; }
+.p-section:last-child { margin-bottom:0; }
+.p-head {
+  font-size:8px; letter-spacing:0.20em;
+  color:var(--faint); text-transform:uppercase;
+  display:block; margin-bottom:6px;
+}
+.p-section a {
+  display:block; font-size:12px;
+  color:var(--muted); text-decoration:none;
+  padding:2px 0; transition:color 0.15s;
+}
+.p-section a:hover { color:var(--accent); }
+
+/* ── CLUSTERS ───────────────────────────────────────────────*/
+.marker-cluster-small div,.marker-cluster-medium div,.marker-cluster-large div {
+  background:var(--clusterdot) !important;
+  color:var(--panel) !important;
+  font-weight:700;
+}
+.marker-cluster-small,.marker-cluster-medium,.marker-cluster-large {
+  background:var(--clusterbg) !important;
+}
+
+/* ── POPUPS ─────────────────────────────────────────────────*/
+.leaflet-popup-content-wrapper {
+  background:var(--popbg) !important;
+  color:var(--poptext) !important;
+  border:1px solid var(--popbdr) !important;
+  border-radius:4px !important;
+  font-size:13px;
+  box-shadow:none !important;
+}
+.leaflet-popup-tip { background:var(--popbg) !important; }
+.leaflet-popup-close-button { color:var(--muted) !important; }
+
+.p-title {
+  font-weight:600; color:var(--text);
+  margin-bottom:7px; line-height:1.3;
+}
+body.event .p-title { font-size:15px; }
+body.under .p-title { font-size:12px; font-family:'Courier New',monospace; letter-spacing:0.03em; text-transform:uppercase; }
+
+.p-line { font-size:12px; color:var(--muted); margin-bottom:4px; }
+.p-line a { color:var(--poplink); text-decoration:none; }
+.p-line a:hover { text-decoration:underline; }
+.p-link { display:block; font-size:12px; color:var(--poplink); text-decoration:none; margin-top:7px; }
+body.under .p-line { font-size:11px; letter-spacing:0.03em; }
+body.under .p-link { font-size:11px; letter-spacing:0.06em; }
+.p-desc { font-size:11px; color:var(--faint); margin-top:5px; line-height:1.5; }
+
+/* ── ENTRY OVERLAY ──────────────────────────────────────────*/
+#entry {
+  position:fixed; inset:0; z-index:500;
+  background:rgba(10,10,10,0.88);
+  display:flex; align-items:center; justify-content:center;
+  transition:opacity 0.5s;
+}
+#entry.gone { opacity:0; pointer-events:none; }
+#entry-box { text-align:center; padding:20px; max-width:340px; width:100%; }
+#entry-eye { font-size:9px; letter-spacing:0.32em; color:#444; text-transform:uppercase; margin-bottom:24px; }
+#entry-h { font-size:28px; color:#e8e4dc; font-weight:300; letter-spacing:0.06em; margin-bottom:8px; }
+#entry-sub { font-size:12px; color:#555; margin-bottom:36px; }
+#entry-btn {
+  display:inline-block;
+  padding:13px 36px;
+  background:none;
+  border:1px solid #2b6b3d;
+  color:#7ec99a;
+  font-size:13px; letter-spacing:0.16em; text-transform:uppercase;
+  cursor:pointer; font-family:inherit;
+  transition:all 0.2s;
+}
+#entry-btn:hover { background:rgba(43,107,61,0.12); border-color:#7ec99a; }
+</style>
+</head>
+<body class="event">
+
+<div id="map"></div>
+
+<div id="chrome">
+  <div id="header">
+    <span id="wordmark">EVENTGHENT</span>
+    <button id="mode-switch" onclick="toggleMode()" title="Switch layer">
+      <span id="mode-dot"></span>
+    </button>
+  </div>
+
+  <div id="controls">
+    <input type="date" id="d0">
+    <input type="date" id="d1">
+    <button class="btn btn-go" onclick="applyFilters()">Filter</button>
+    <button class="btn" onclick="resetFilter()">Reset</button>
+    <button class="btn" onclick="quickDate(0)">Today</button>
+    <button class="btn" onclick="quickDate(1)">Tomorrow</button>
+    <button class="btn" onclick="thisWeekend()">Fri–Sun</button>
+
+    <div class="sep"></div>
+    <span class="tg-label">Source</span>
+    <button class="toggle on" id="s-facebook"        onclick="toggleSrc('facebook')">FB</button>
+    <button class="toggle on" id="s-venue_site"      onclick="toggleSrc('venue_site')">Venue</button>
+    <button class="toggle on" id="s-collective_site" onclick="toggleSrc('collective_site')">DIY</button>
+
+    <span id="counter"></span>
+  </div>
+</div>
+
+<button id="portals-btn" onclick="togglePortals()">↗ Scene portals</button>
+<div id="portals-panel">
+  <div class="p-section">
+    <span class="p-head">Official</span>
+    <a href="https://www.fomostation.be/radar/" target="_blank">FOMO Station</a>
+    <a href="https://vndg.be/" target="_blank">VNDG</a>
+    <a href="https://visit.gent.be/nl/ui/event" target="_blank">Visit Gent</a>
+  </div>
+  <div class="p-section">
+    <span class="p-head">Venues</span>
+    <a href="https://www.charlatan.be/agenda" target="_blank">Charlatan</a>
+    <a href="https://kompassklub.com/agenda/" target="_blank">Kompass</a>
+    <a href="https://www.viernulvier.gent/nl/agenda" target="_blank">Viernulvier</a>
+    <a href="https://www.minus-one.be" target="_blank">Minus One</a>
+  </div>
+  <div class="p-section">
+    <span class="p-head">Niche</span>
+    <a href="https://www.goabase.net/party/country/be" target="_blank">Goabase</a>
+    <a href="https://www.reggae.be" target="_blank">Reggae.be</a>
+  </div>
+</div>
+
+<div id="entry">
+  <div id="entry-box">
+    <p id="entry-eye">Gent · Event map</p>
+    <h1 id="entry-h">EventGhent</h1>
+    <p id="entry-sub">Public cultural events in the city</p>
+    <button id="entry-btn" onclick="enterMap()">Enter</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+<script>
+
+const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQHer0RSLW98_1WHGS-6y8JB38ClUC9MmM6bxtKrdkv2MOG5cmYI8T2ghl9uSxNEn7ichRihuLWPmHN/pub?output=csv';
+
+/* ── STATE ───────────────────────────────────────────────── */
+let mode        = 'event';
+let allEvents   = [];
+let activeLayer = 'all';
+let activeSrcs  = new Set(['facebook','venue_site','collective_site']);
+let dateStart   = null, dateEnd = null;
+let portalsOpen = false;
+
+/* ── MAP ─────────────────────────────────────────────────── */
+const TILES = {
+  event: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    {attribution:'© OpenStreetMap © CARTO'}),
+  under: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    {attribution:'© OpenStreetMap © CARTO'}),
+};
+const map = L.map('map',{zoomControl:false}).setView([51.0543,3.7174],13);
+L.control.zoom({position:'bottomleft'}).addTo(map);
+TILES.event.addTo(map);
+let activeTile = 'event';
+
+let markers = L.markerClusterGroup({maxClusterRadius:50,chunkedLoading:true});
+map.addLayer(markers);
+
+/* ── ENTRY ───────────────────────────────────────────────── */
+function enterMap() {
+  document.getElementById('entry').classList.add('gone');
+}
+
+/* ── MODE ────────────────────────────────────────────────── */
+function toggleMode() {
+  mode = mode === 'event' ? 'under' : 'event';
+  const body = document.body;
+  body.classList.remove('event','under');
+  body.classList.add(mode);
+
+  // Swap tiles
+  TILES[mode].addTo(map);
+  map.removeLayer(TILES[activeTile]);
+  activeTile = mode;
+
+  // Update wordmark
+  document.getElementById('wordmark').textContent =
+    mode === 'event' ? 'EVENTGHENT' : 'UNDERGHENT';
+
+  renderEvents(_filtered());
+}
+
+/* ── PORTALS ─────────────────────────────────────────────── */
+function togglePortals() {
+  portalsOpen = !portalsOpen;
+  document.getElementById('portals-panel').classList.toggle('open', portalsOpen);
+}
+document.addEventListener('click', e => {
+  const panel = document.getElementById('portals-panel');
+  const btn   = document.getElementById('portals-btn');
+  if (portalsOpen && !panel.contains(e.target) && !btn.contains(e.target)) {
+    portalsOpen = false;
+    panel.classList.remove('open');
+  }
+});
+
+/* ── SOURCE TOGGLES ──────────────────────────────────────── */
+function toggleSrc(s) {
+  if (activeSrcs.has(s)) activeSrcs.delete(s);
+  else activeSrcs.add(s);
+  document.getElementById('s-'+s).classList.toggle('on', activeSrcs.has(s));
+  renderEvents(_filtered());
+}
+
+/* ── DATE FILTERS ────────────────────────────────────────── */
+function applyFilters() {
+  const s = document.getElementById('d0').value;
+  const e = document.getElementById('d1').value;
+  if (s) dateStart = new Date(s+'T00:00:00');
+  if (e) dateEnd   = new Date(e+'T23:59:59');
+  renderEvents(_filtered());
+}
+function resetFilter() {
+  document.getElementById('d0').value = '';
+  document.getElementById('d1').value = '';
+  dateStart = null; dateEnd = null;
+  renderEvents(_filtered());
+}
+function quickDate(offset) {
+  const d = new Date(); d.setDate(d.getDate() + offset);
+  dateStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  dateEnd   = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23,59,59);
+  renderEvents(_filtered());
+}
+function thisWeekend() {
+  const d = new Date();
+  const fri = new Date(d); fri.setDate(d.getDate() + (5-d.getDay()+7)%7);
+  const sun = new Date(fri); sun.setDate(fri.getDate()+2); sun.setHours(23,59,59);
+  dateStart = fri; dateEnd = sun;
+  renderEvents(_filtered());
+}
+
+function _parseDate(s) {
+  if (!s) return null; s = s.trim();
+  if (s.includes('.')) { const p=s.split('.'); if(p.length>=3) return new Date(+p[2],+p[1]-1,+p[0]); }
+  if (s.includes('-')) return new Date(s.slice(0,10)+'T00:00:00');
+  return null;
+}
+
+function _filtered() {
+  return allEvents.filter(ev => {
+    const status = (ev.Status||ev.status||'').toLowerCase().trim();
+    if (status !== 'approved') return false;
+
+    const src = (ev.source_type||ev.Source_type||'facebook').toLowerCase();
+
+    // In event mode: show surface + review layer events
+    // In under mode: show under + review layer events
+    const layer = (ev.layer||ev.Layer||'review').toLowerCase();
+    if (mode === 'event' && layer === 'under') return false;
+    if (mode === 'under' && layer === 'surface') return false;
+
+    if (!activeSrcs.has(src)) return false;
+
+    if (dateStart || dateEnd) {
+      const d = _parseDate(ev.Date_Start || ev.start_datetime);
+      if (!d) return false;
+      if (dateStart && d < dateStart) return false;
+      if (dateEnd   && d > dateEnd)   return false;
+    }
+    return true;
+  });
+}
+
+/* ── MARKERS ─────────────────────────────────────────────── */
+function _icon(ev) {
+  const raw = ev.Date_Start || ev.start_datetime || '';
+  let label = '??';
+  if (raw.includes('.')) { const p=raw.split('.'); label=p[0].padStart(2,'0')+'.'+p[1].padStart(2,'0'); }
+  else if (raw.length>=10) { label=raw.slice(8,10)+'.'+raw.slice(5,7); }
+
+  if (mode === 'under') {
+    return L.divIcon({
+      html:`<div style="background:#0b0b0b;color:#9d88f0;border:1px solid rgba(157,136,240,0.3);padding:2px 6px;font-family:'Courier New',monospace;font-size:10px;font-weight:700;white-space:nowrap;position:relative">${label}<span style="position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid rgba(157,136,240,0.4)"></span></div>`,
+      className:'', iconSize:[48,20], iconAnchor:[24,24],
+    });
+  }
+  return L.divIcon({
+    html:`<div style="background:#2b6b3d;color:#fff;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:500;white-space:nowrap;position:relative;letter-spacing:0.02em">${label}<span style="position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid #2b6b3d"></span></div>`,
+    className:'', iconSize:[50,22], iconAnchor:[25,26],
+  });
+}
+
+/* ── POPUPS ──────────────────────────────────────────────── */
+function _popup(ev) {
+  const title   = ev.Title||ev.title||'Untitled';
+  const venue   = ev.Venue||ev.venue||'';
+  const addr    = ev.Address||ev.address||'';
+  const city    = ev.City||ev.city||'Gent';
+  const date    = ev.Date_Start||(ev.start_datetime||'').slice(0,10)||'';
+  const time    = ev.Hour_Start||(ev.start_datetime||'').slice(11,16)||'';
+  const srcUrl  = ev.Source_url||ev.source_url||'';
+  const tikUrl  = ev.Tickets_url||ev.tickets_url||'';
+  const going   = ev.Going||ev.going||'';
+  const intrstd = ev.Interested||ev.interested||'';
+  const price   = ev.Price||ev.price||'';
+  const desc    = ev.Description||ev.description||'';
+
+  const locFull = [venue,addr,city].filter(Boolean).join(', ');
+  const mapsUrl = 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(locFull);
+
+  let h = `<div class="p-title">${title}</div>`;
+
+  if (mode === 'under') {
+    if (venue||addr) h += `<div class="p-line">— <a href="${mapsUrl}" target="_blank">${venue||addr}</a></div>`;
+    if (date)        h += `<div class="p-line">${date}${time?' '+time:''}</div>`;
+    if (price)       h += `<div class="p-line">${price}</div>`;
+    if (going)       h += `<div class="p-line" style="color:var(--faint)">${going} going${intrstd?' · '+intrstd+' interested':''}</div>`;
+    if (desc)        h += `<div class="p-desc">${desc.slice(0,200)}</div>`;
+    if (srcUrl)      h += `<a class="p-link" href="${srcUrl}" target="_blank">→ source</a>`;
+    if (tikUrl)      h += `<a class="p-link" href="${tikUrl}" target="_blank">→ tickets</a>`;
+  } else {
+    if (venue||addr) h += `<div class="p-line">📍 <a href="${mapsUrl}" target="_blank">${venue||addr}</a></div>`;
+    if (date)        h += `<div class="p-line">📅 ${date}${time?' · '+time:''}</div>`;
+    if (price)       h += `<div class="p-line">💶 ${price}</div>`;
+    if (intrstd||going) h += `<div class="p-line" style="color:var(--faint)">${[intrstd&&intrstd+' interested',going&&going+' going'].filter(Boolean).join(' · ')}</div>`;
+    if (desc)        h += `<div class="p-desc">${desc.slice(0,200)}</div>`;
+    if (srcUrl)      h += `<a class="p-link" href="${srcUrl}" target="_blank">View event →</a>`;
+    if (tikUrl)      h += `<a class="p-link" href="${tikUrl}" target="_blank">Tickets →</a>`;
+  }
+  return h;
+}
+
+/* ── RENDER ──────────────────────────────────────────────── */
+function renderEvents(events) {
+  markers.clearLayers();
+  let n = 0;
+  events.forEach(ev => {
+    let lat = (ev.Lat||ev.lat||'').toString().replace(',','.');
+    let lng = (ev.Lng||ev.lng||'').toString().replace(',','.');
+    lat = parseFloat(lat); lng = parseFloat(lng);
+    if (isNaN(lat)||isNaN(lng)) return;
+    const m = L.marker([lat,lng],{icon:_icon(ev)});
+    m.bindPopup(_popup(ev),{maxWidth:300});
+    markers.addLayer(m);
+    n++;
+  });
+  document.getElementById('counter').textContent = n+' events';
+}
+
+/* ── LOAD ────────────────────────────────────────────────── */
+async function loadData() {
+  try {
+    const r   = await fetch(SHEET_CSV);
+    const csv = await r.text();
+    const p   = Papa.parse(csv,{header:true,skipEmptyLines:true});
+    allEvents = p.data.map(e=>({
+      ...e,
+      source_type: (e.source_type||e.Source_type||'facebook').toLowerCase(),
+      layer:       (e.layer||e.Layer||'review').toLowerCase(),
+      status:      (e.status||e.Status||'').toLowerCase(),
+    }));
+    renderEvents(_filtered());
+  } catch(e) {
+    document.getElementById('counter').textContent='⚠ Could not load events';
+    console.error(e);
+  }
+}
+
+loadData();
+</script>
+</body>
+</html>

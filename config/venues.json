@@ -1,0 +1,136 @@
+{
+  "venues": [
+    {
+      "id": "charlatan",
+      "name": "Charlatan",
+      "aliases": [
+        "charlatan",
+        "de charlatan",
+        "cafe charlatan"
+      ],
+      "address": "Vlasmarkt 6, 9000 Gent",
+      "lat": 51.05603186841703,
+      "lng": 3.7285059220882286,
+      "layer": "under",
+      "scrape_url": "https://www.charlatan.be/agenda",
+      "scrape_type": "html"
+    },
+    {
+      "id": "kompass",
+      "name": "Kompass",
+      "aliases": [
+        "kompass",
+        "kompass klub",
+        "kompass club",
+        "kompass klup"
+      ],
+      "address": "Nieuwevaart 51, 9000 Gent",
+      "lat": 51.06836775216201,
+      "lng": 3.723787570557093,
+      "layer": "under",
+      "scrape_url": "https://kompassklub.com/event-list/",
+      "scrape_type": "html"
+    },
+    {
+      "id": "viernulvier",
+      "name": "VIERNULVIER",
+      "aliases": [
+        "viernulvier",
+        "vooruit",
+        "de vooruit",
+        "vooruit concertzaal",
+        "4nulvier",
+        "4 nul vier",
+        "kunstencentrum viernulvier",
+        "viernulvier concertzaal",
+        "viernulvier café"
+      ],
+      "address": "Sint-Pietersnieuwstraat 23, 9000 Gent",
+      "lat": 51.04785719025603,
+      "lng": 3.727390868709035,
+      "layer": "surface",
+      "scrape_url": "https://www.viernulvier.gent/nl/agenda",
+      "scrape_type": "html"
+    },
+    {
+      "id": "minusone",
+      "name": "Minus One",
+      "aliases": [
+        "minus one",
+        "minus 1",
+        "minus-one",
+        "minus one gent",
+        "joc minus one"
+      ],
+      "address": "Opgeëistenlaan 455, 9000 Gent",
+      "lat": 51.064983789821206,
+      "lng": 3.7170938380275604,
+      "layer": "under",
+      "scrape_url": "https://www.minus-one.be/agenda",
+      "scrape_type": "html"
+    },
+    {
+      "id": "chinastraat",
+      "name": "Chinastraat",
+      "aliases": [
+        "chinastraat",
+        "china straat",
+        "chinastraat gent"
+      ],
+      "address": "Chinastraat 1, 9000 Gent",
+      "lat": 51.07292204573162,
+      "lng": 3.7352400275105238,
+      "layer": "under",
+      "scrape_url": null,
+      "scrape_type": null
+    },
+    {
+      "id": "vierdeZaal",
+      "name": "Vierde Zaal",
+      "aliases": [
+        "vierde zaal",
+        "4e zaal",
+        "4dezaal",
+        "de vierde zaal",
+        "4de zaal",
+        "vierdezaal"
+      ],
+      "address": "Driebeekstraat 4, 9050 Gent",
+      "lat": 51.03703524099016,
+      "lng": 3.76571949754381,
+      "layer": "under",
+      "scrape_url": null,
+      "scrape_type": null
+    },
+    {
+      "id": "wintercircus",
+      "name": "Wintercircus",
+      "aliases": [
+        "wintercircus",
+        "winter circus",
+        "club wintercircus"
+      ],
+      "address": "Lammerstraat 13, 9000 Gent",
+      "lat": 51.04823127912577,
+      "lng": 3.728013926379643,
+      "layer": "surface",
+      "scrape_url": null,
+      "scrape_type": null
+    },
+    {
+      "id": "baudelopark",
+      "name": "Baudelopark",
+      "aliases": [
+        "baudelopark",
+        "baudelo",
+        "baudelo park"
+      ],
+      "address": "Koning Willem I-kaai 8, 9000 Gent",
+      "lat": 51.05846956553006,
+      "lng": 3.7303613975448613,
+      "layer": "surface",
+      "scrape_url": null,
+      "scrape_type": null
+    }
+  ]
+}

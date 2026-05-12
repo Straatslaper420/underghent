@@ -1,0 +1,44 @@
+{
+  "collectives": [
+    {
+      "id": "vantara_vichitra",
+      "name": "Vantara Vichitra Records",
+      "layer": "under",
+      "tags": ["electronic", "experimental"],
+      "scrape_url": null,
+      "scrape_type": null
+    },
+    {
+      "id": "ogcult",
+      "name": "OGCult",
+      "layer": "under",
+      "tags": ["techno", "rave"],
+      "scrape_url": null,
+      "scrape_type": null
+    },
+    {
+      "id": "acidica",
+      "name": "Acidica",
+      "layer": "under",
+      "tags": ["acid", "techno", "festival"],
+      "scrape_url": null,
+      "scrape_type": null
+    },
+    {
+      "id": "africa_unite",
+      "name": "Africa Unite",
+      "layer": "under",
+      "tags": ["reggae", "dub", "roots"],
+      "scrape_url": null,
+      "scrape_type": null
+    },
+    {
+      "id": "afroton",
+      "name": "Afroton",
+      "layer": "under",
+      "tags": ["afrobeats", "reggaeton", "amapiano"],
+      "scrape_url": null,
+      "scrape_type": null
+    }
+  ]
+}

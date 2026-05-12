@@ -1,0 +1,113 @@
+Storage: Google Sheets  (Events / GeoReview / GeoFail tabs)
+
+========================================
+  Loading existing event IDs...
+  Events: 0  GeoReview: 0  GeoFail: 0
+  Loaded 82 venue coord references from Events sheet
+  Local venue cache: 84 venues
+
+========================================
+  UPDATING SOCIAL COUNTS (interested / going)
+  [facebook] Collected social counts for 218 events
+  No social count changes detected
+
+========================================
+  FACEBOOK INGESTION
+  [facebook] Processing fourth_batch (1).json
+    Found 2 raw events
+  [facebook] Processing fourth_batch (10).json
+    Found 7 raw events
+  [facebook] Processing fourth_batch (11).json
+    Found 8 raw events
+  [facebook] Processing fourth_batch (12).json
+    Found 12 raw events
+  [facebook] Processing fourth_batch (13).json
+    Found 12 raw events
+  [facebook] Processing fourth_batch (14).json
+    Found 12 raw events
+  [facebook] Processing fourth_batch (15).json
+    Found 12 raw events
+  [facebook] Processing fourth_batch (16).json
+    Found 12 raw events
+  [facebook] Processing fourth_batch (17).json
+    Found 12 raw events
+  [facebook] Processing fourth_batch (18).json
+    Found 12 raw events
+  [facebook] Processing fourth_batch (19).json
+    Found 12 raw events
+  [facebook] Processing fourth_batch (2).json
+    Found 2 raw events
+  [facebook] Processing fourth_batch (20).json
+    Found 5 raw events
+  [facebook] Processing fourth_batch (21).json
+    Found 12 raw events
+  [facebook] Processing fourth_batch (22).json
+    Found 12 raw events
+  [facebook] Processing fourth_batch (23).json
+    Found 12 raw events
+  [facebook] Processing fourth_batch (3).json
+    Found 9 raw events
+  [facebook] Processing fourth_batch (4).json
+    Found 5 raw events
+  [facebook] Processing fourth_batch (5).json
+    Found 7 raw events
+  [facebook] Processing fourth_batch (6).json
+    Found 8 raw events
+  [facebook] Processing fourth_batch (7).json
+    Found 9 raw events
+  [facebook] Processing fourth_batch (8).json
+    Found 12 raw events
+  [facebook] Processing fourth_batch (9).json
+    Found 12 raw events
+  [facebook] Total new events: 218
+  [facebook] Geo: exact=183  geo_review=35  unresolved=0  (sum=218)
+
+========================================
+  VENUE WEBSITE INGESTION
+  [venue_ingest] Scraping Charlatan → https://www.charlatan.be/agenda
+    Found 0 events, 0 new
+  [venue_ingest] Scraping VIERNULVIER → https://www.viernulvier.gent/nl/agenda
+    JSON API failed (401 Client Error: Unauthorized for url: https://www.viernulvier.gent/api/agenda), trying HTML...
+    Found 0 events, 0 new
+  [venue_ingest] Scraping Kompass → https://kompassklub.com/event-list/
+    Found 0 events, 0 new
+
+========================================
+  COLLECTIVE WEBSITE INGESTION
+
+========================================
+  DEDUPLICATION
+  Total raw new events: 218
+  approved=20  geo_review=35  pending=95  dups=0  geofail=0
+
+========================================
+  WRITING TO STORAGE
+    Wrote 115 rows to 'Events' in 1 API call
+    Wrote 35 rows to 'GeoReview' in 1 API call
+  Events: 115  GeoReview: 35  GeoFail: 0
+
+========================================
+  EXPORTING JSON FILES
+  Wrote  218 events → output\events_master.json
+  Wrote    3 events → output\events_surface.json
+  Wrote   17 events → output\events_under.json
+  Wrote  130 events → output\events_review.json
+  Wrote   68 events → output\events_low_interest.json
+  Wrote   35 events → output\events_geofail.json
+
+  [export] master=218  surface=3  under=17  review=130  low_interest=68  geofail=35
+
+========================================
+  Facebook:      218
+  Venue sites:   0
+  Collectives:   0
+  Duplicates:    0
+  → Approved:    20
+  → GeoReview:   35  ← run geo_review_tool.py to fix these
+  → Pending:     95
+  → Low interest:68
+  → GeoFail:     0
+
+  !! 35 events need location verification.
+     Run: python geo_review_tool.py
+========================================

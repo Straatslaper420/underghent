@@ -1,0 +1,40 @@
+{
+  "layer_rules": {
+    "venue_defaults": {
+      "under": ["charlatan", "kompass", "chinastraat", "minusone", "aap", "giraf", "funke", "vierdeZaal"],
+      "surface": ["viernulvier", "pierkespark", "dokbrewing", "wintercircus", "missysippy"]
+    },
+    "collective_defaults": {
+      "under": ["vantara_vichitra", "ogcult", "acidica", "africa_unite", "afroton"]
+    },
+    "keyword_rules": {
+      "under": [
+        "techno", "rave", "underground", "collective", "DIY", "acid", "drone",
+        "noise", "experimental", "industrial", "dark", "occult", "squat",
+        "afterparty", "after party", "illegal", "free party", "dub", "roots",
+        "psytrance", "gabber", "hardcore", "punk", "metal", "doom"
+      ],
+      "surface": [
+        "festival", "theater", "theatre", "ballet", "opera", "classical",
+        "jazz festival", "pop", "family", "kids", "workshop", "expo",
+        "exhibition", "museum", "gallery", "market", "fair", "gentse feesten"
+      ]
+    },
+    "source_type_defaults": {
+      "facebook": "review",
+      "venue_site": "surface",
+      "collective_site": "under"
+    },
+    "confidence": {
+      "venue_canonical_match": 0.95,
+      "collective_match": 0.90,
+      "keyword_match": 0.70,
+      "source_type_default": 0.50,
+      "no_signal": 0.30
+    }
+  },
+  "status_rules": {
+    "auto_approve_threshold": 0.85,
+    "auto_review_threshold": 0.50
+  }
+}
