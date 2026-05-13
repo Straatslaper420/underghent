@@ -71,6 +71,18 @@
     "lng": 3.7217407,
     "source": "sheet_row"
   },
+  "Blandijnberg 2, 9000 Ghent, Belgium": {
+    "address": "Blandijnberg, Kunstenkwartier, Muinkparkwijk, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
+    "lat": 51.0439481,
+    "lng": 3.725858,
+    "source": "direct_address_geocode"
+  },
+  "Brugsesteenweg 267, 9000 Ghent, Belgium": {
+    "address": "267, Brugsesteenweg, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
+    "lat": 51.0670516,
+    "lng": 3.6864608,
+    "source": "direct_address_geocode"
+  },
   "Burgstraat 59, 9000 Ghent, Belgium": {
     "address": "57;59, Burgstraat, Prinsenhof, Ekkergem, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
     "lat": 51.0561395,
@@ -167,10 +179,28 @@
     "lng": 3.7659118,
     "source": "direct_address_geocode"
   },
+  "Emile Braunplein, 9000 Ghent, Belgium": {
+    "address": "Emile Braunplein, Sint-Jacobs, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
+    "lat": 51.0537394,
+    "lng": 3.7246322,
+    "source": "direct_address_geocode"
+  },
+  "Eskimofabriek": {
+    "address": "Eskimofabriek, Wiedauwkaai, Tolhuis, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
+    "lat": 51.0712547,
+    "lng": 3.7257732,
+    "source": "venue_name_geocode"
+  },
   "Flordi coworking, Sint-Salvatorstraat 5, 9000 Gent": {
     "address": "Flordi, 5, Sint-Salvatorstraat, Heilig Kerst, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
     "lat": 51.0642696,
     "lng": 3.7289401,
+    "source": "direct_address_geocode"
+  },
+  "Frans de Mildreef 5, 9050": {
+    "address": "5, Frans De Mildreef, Bellevue, Ledeberg, Gent, Oost-Vlaanderen, 9050, België / Belgique / Belgien",
+    "lat": 51.0317145,
+    "lng": 3.7416275,
     "source": "direct_address_geocode"
   },
   "Gand": {
@@ -203,6 +233,12 @@
     "lng": 3.7290914,
     "source": "sheet_row"
   },
+  "Gentbrugge": {
+    "address": "Gentbrugge, Gent, Oost-Vlaanderen, Vlaanderen, 9050, België / Belgique / Belgien",
+    "lat": 51.0447236,
+    "lng": 3.7588813,
+    "source": "venue_name_geocode"
+  },
   "Gentbrugge Arsenaal": {
     "address": "Gentbrugge Arsenaal, Brusselsesteenweg, Moscou, Gentbrugge, Gent, Oost-Vlaanderen, Vlaanderen, 9050, België / Belgique / Belgien",
     "lat": 51.0340495,
@@ -213,6 +249,12 @@
     "address": "Godshuizenlaan, Stationsbuurt Noord, Ekkergem, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
     "lat": 51.0437654,
     "lng": 3.715506,
+    "source": "direct_address_geocode"
+  },
+  "Goedlevenstraat 179, 9041 Ghent, Belgium": {
+    "address": "179A-179D, Goedlevenstraat, Oude Bareel, Oostakker, Gent, Oost-Vlaanderen, Vlaanderen, 9040, België / Belgique / Belgien",
+    "lat": 51.0744563,
+    "lng": 3.7724712,
     "source": "direct_address_geocode"
   },
   "Griendijk 17, 9000 Ghent, Belgium": {
@@ -226,6 +268,12 @@
     "lat": 51.0540064,
     "lng": 3.7495086,
     "source": "sheet_row"
+  },
+  "Haspelstraat 31, 9000 Ghent, Belgium": {
+    "address": "bij' De Vieze Gasten, 31, Haspelstraat, Brugse Poort, Ekkergem, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
+    "lat": 51.0585987,
+    "lng": 3.7013081,
+    "source": "direct_address_geocode"
   },
   "Hogekouterstraat 60, 9030 Ghent, Belgium": {
     "address": "60, Hogekouterstraat, Kolegem, Mariakerke, Gent, Oost-Vlaanderen, Vlaanderen, 9030, België / Belgique / Belgien",
@@ -257,10 +305,22 @@
     "lng": 3.7218871,
     "source": "venue_name_geocode"
   },
+  "Industriepark-Drongen 14, 9031 Gent, België": {
+    "address": "14, Industriepark-Drongen, Drongen I, Drongen, Gent, Oost-Vlaanderen, Vlaanderen, 9031, België / Belgique / Belgien",
+    "lat": 51.0433184,
+    "lng": 3.5958001,
+    "source": "direct_address_geocode"
+  },
   "International School Ghent": {
     "address": "International School Ghent, 258, De Pintelaan, Zwijnaardse Dries, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
     "lat": 51.0260294,
     "lng": 3.7182093,
+    "source": "venue_name_geocode"
+  },
+  "Kaffie is kaffie": {
+    "address": "Kaffie is Kaffie VZW, 1, Emiel Hullebroeckplein, Sas- en Bassijnwijk, Gentbrugge, Gent, Oost-Vlaanderen, Vlaanderen, 9050, België / Belgique / Belgien",
+    "lat": 51.0428729,
+    "lng": 3.7433397,
     "source": "venue_name_geocode"
   },
   "Kammerstraat 10, 9000 Gent, België": {
@@ -299,6 +359,12 @@
     "lng": 3.7227163,
     "source": "direct_address_geocode"
   },
+  "Klinkkouterstraat 15, 9040 Ghent, Belgium": {
+    "address": "15, Klinkkouterstraat, Sint-Amandsberg, Gent, Oost-Vlaanderen, Vlaanderen, 9040, België / Belgique / Belgien",
+    "lat": 51.0517804,
+    "lng": 3.7488775,
+    "source": "direct_address_geocode"
+  },
   "Kogelstraat 34, 9000 Ghent, Belgium": {
     "address": "34, Kogelstraat, Dampoortwijk, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
     "lat": 51.058832,
@@ -329,6 +395,12 @@
     "lng": 3.7123039,
     "source": "direct_address_geocode"
   },
+  "Korenveldstraat 47, 9032 Wondelgem, Belgium": {
+    "address": "47, Korenveldstraat, Wondelgem, Gent, Oost-Vlaanderen, 9032, België / Belgique / Belgien",
+    "lat": 51.080527,
+    "lng": 3.7116457,
+    "source": "direct_address_geocode"
+  },
   "Kortrijksesteenweg 110, 9000 Ghent, Belgium": {
     "address": "110, Kortrijksesteenweg, Stationsbuurt Noord, Muinkparkwijk, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
     "lat": 51.0406177,
@@ -339,6 +411,18 @@
     "address": "573;575, Kortrijksesteenweg, Miljoenenkwartier, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
     "lat": 51.0351583,
     "lng": 3.7166477,
+    "source": "direct_address_geocode"
+  },
+  "Kouter 29, 9000 Ghent, Belgium": {
+    "address": "Handelsbeurs, 29, Kouter, Zuid, Muinkparkwijk, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
+    "lat": 51.0497185,
+    "lng": 3.7231935,
+    "source": "direct_address_geocode"
+  },
+  "Kouter, 9000 Ghent, Belgium": {
+    "address": "Kouter, Kunstenkwartier, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
+    "lat": 51.0502414,
+    "lng": 3.7238306,
     "source": "direct_address_geocode"
   },
   "Kraanlei 6, 9000 Gent, België": {
@@ -352,6 +436,12 @@
     "lat": 51.0413597,
     "lng": 3.7262532,
     "source": "direct_address_geocode"
+  },
+  "Kuipke. Gent": {
+    "address": "Kuipke, Eugène Felixdreef, Strop, Muinkparkwijk, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
+    "lat": 51.0387504,
+    "lng": 3.7207688,
+    "source": "venue_name_geocode"
   },
   "Lange Violettestraat 277A, 9000 Gent, België": {
     "address": "Arena Van Vletingen, 277A, Lange Violettestraat, Brusselse Poort, Muinkparkwijk, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
@@ -370,6 +460,12 @@
     "lat": 51.0472817,
     "lng": 3.7288121,
     "source": "venue_name_geocode"
+  },
+  "Lourdesstraat 6A, 9041 Oostakker, Belgium": {
+    "address": "6;6A, Lourdesstraat, Oostakker, Gent, Oost-Vlaanderen, Vlaanderen, 9041, België / Belgique / Belgien",
+    "lat": 51.0776173,
+    "lng": 3.7542358,
+    "source": "direct_address_geocode"
   },
   "Lucas Munichstraat 84 , 9000 Ghent, Belgium": {
     "address": "76;78;80;82;84;86;84B, Lucas Munichstraat, Sint Macharius / Sint Baafsdorp, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
@@ -455,6 +551,18 @@
     "lng": 3.7186929,
     "source": "venue_name_geocode"
   },
+  "Pierkespark, Haspelstraat, 9000 Gent": {
+    "address": "Buurtfietsenstalling Pierkespark, 49, Haspelstraat, Brugse Poort, Ekkergem, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
+    "lat": 51.0588934,
+    "lng": 3.7013745,
+    "source": "venue_name_geocode"
+  },
+  "Plantentuin Gent": {
+    "address": "Plantentuin UGent, Muinkparkwijk, Gent, Oost-Vlaanderen, Vlaanderen, België / Belgique / Belgien",
+    "lat": 51.0353588,
+    "lng": 3.7225342,
+    "source": "venue_name_geocode"
+  },
   "Platteberg, 9000 Gent, België": {
     "address": "Platteberg, Waalse Krook, Muinkparkwijk, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
     "lat": 51.0486588,
@@ -471,6 +579,12 @@
     "address": "2, Roderoestraat, Ekkergem, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
     "lat": 51.0487697,
     "lng": 3.7104806,
+    "source": "direct_address_geocode"
+  },
+  "Roerstraat 5, Gent, België": {
+    "address": "5, Roerstraat, Muide, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
+    "lat": 51.072644,
+    "lng": 3.7319772,
     "source": "direct_address_geocode"
   },
   "STAMcafé Gent": {
@@ -503,6 +617,12 @@
     "lng": 3.7105657,
     "source": "venue_name_geocode"
   },
+  "Sint-Jozefstraat, 9041 Gent, België": {
+    "address": "Sint-Jozefstraat, Lourdes, Oostakker, Gent, Oost-Vlaanderen, Vlaanderen, 9041, België / Belgique / Belgien",
+    "lat": 51.0831254,
+    "lng": 3.7652595,
+    "source": "direct_address_geocode"
+  },
   "Sint-Pietersabdij (Gent)": {
     "address": "Sint-Pietersabdij, Sint-Pietersplein, Kunstenkwartier, Muinkparkwijk, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
     "lat": 51.0417748,
@@ -515,10 +635,22 @@
     "lng": 3.7274379,
     "source": "venue_name_geocode"
   },
+  "Sint-Pietersplein": {
+    "address": "Sint-Pietersplein, Kunstenkwartier, Muinkparkwijk, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
+    "lat": 51.0425659,
+    "lng": 3.725878,
+    "source": "venue_name_geocode"
+  },
   "Skaldenstraat 121/A3, 9042 Ghent, Belgium": {
     "address": "Skaldenstraat, Havengebied Gent - North Sea Port, Gent, Oost-Vlaanderen, Vlaanderen, 9042, België / Belgique / Belgien",
     "lat": 51.114553,
     "lng": 3.7861229,
+    "source": "direct_address_geocode"
+  },
+  "Spaanskasteelplein, 9000 Gent, België": {
+    "address": "Spaanskasteelplein, Sint Macharius / Sint Baafsdorp, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
+    "lat": 51.0542275,
+    "lng": 3.7383199,
     "source": "direct_address_geocode"
   },
   "Sport Vlaanderen Gent": {
@@ -537,6 +669,12 @@
     "address": "41, Stapelplein, Ham, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
     "lat": 51.0633959,
     "lng": 3.7340498,
+    "source": "direct_address_geocode"
+  },
+  "Ter Platen 60, 9000 Gent, België": {
+    "address": "Studio Edville Centre Ghent, 60, Ter Platen, Strop, Muinkparkwijk, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
+    "lat": 51.0379022,
+    "lng": 3.7304733,
     "source": "direct_address_geocode"
   },
   "The Crossover": {
@@ -567,6 +705,12 @@
     "address": "Trefpunt, Walter De Buckplein, Sint-Jacobs, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
     "lat": 51.0563472,
     "lng": 3.7272011,
+    "source": "venue_name_geocode"
+  },
+  "UGent Campus Sterre": {
+    "address": "UGent campus Sterre, 281, Krijgslaan, Sint-Pieters-Aalst, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
+    "lat": 51.0250898,
+    "lng": 3.7135395,
     "source": "venue_name_geocode"
   },
   "VIERNULVIER": {
@@ -605,6 +749,12 @@
     "lng": 3.7218191,
     "source": "direct_address_geocode"
   },
+  "Warmoezeniersweg 20, 9000 Ghent, Belgium": {
+    "address": "IJsbaan Kristallijn, 20, Warmoezeniersweg, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
+    "lat": 51.0245542,
+    "lng": 3.7441472,
+    "source": "direct_address_geocode"
+  },
   "Watersportlaan 3, 9000 Gent, België": {
     "address": "GUSB, 3, Watersportlaan, Ekkergem, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
     "lat": 51.0482464,
@@ -628,6 +778,12 @@
     "lat": 51.04823128,
     "lng": 3.728013926,
     "source": "sheet_row"
+  },
+  "Wispelbergstraat 2, 9000 Gent, België": {
+    "address": "Atheneum Wispelberg, 2, Wispelbergstraat, Papegaai, Gent, Oost-Vlaanderen, Vlaanderen, 9000, België / Belgique / Belgien",
+    "lat": 51.0524396,
+    "lng": 3.7124816,
+    "source": "direct_address_geocode"
   },
   "Zuidpark": {
     "address": "Koning Albertpark, Muinkparkwijk, Gent, Oost-Vlaanderen, Vlaanderen, België / Belgique / Belgien",

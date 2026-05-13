@@ -68,6 +68,13 @@ class Event:
     going:              str   = ""
     duplicate_of:       str   = ""
 
+    # GMaps enrichment
+    lat_precise:        Optional[float] = None
+    lng_precise:        Optional[float] = None
+    gmaps_place_id:     str   = ""
+    coord_source:       str   = ""
+    coord_confidence:   str   = ""
+
     def to_dict(self):
         return asdict(self)
 

@@ -3,12 +3,12 @@ Storage: Google Sheets  (Events / GeoReview / GeoFail tabs)
 ========================================
   Loading existing event IDs...
   Events: 0  GeoReview: 0  GeoFail: 0
-  Loaded 82 venue coord references from Events sheet
-  Local venue cache: 84 venues
+  Loaded 106 venue coord references from Events sheet
+  Local venue cache: 108 venues
 
 ========================================
   UPDATING SOCIAL COUNTS (interested / going)
-  [facebook] Collected social counts for 218 events
+  [facebook] Collected social counts for 294 events
   No social count changes detected
 
 ========================================
@@ -59,55 +59,127 @@ Storage: Google Sheets  (Events / GeoReview / GeoFail tabs)
     Found 12 raw events
   [facebook] Processing fourth_batch (9).json
     Found 12 raw events
-  [facebook] Total new events: 218
-  [facebook] Geo: exact=183  geo_review=35  unresolved=0  (sum=218)
+  [facebook] Processing raw_response (1).json
+    Found 12 raw events
+  [facebook] Processing raw_response (2).json
+    Found 11 raw events
+  [facebook] Processing raw_response (3).json
+    Found 12 raw events
+  [facebook] Processing raw_response (4).json
+    Found 12 raw events
+  [facebook] Processing raw_response (5).json
+    Found 12 raw events
+  [facebook] Processing raw_response (6).json
+    Found 12 raw events
+  [facebook] Processing raw_response (7).json
+    Found 12 raw events
+  [facebook] Processing raw_response.json
+    Found 12 raw events
+  [facebook] Processing second batch (1).json
+    Found 12 raw events
+  [facebook] Processing second batch (2).json
+    Found 12 raw events
+  [facebook] Processing second batch (3).json
+    Found 12 raw events
+  [facebook] Processing second batch (4).json
+    Found 12 raw events
+  [facebook] Processing second batch (5).json
+    Found 12 raw events
+  [facebook] Processing second batch (6).json
+    Found 12 raw events
+  [facebook] Processing second batch (7).json
+    Found 12 raw events
+  [facebook] Processing second batch (8).json
+    Found 12 raw events
+  [facebook] Processing second batch (9).json
+    Found 12 raw events
+  [facebook] Processing thirdbatch (1).json
+    Found 0 raw events
+  [facebook] Processing thirdbatch (2).json
+    Found 0 raw events
+  [facebook] Processing thirdbatch (3).json
+    Found 0 raw events
+  [facebook] Processing thirdbatch (4).json
+    Found 0 raw events
+  [facebook] Processing thirdbatch (5).json
+    Found 0 raw events
+  [facebook] Total new events: 294
+  [facebook] Geo: exact=364  geo_review=57  unresolved=0  (sum=421)
 
 ========================================
   VENUE WEBSITE INGESTION
   [venue_ingest] Scraping Charlatan → https://www.charlatan.be/agenda
-    Found 0 events, 0 new
+    Found 8 events, 8 new
   [venue_ingest] Scraping VIERNULVIER → https://www.viernulvier.gent/nl/agenda
-    JSON API failed (401 Client Error: Unauthorized for url: https://www.viernulvier.gent/api/agenda), trying HTML...
-    Found 0 events, 0 new
+    Found 16 events, 16 new
   [venue_ingest] Scraping Kompass → https://kompassklub.com/event-list/
+  [kompass] Site is JS-rendered — no events in static HTML. Check for a ticket API or add to Facebook pipeline.
     Found 0 events, 0 new
+  [venue_ingest] Scraping Hot Club Gent → https://www.hotclub.gent/programma.php
+    Found 23 events, 23 new
+  [venue_ingest] Scraping De Centrale → https://www.decentrale.be/en/agenda
+    Found 29 events, 29 new
+  [venue_ingest] Scraping Ha Concerts → https://www.haconcerts.be/nl/concertagenda
+    ha_concerts unreachable after 3 attempts: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+    Found 0 events, 0 new
+  [venue_ingest] Scraping The Crossover → https://www.thecrossover.be/
+    Found 1 events, 1 new
+  [venue_ingest] Scraping Zebrastraat → https://www.zebrastraat.be/nl/agenda
+  [zebrastraat] Events are JS-filtered — not in static HTML. Add to Facebook pipeline or find their API.
+    Found 0 events, 0 new
+  [venue_ingest] Scraping BROEI → https://www.broei.be/agenda
+    Found 97 events, 97 new
+  [venue_ingest] Scraping Trefpunt → https://trefpunt.be/agenda/
+    Found 13 events, 13 new
+  [venue_ingest] Scraping Kinky Star → https://kinkystar.com/programma
+    Found 0 events, 0 new
+  [venue_ingest] Scraping Copa DOK → https://www.copadok.be/line-up
+    Found 14 events, 14 new
+  [venue_ingest] Scraping De Bijloke → https://www.bijloke.be/nl/programma
+    Found 10 events, 10 new
+  [venue_ingest] Scraping Chinastraat → https://chinastraat.be/#agenda
+    Found 1 events, 1 new
+  [venue_ingest] Skipping vierdeZaal — no scrape_url
+  [venue_ingest] Scraping Wintercircus → https://www.wintercircus.be/en/agenda
+    Found 2 events, 2 new
+  [venue_ingest] Skipping minusone — no scrape_url
 
 ========================================
   COLLECTIVE WEBSITE INGESTION
 
 ========================================
   DEDUPLICATION
-  Total raw new events: 218
-  approved=20  geo_review=35  pending=95  dups=0  geofail=0
+  Total raw new events: 508
+  approved=267  geo_review=39  pending=112  dups=3  geofail=0
 
 ========================================
   WRITING TO STORAGE
-    Wrote 115 rows to 'Events' in 1 API call
-    Wrote 35 rows to 'GeoReview' in 1 API call
-  Events: 115  GeoReview: 35  GeoFail: 0
+    Wrote 382 rows to 'Events' in 1 API call
+    Wrote 39 rows to 'GeoReview' in 1 API call
+  Events: 382  GeoReview: 39  GeoFail: 0
 
 ========================================
   EXPORTING JSON FILES
-  Wrote  218 events → output\events_master.json
-  Wrote    3 events → output\events_surface.json
-  Wrote   17 events → output\events_under.json
-  Wrote  130 events → output\events_review.json
-  Wrote   68 events → output\events_low_interest.json
-  Wrote   35 events → output\events_geofail.json
+  Wrote  505 events → output\events_master.json
+  Wrote  232 events → output\events_surface.json
+  Wrote   35 events → output\events_under.json
+  Wrote  151 events → output\events_review.json
+  Wrote   87 events → output\events_low_interest.json
+  Wrote   39 events → output\events_geofail.json
 
-  [export] master=218  surface=3  under=17  review=130  low_interest=68  geofail=35
+  [export] master=505  surface=232  under=35  review=151  low_interest=87  geofail=39
 
 ========================================
-  Facebook:      218
-  Venue sites:   0
+  Facebook:      294
+  Venue sites:   214
   Collectives:   0
-  Duplicates:    0
-  → Approved:    20
-  → GeoReview:   35  ← run geo_review_tool.py to fix these
-  → Pending:     95
-  → Low interest:68
+  Duplicates:    3
+  → Approved:    267
+  → GeoReview:   39  ← run geo_review_tool.py to fix these
+  → Pending:     112
+  → Low interest:87
   → GeoFail:     0
 
-  !! 35 events need location verification.
+  !! 39 events need location verification.
      Run: python geo_review_tool.py
 ========================================

@@ -144,7 +144,7 @@
         "experimental"
       ],
       "verified": true,
-      "scrape_url": "https://chinastraat.be",
+      "scrape_url": "https://chinastraat.be/#agenda",
       "scrape_type": "html"
     },
     {
@@ -260,8 +260,8 @@
         "funke"
       ],
       "verified": true,
-      "scrape_url": null,
-      "scrape_type": null
+      "scrape_url": "https://funke.gent/program",
+      "scrape_type": "html"
     },
     {
       "id": "asgaard",
@@ -276,7 +276,7 @@
       "lat": 51.0367699,
       "lng": 3.7659118,
       "layer": "under",
-      "website": null,
+      "website": "https://asgaard.anykrowd.app/#/events",
       "facebook_page_id": null,
       "instagram": null,
       "logo": null,
@@ -408,8 +408,8 @@
         "experimental"
       ],
       "verified": true,
-      "scrape_url": null,
-      "scrape_type": null
+      "scrape_url": "https://chinastraat.be/#agenda",
+      "scrape_type": "html"
     },
     {
       "id": "hotclub",

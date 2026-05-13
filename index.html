@@ -260,6 +260,72 @@ body.under .p-line { font-size:11px; letter-spacing:0.03em; }
 body.under .p-link { font-size:11px; letter-spacing:0.06em; }
 .p-desc { font-size:11px; color:var(--faint); margin-top:5px; line-height:1.5; }
 
+/* ── VENUE MARKER BUBBLES ───────────────────────────────────*/
+.venue-bubble {
+  width:32px; height:32px; border-radius:50%;
+  background:var(--marker); color:var(--markertxt);
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:13px; cursor:pointer;
+  box-shadow:0 1px 5px rgba(0,0,0,0.35);
+  border:2px solid rgba(255,255,255,0.18);
+  font-family:var(--mono); letter-spacing:0.03em;
+  user-select:none;
+}
+body.under .venue-bubble { border-color:rgba(157,136,240,0.35); }
+
+/* ── VENUE SIDEBAR ──────────────────────────────────────────*/
+#venue-sidebar {
+  position:fixed; top:92px; right:0;
+  width:320px; height:calc(100vh - 92px);
+  background:var(--panel); border-left:1px solid var(--border);
+  z-index:300; display:flex; flex-direction:column;
+  transform:translateX(100%);
+  transition:transform 0.25s ease, background 0.7s, border-color 0.7s;
+  overflow:hidden; box-shadow:-3px 0 12px rgba(0,0,0,0.12);
+}
+#venue-sidebar.open { transform:translateX(0); }
+
+#sidebar-header {
+  padding:14px 16px 12px; border-bottom:1px solid var(--border);
+  flex-shrink:0; position:relative;
+}
+#sidebar-close {
+  position:absolute; top:10px; right:10px;
+  background:none; border:none; color:var(--muted);
+  font-size:20px; cursor:pointer; padding:4px; line-height:1;
+}
+#sidebar-close:hover { color:var(--text); }
+#sidebar-venue-name {
+  font-size:15px; font-weight:700; color:var(--text);
+  margin-bottom:5px; padding-right:30px; font-family:var(--mono);
+}
+body.under #sidebar-venue-name {
+  font-size:12px; letter-spacing:0.08em; text-transform:uppercase;
+}
+#sidebar-venue-meta { font-size:12px; color:var(--muted); line-height:1.6; }
+#sidebar-venue-meta a { color:var(--accent); text-decoration:none; }
+#sidebar-venue-meta a:hover { text-decoration:underline; }
+
+#sidebar-events { overflow-y:auto; flex:1; }
+.sidebar-empty { padding:20px 16px; font-size:12px; color:var(--faint); }
+.sidebar-event {
+  padding:11px 16px; border-bottom:1px solid var(--border);
+}
+.sidebar-event:last-child { border-bottom:none; }
+.sidebar-event-title {
+  font-size:13px; font-weight:600; color:var(--text);
+  margin-bottom:4px; line-height:1.3;
+}
+body.under .sidebar-event-title {
+  font-size:11px; font-family:'Courier New',monospace;
+  text-transform:uppercase; letter-spacing:0.03em;
+}
+.sidebar-event-meta { font-size:11px; color:var(--muted); margin-bottom:3px; }
+.sidebar-event-link {
+  font-size:11px; color:var(--accent); text-decoration:none;
+}
+.sidebar-event-link:hover { text-decoration:underline; }
+
 /* ── ENTRY OVERLAY ──────────────────────────────────────────*/
 #entry {
   position:fixed; inset:0; z-index:500;
@@ -336,6 +402,15 @@ body.under .p-link { font-size:11px; letter-spacing:0.06em; }
     <a href="https://www.goabase.net/party/country/be" target="_blank">Goabase</a>
     <a href="https://www.reggae.be" target="_blank">Reggae.be</a>
   </div>
+</div>
+
+<div id="venue-sidebar">
+  <div id="sidebar-header">
+    <button id="sidebar-close" onclick="closeSidebar()">×</button>
+    <div id="sidebar-venue-name"></div>
+    <div id="sidebar-venue-meta"></div>
+  </div>
+  <div id="sidebar-events"></div>
 </div>
 
 <div id="entry">
@@ -423,6 +498,10 @@ function toggleSrc(s) {
   if (activeSrcs.has(s)) activeSrcs.delete(s);
   else activeSrcs.add(s);
   document.getElementById('s-'+s).classList.toggle('on', activeSrcs.has(s));
+  if (s === 'venue_site') {
+    if (activeSrcs.has('venue_site')) { if (!map.hasLayer(venueMarkers)) venueMarkers.addTo(map); }
+    else map.removeLayer(venueMarkers);
+  }
   renderEvents(_filtered());
 }
 
@@ -565,6 +644,62 @@ function renderEvents(events) {
   document.getElementById('counter').textContent = n+' events';
 }
 
+/* ── VENUE SIDEBAR ───────────────────────────────────────── */
+let sidebarOpen = false;
+
+function openVenueSidebar(v) {
+  const nameEl = document.getElementById('sidebar-venue-name');
+  const metaEl = document.getElementById('sidebar-venue-meta');
+  const listEl = document.getElementById('sidebar-events');
+
+  nameEl.textContent = v.canonical_name;
+
+  let meta = '';
+  if (v.address) meta += `<span>${v.address}</span>`;
+  if (v.website) meta += `${meta ? '<br>' : ''}<a href="${v.website}" target="_blank">${v.website.replace(/^https?:\/\//,'')}</a>`;
+  metaEl.innerHTML = meta;
+
+  const vname = (v.canonical_name || '').toLowerCase();
+  const matching = allEvents.filter(ev => {
+    if ((ev.status || ev.Status || '').toLowerCase() !== 'approved') return false;
+    return (ev.Venue || ev.venue || '').toLowerCase() === vname;
+  }).sort((a, b) => {
+    const da = _parseDate(a.Date_Start || a.start_datetime);
+    const db = _parseDate(b.Date_Start || b.start_datetime);
+    if (!da && !db) return 0;
+    if (!da) return 1;
+    if (!db) return -1;
+    return da - db;
+  });
+
+  if (!matching.length) {
+    listEl.innerHTML = '<div class="sidebar-empty">No upcoming events found</div>';
+  } else {
+    listEl.innerHTML = matching.map(ev => {
+      const title  = ev.Title  || ev.title  || 'Untitled';
+      const date   = ev.Date_Start || (ev.start_datetime || '').slice(0,10) || '';
+      const time   = ev.Hour_Start || (ev.start_datetime || '').slice(11,16) || '';
+      const price  = ev.Price  || ev.price  || '';
+      const srcUrl = ev.Source_url || ev.source_url || '';
+      const dateLine = [date, time].filter(Boolean).join(' · ');
+      return `<div class="sidebar-event">
+        <div class="sidebar-event-title">${title}</div>
+        ${dateLine ? `<div class="sidebar-event-meta">${dateLine}</div>` : ''}
+        ${price    ? `<div class="sidebar-event-meta">${price}</div>` : ''}
+        ${srcUrl   ? `<a class="sidebar-event-link" href="${srcUrl}" target="_blank">&#8594; event page</a>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('venue-sidebar').classList.add('open');
+  sidebarOpen = true;
+}
+
+function closeSidebar() {
+  document.getElementById('venue-sidebar').classList.remove('open');
+  sidebarOpen = false;
+}
+
 /* ── VENUE BUBBLES ───────────────────────────────────────── */
 async function loadVenues() {
   try {
@@ -572,15 +707,14 @@ async function loadVenues() {
     const data = await r.json();
     data.venues.forEach(v => {
       if (!v.lat || !v.lng) return;
-      const circle = L.circleMarker([v.lat, v.lng], {
-        radius: 8, color: '#2b6b3d', fillColor: '#2b6b3d',
-        fillOpacity: 0.18, weight: 2,
+      const abbr = (v.canonical_name || '??').slice(0,2).toUpperCase();
+      const icon = L.divIcon({
+        html: `<div class="venue-bubble">${abbr}</div>`,
+        className: '', iconSize: [32,32], iconAnchor: [16,16],
       });
-      let popup = `<div class="p-title">${v.canonical_name}</div>`;
-      if (v.address) popup += `<div class="p-line">${v.address}</div>`;
-      if (v.website) popup += `<a class="p-link" href="${v.website}" target="_blank">Website →</a>`;
-      circle.bindPopup(popup, {maxWidth:260});
-      venueMarkers.addLayer(circle);
+      const m = L.marker([v.lat, v.lng], {icon, zIndexOffset:1000});
+      m.on('click', e => { L.DomEvent.stopPropagation(e); openVenueSidebar(v); });
+      venueMarkers.addLayer(m);
     });
   } catch(e) {
     console.error('Could not load venues.json', e);
@@ -619,6 +753,8 @@ async function loadData() {
     console.error(e);
   }
 }
+
+map.on('click', () => { if (sidebarOpen) closeSidebar(); });
 
 loadData();
 loadVenues();
