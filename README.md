@@ -8,7 +8,7 @@ Multi-source cultural event aggregation for Ghent.
 underghent_v2/
 ├── main.py                  ← Run this (or double-click run.bat)
 ├── run.bat
-├── credentials.json         ← Your Google service account (keep secret!)
+├── 
 ├── index.html               ← Frontend map
 │
 ├── config/
