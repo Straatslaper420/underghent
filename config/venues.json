@@ -2,6 +2,7 @@
   "venues": [
     {
       "id": "charlatan",
+      "canonical_name": "Charlatan",
       "name": "Charlatan",
       "aliases": [
         "charlatan",
@@ -12,11 +13,23 @@
       "lat": 51.05603186841703,
       "lng": 3.7285059220882286,
       "layer": "under",
+      "website": "https://www.charlatan.be",
+      "facebook_page_id": "charlatancafe",
+      "instagram": "charlatancafe",
+      "logo": null,
+      "genres": [
+        "club",
+        "techno",
+        "electronic",
+        "nightlife"
+      ],
+      "verified": true,
       "scrape_url": "https://www.charlatan.be/agenda",
       "scrape_type": "html"
     },
     {
       "id": "kompass",
+      "canonical_name": "Kompass",
       "name": "Kompass",
       "aliases": [
         "kompass",
@@ -28,11 +41,23 @@
       "lat": 51.06836775216201,
       "lng": 3.723787570557093,
       "layer": "under",
+      "website": "https://kompassklub.com",
+      "facebook_page_id": "kompassklub",
+      "instagram": "kompassklub",
+      "logo": null,
+      "genres": [
+        "techno",
+        "electronic",
+        "club",
+        "industrial"
+      ],
+      "verified": true,
       "scrape_url": "https://kompassklub.com/event-list/",
       "scrape_type": "html"
     },
     {
       "id": "viernulvier",
+      "canonical_name": "VIERNULVIER",
       "name": "VIERNULVIER",
       "aliases": [
         "viernulvier",
@@ -49,11 +74,25 @@
       "lat": 51.04785719025603,
       "lng": 3.727390868709035,
       "layer": "surface",
+      "website": "https://www.viernulvier.gent",
+      "facebook_page_id": "viernulvier",
+      "instagram": "viernulvier",
+      "logo": null,
+      "genres": [
+        "concert",
+        "theater",
+        "dance",
+        "alternative",
+        "pop",
+        "jazz"
+      ],
+      "verified": true,
       "scrape_url": "https://www.viernulvier.gent/nl/agenda",
       "scrape_type": "html"
     },
     {
       "id": "minusone",
+      "canonical_name": "Minus One",
       "name": "Minus One",
       "aliases": [
         "minus one",
@@ -66,11 +105,24 @@
       "lat": 51.064983789821206,
       "lng": 3.7170938380275604,
       "layer": "under",
-      "scrape_url": "https://www.minus-one.be/agenda",
-      "scrape_type": "html"
+      "website": "https://www.minus-one.be",
+      "facebook_page_id": "vzwminusone",
+      "instagram": "minusonegent",
+      "logo": null,
+      "genres": [
+        "punk",
+        "metal",
+        "rock",
+        "hardcore",
+        "DIY"
+      ],
+      "verified": true,
+      "scrape_url": null,
+      "scrape_type": null
     },
     {
       "id": "chinastraat",
+      "canonical_name": "Chinastraat",
       "name": "Chinastraat",
       "aliases": [
         "chinastraat",
@@ -81,11 +133,23 @@
       "lat": 51.07292204573162,
       "lng": 3.7352400275105238,
       "layer": "under",
-      "scrape_url": null,
-      "scrape_type": null
+      "website": null,
+      "facebook_page_id": null,
+      "instagram": null,
+      "logo": null,
+      "genres": [
+        "squat",
+        "DIY",
+        "underground",
+        "experimental"
+      ],
+      "verified": true,
+      "scrape_url": "https://chinastraat.be",
+      "scrape_type": "html"
     },
     {
       "id": "vierdeZaal",
+      "canonical_name": "Vierde Zaal",
       "name": "Vierde Zaal",
       "aliases": [
         "vierde zaal",
@@ -99,11 +163,23 @@
       "lat": 51.03703524099016,
       "lng": 3.76571949754381,
       "layer": "under",
+      "website": null,
+      "facebook_page_id": null,
+      "instagram": null,
+      "logo": null,
+      "genres": [
+        "DIY",
+        "underground",
+        "experimental",
+        "punk"
+      ],
+      "verified": true,
       "scrape_url": null,
       "scrape_type": null
     },
     {
       "id": "wintercircus",
+      "canonical_name": "Wintercircus",
       "name": "Wintercircus",
       "aliases": [
         "wintercircus",
@@ -114,11 +190,23 @@
       "lat": 51.04823127912577,
       "lng": 3.728013926379643,
       "layer": "surface",
-      "scrape_url": null,
-      "scrape_type": null
+      "website": null,
+      "facebook_page_id": "clubwintercircus",
+      "instagram": "clubwintercircus",
+      "logo": null,
+      "genres": [
+        "club",
+        "pop",
+        "electronic",
+        "urban"
+      ],
+      "verified": true,
+      "scrape_url": "https://www.wintercircus.be/en/agenda",
+      "scrape_type": "html"
     },
     {
       "id": "baudelopark",
+      "canonical_name": "Baudelopark",
       "name": "Baudelopark",
       "aliases": [
         "baudelopark",
@@ -129,8 +217,379 @@
       "lat": 51.05846956553006,
       "lng": 3.7303613975448613,
       "layer": "surface",
+      "website": null,
+      "facebook_page_id": null,
+      "instagram": null,
+      "logo": null,
+      "genres": [
+        "outdoor",
+        "festival",
+        "community",
+        "world"
+      ],
+      "verified": true,
       "scrape_url": null,
       "scrape_type": null
+    },
+    {
+      "id": "funke",
+      "canonical_name": "FUNKE",
+      "name": "FUNKE",
+      "aliases": [
+        "funke",
+        "cafe funke",
+        "funke gent",
+        "FUNKE",
+        "13;13a, bij sint-jacobs, sint-jacobs, gent, oost-vlaanderen, vlaanderen, 9000, belgië / belgique / belgien"
+      ],
+      "address": "Sint-Jacobs 13-13A, 9000 Gent",
+      "lat": 51.0571191,
+      "lng": 3.7276669,
+      "layer": "surface",
+      "website": null,
+      "facebook_page_id": "funke.fu",
+      "instagram": "funke.fu",
+      "logo": null,
+      "genres": [
+        "jazz",
+        "blues",
+        "world",
+        "live music"
+      ],
+      "title_patterns": [
+        "funke"
+      ],
+      "verified": true,
+      "scrape_url": null,
+      "scrape_type": null
+    },
+    {
+      "id": "asgaard",
+      "canonical_name": "Asgaard",
+      "name": "Asgaard",
+      "aliases": [
+        "asgaard",
+        "asgaard gentbrugge",
+        "asgaard gent"
+      ],
+      "address": "Driebeekstraat 3, 9050 Gentbrugge",
+      "lat": 51.0367699,
+      "lng": 3.7659118,
+      "layer": "under",
+      "website": null,
+      "facebook_page_id": null,
+      "instagram": null,
+      "logo": null,
+      "genres": [
+        "metal",
+        "hardcore",
+        "punk",
+        "black metal",
+        "DIY"
+      ],
+      "verified": true,
+      "scrape_url": null,
+      "scrape_type": null
+    },
+    {
+      "id": "gent_jazz",
+      "canonical_name": "Gent Jazz",
+      "name": "Gent Jazz",
+      "aliases": [
+        "gent jazz",
+        "gent jazz 2026",
+        "gentjazz",
+        "gent jazz festival",
+        "jazz gent",
+        "godshuizenlaan, stationsbuurt noord, ekkergem, gent, oost-vlaanderen, vlaanderen, 9000, belgië / belgique / belgien"
+      ],
+      "address": "Godshuizenlaan, 9000 Gent",
+      "lat": 51.0437654,
+      "lng": 3.715506,
+      "layer": "surface",
+      "website": null,
+      "facebook_page_id": "gentjazz",
+      "instagram": "gentjazz",
+      "logo": null,
+      "genres": [
+        "jazz",
+        "world",
+        "blues",
+        "festival"
+      ],
+      "title_patterns": [
+        "gent jazz"
+      ],
+      "verified": true,
+      "scrape_url": null,
+      "scrape_type": null
+    },
+    {
+      "id": "missy_sippy",
+      "canonical_name": "Missy Sippy",
+      "name": "Missy Sippy",
+      "aliases": [
+        "missy sippy",
+        "missy sippy blues",
+        "missy sippy blues & roots club",
+        "missy sippy blues and roots club",
+        "klein turkije 16"
+      ],
+      "address": "Klein Turkije 16, 9000 Gent",
+      "lat": 51.05283499999999,
+      "lng": 3.7203871,
+      "layer": "surface",
+      "website": "https://www.missy-sippy.be",
+      "facebook_page_id": "MissySippy.Gent",
+      "instagram": "missysippygent",
+      "logo": null,
+      "genres": [
+        "blues",
+        "jazz",
+        "roots",
+        "swing",
+        "live music"
+      ],
+      "verified": true,
+      "scrape_url": null,
+      "scrape_type": null
+    },
+    {
+      "id": "shoonya",
+      "canonical_name": "Shoonya Dance Centre",
+      "name": "Shoonya Dance Centre",
+      "aliases": [
+        "shoonya",
+        "shoonya dance",
+        "shoonya dance centre",
+        "shoonya dance gent",
+        "stapelplein 41"
+      ],
+      "address": "Stapelplein 41, 9000 Gent",
+      "lat": 51.0587,
+      "lng": 3.7318,
+      "layer": "surface",
+      "website": "https://www.shoonyadance.com",
+      "facebook_page_id": "shoonyadance",
+      "instagram": "shoonyadance",
+      "logo": null,
+      "genres": [
+        "dance",
+        "world",
+        "festival",
+        "workshop"
+      ],
+      "verified": true,
+      "scrape_url": null,
+      "scrape_type": null
+    },
+    {
+      "id": "chinastraat_venue",
+      "canonical_name": "Chinastraat",
+      "name": "Chinastraat",
+      "aliases": [
+        "chinastraat",
+        "china straat",
+        "chinastraat gent",
+        "chinastraat 1"
+      ],
+      "address": "Chinastraat 1, 9000 Gent",
+      "lat": 51.07292204573162,
+      "lng": 3.7352400275105238,
+      "layer": "under",
+      "website": null,
+      "facebook_page_id": null,
+      "instagram": null,
+      "logo": null,
+      "genres": [
+        "squat",
+        "DIY",
+        "underground",
+        "experimental"
+      ],
+      "verified": true,
+      "scrape_url": null,
+      "scrape_type": null
+    },
+    {
+      "id": "hotclub",
+      "canonical_name": "Hot Club Gent",
+      "name": "Hot Club Gent",
+      "aliases": ["hot club gent", "hot club", "hotclub gent"],
+      "address": "Schuddevisstraatje 2, 9000 Gent",
+      "lat": 51.0558,
+      "lng": 3.7204,
+      "layer": "surface",
+      "website": "https://www.hotclub.gent",
+      "facebook_page_id": null,
+      "instagram": null,
+      "logo": null,
+      "genres": ["jazz", "blues", "swing", "world", "gypsy"],
+      "verified": true,
+      "scrape_url": "https://www.hotclub.gent/programma.php",
+      "scrape_type": "html"
+    },
+    {
+      "id": "decentrale",
+      "canonical_name": "De Centrale",
+      "name": "De Centrale",
+      "aliases": ["de centrale", "centrale gent", "intercultureel muziekcentrum"],
+      "address": "Kraankindersstraat 2, 9000 Gent",
+      "lat": 51.0573,
+      "lng": 3.7197,
+      "layer": "surface",
+      "website": "https://www.decentrale.be",
+      "facebook_page_id": null,
+      "instagram": null,
+      "logo": null,
+      "genres": ["world", "intercultural", "jazz", "folk", "global"],
+      "verified": true,
+      "scrape_url": "https://www.decentrale.be/en/agenda",
+      "scrape_type": "html"
+    },
+    {
+      "id": "ha_concerts",
+      "canonical_name": "Ha Concerts",
+      "name": "Ha Concerts",
+      "aliases": ["ha concerts", "haconcerts", "ha", "ha gent"],
+      "address": "Koningin Elisabethlaan 18, 9000 Gent",
+      "lat": 51.0497,
+      "lng": 3.7208,
+      "layer": "surface",
+      "website": "https://www.haconcerts.be",
+      "facebook_page_id": null,
+      "instagram": null,
+      "logo": null,
+      "genres": ["jazz", "pop", "world", "classical", "children"],
+      "verified": true,
+      "scrape_url": "https://www.haconcerts.be/nl/concertagenda",
+      "scrape_type": "html"
+    },
+    {
+      "id": "thecrossover",
+      "canonical_name": "The Crossover",
+      "name": "The Crossover",
+      "aliases": ["the crossover", "crossover music pub", "crossover gent"],
+      "address": "Biezekapelstraat 6, 9000 Gent",
+      "lat": 51.0540,
+      "lng": 3.7226,
+      "layer": "surface",
+      "website": "https://www.thecrossover.be",
+      "facebook_page_id": null,
+      "instagram": null,
+      "logo": null,
+      "genres": ["blues", "rock", "roots", "soul", "live music"],
+      "verified": true,
+      "scrape_url": "https://www.thecrossover.be/",
+      "scrape_type": "html"
+    },
+    {
+      "id": "zebrastraat",
+      "canonical_name": "Zebrastraat",
+      "name": "Zebrastraat",
+      "aliases": ["zebrastraat", "zebra straat", "zebrastraat gent"],
+      "address": "Zebrastraat 32, 9000 Gent",
+      "lat": 51.0446,
+      "lng": 3.7365,
+      "layer": "surface",
+      "website": "https://www.zebrastraat.be",
+      "facebook_page_id": null,
+      "instagram": null,
+      "logo": null,
+      "genres": ["arts", "culture", "experimental", "interdisciplinary"],
+      "verified": true,
+      "scrape_url": "https://www.zebrastraat.be/nl/agenda",
+      "scrape_type": "html"
+    },
+    {
+      "id": "broei",
+      "canonical_name": "BROEI",
+      "name": "BROEI",
+      "aliases": ["broei", "broei gent", "broei vzw"],
+      "address": "Victorialaan 1, 9000 Gent",
+      "lat": 51.0412,
+      "lng": 3.7289,
+      "layer": "surface",
+      "website": "https://www.broei.be",
+      "facebook_page_id": null,
+      "instagram": null,
+      "logo": null,
+      "genres": ["arts", "culture", "DIY", "community", "performance", "music"],
+      "verified": true,
+      "scrape_url": "https://www.broei.be/agenda",
+      "scrape_type": "html"
+    },
+    {
+      "id": "trefpunt",
+      "canonical_name": "Trefpunt",
+      "name": "Trefpunt",
+      "aliases": ["trefpunt", "trefpunt gent", "trefpunt festival"],
+      "address": "Sint-Jacobsnieuwstraat 41, 9000 Gent",
+      "lat": 51.0558,
+      "lng": 3.7246,
+      "layer": "surface",
+      "website": "https://trefpunt.be",
+      "facebook_page_id": null,
+      "instagram": null,
+      "logo": null,
+      "genres": ["jazz", "blues", "folk", "world", "live music", "community"],
+      "verified": true,
+      "scrape_url": "https://trefpunt.be/agenda/",
+      "scrape_type": "html"
+    },
+    {
+      "id": "kinkystar",
+      "canonical_name": "Kinky Star",
+      "name": "Kinky Star",
+      "aliases": ["kinky star", "kinkystar", "kinky star gent"],
+      "address": "Vlasmarkt 9, 9000 Gent",
+      "lat": 51.0563,
+      "lng": 3.7286,
+      "layer": "under",
+      "website": "https://kinkystar.com",
+      "facebook_page_id": null,
+      "instagram": null,
+      "logo": null,
+      "genres": ["indie", "alternative", "punk", "experimental", "DIY", "underground"],
+      "verified": true,
+      "scrape_url": "https://kinkystar.com/programma",
+      "scrape_type": "html"
+    },
+    {
+      "id": "copadok",
+      "canonical_name": "Copa DOK",
+      "name": "Copa DOK",
+      "aliases": ["copa dok", "copadok", "copa dok gent", "copa"],
+      "address": "Koopvaardijlaan, 9000 Gent",
+      "lat": 51.0712,
+      "lng": 3.7289,
+      "layer": "surface",
+      "website": "https://www.copadok.be",
+      "facebook_page_id": null,
+      "instagram": null,
+      "logo": null,
+      "genres": ["festival", "outdoor", "pop", "world", "electronic"],
+      "verified": true,
+      "scrape_url": "https://www.copadok.be/line-up",
+      "scrape_type": "html"
+    },
+    {
+      "id": "debijloke",
+      "canonical_name": "De Bijloke",
+      "name": "De Bijloke",
+      "aliases": ["de bijloke", "bijloke", "muziekcentrum de bijloke", "bijloke gent", "kraakhuis"],
+      "address": "Bijlokekaai 7, 9000 Gent",
+      "lat": 51.0477,
+      "lng": 3.7162,
+      "layer": "surface",
+      "website": "https://www.bijloke.be",
+      "facebook_page_id": null,
+      "instagram": null,
+      "logo": null,
+      "genres": ["classical", "world", "jazz", "folk", "early music"],
+      "verified": true,
+      "scrape_url": "https://www.bijloke.be/nl/programma",
+      "scrape_type": "html"
     }
   ]
 }

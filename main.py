@@ -35,7 +35,7 @@ USE_GOOGLE_SHEETS = os.path.exists(CREDENTIALS_FILE)
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "data_pipeline"))
 
 from models             import Event
-from normalize          import load_runtime_venue_db
+from normalize          import load_runtime_venue_db, make_normalized_hash
 from facebook_ingest    import ingest_folder as ingest_facebook, collect_social_updates
 from venue_ingest       import ingest_all_venues
 from collective_ingest  import ingest_all_collectives
@@ -96,6 +96,19 @@ if USE_GOOGLE_SHEETS:
     rows = sheet_events.get_all_values()[1:]
     n = load_runtime_venue_db(rows)
     print(f"  Loaded {n} venue coord references from Events sheet")
+
+    # Also add normalized hashes so FB↔venue cross-source dedup works across runs
+    for row in rows:
+        title    = row[1] if len(row) > 1 else ""
+        date_raw = row[2] if len(row) > 2 else ""   # stored as DD.MM.YYYY
+        venue    = row[6] if len(row) > 6 else ""
+        if len(date_raw) == 10:
+            d, m, y = date_raw[:2], date_raw[3:5], date_raw[6:]
+            date_iso = f"{y}-{m}-{d}"
+        else:
+            date_iso = date_raw[:10]
+        if title and date_iso:
+            existing_ids.add(make_normalized_hash(title, date_iso, venue))
     try:
         import json as _j, os as _os
         _cf = _os.path.join(_os.path.dirname(__file__), "data_pipeline", "..", "config", "venue_cache.json")
@@ -266,8 +279,19 @@ def _batch_write_ws(ws, events):
                 return 0
     return 0
 
+def _pair_with_dups(canonical_events, dups):
+    """Return canonical events each followed immediately by their duplicate row(s)."""
+    dup_map = {}
+    for d in dups:
+        dup_map.setdefault(d.duplicate_of, []).append(d)
+    result = []
+    for ev in canonical_events:
+        result.append(ev)
+        result.extend(dup_map.get(ev.id, []))
+    return result
+
 if USE_GOOGLE_SHEETS:
-    n1 = _batch_write_ws(sheet_events,    approved + pending)
+    n1 = _batch_write_ws(sheet_events,    _pair_with_dups(approved + pending, dups))
     n2 = _batch_write_ws(sheet_georeview, geo_review)
     n3 = _batch_write_ws(sheet_geofail,   geofail)
     print(f"  Events: {n1}  GeoReview: {n2}  GeoFail: {n3}")

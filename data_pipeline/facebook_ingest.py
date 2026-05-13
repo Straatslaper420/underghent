@@ -43,9 +43,13 @@ def ingest_folder(folder_path: str, existing_ids: set = None) -> List[Event]:
             ev = _parse(raw, stats)
             if not ev:
                 continue
-            if ev.raw_id in existing_ids:
+            if (ev.raw_id in existing_ids
+                    or ev.id in existing_ids
+                    or ev.normalized_hash in existing_ids):
                 continue
             existing_ids.add(ev.raw_id)
+            existing_ids.add(ev.id)
+            existing_ids.add(ev.normalized_hash)
             events.append(ev)
 
     total = len(events)

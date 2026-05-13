@@ -1,0 +1,79 @@
+Storage: Google Sheets  (Events / GeoReview / GeoFail tabs)
+
+========================================
+  Loading existing event IDs...
+  Events: 129  GeoReview: 11  GeoFail: 0
+  Loaded 106 venue coord references from Events sheet
+
+========================================
+  VENUE WEBSITE SCRAPING
+  [venue_ingest] Scraping Charlatan → https://www.charlatan.be/agenda
+    Found 9 events, 9 new
+  [venue_ingest] Scraping VIERNULVIER → https://www.viernulvier.gent/nl/agenda
+    Found 16 events, 16 new
+  [venue_ingest] Scraping Kompass → https://kompassklub.com/event-list/
+  [kompass] Site is JS-rendered — no events in static HTML. Check for a ticket API or add to Facebook pipeline.
+    Found 0 events, 0 new
+  [venue_ingest] Scraping Hot Club Gent → https://www.hotclub.gent/programma.php
+    Found 25 events, 25 new
+  [venue_ingest] Scraping De Centrale → https://www.decentrale.be/en/agenda
+    Found 29 events, 29 new
+  [venue_ingest] Scraping Ha Concerts → https://www.haconcerts.be/nl/concertagenda
+    ha_concerts unreachable after 3 attempts: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+    Found 0 events, 0 new
+  [venue_ingest] Scraping The Crossover → https://www.thecrossover.be/
+    Found 1 events, 1 new
+  [venue_ingest] Scraping Zebrastraat → https://www.zebrastraat.be/nl/agenda
+  [zebrastraat] Events are JS-filtered — not in static HTML. Add to Facebook pipeline or find their API.
+    Found 0 events, 0 new
+  [venue_ingest] Scraping BROEI → https://www.broei.be/agenda
+    Found 100 events, 100 new
+  [venue_ingest] Scraping Trefpunt → https://trefpunt.be/agenda/
+    Found 13 events, 13 new
+  [venue_ingest] Scraping Kinky Star → https://kinkystar.com/programma
+    Found 0 events, 0 new
+  [venue_ingest] Scraping Copa DOK → https://www.copadok.be/line-up
+    Found 14 events, 14 new
+  [venue_ingest] Scraping De Bijloke → https://www.bijloke.be/nl/programma
+    Found 10 events, 10 new
+  [venue_ingest] Scraping Chinastraat → https://chinastraat.be
+    Found 1 events, 1 new
+  [venue_ingest] Skipping vierdeZaal — no scrape_url
+  [venue_ingest] Scraping Wintercircus → https://www.wintercircus.be/en/agenda
+    Found 2 events, 2 new
+  [venue_ingest] Skipping minusone — no scrape_url
+  Total new venue events: 220
+
+========================================
+  DEDUPLICATION
+  approved=220  geo_review=0  pending=0  dups=0  geofail=0
+
+========================================
+  WRITING TO STORAGE
+    Wrote 220 rows to 'Events'
+  Events: 220  GeoReview: 0  GeoFail: 0
+
+========================================
+  EXPORTING JSON FILES
+  Wrote  220 events → output\events_master.json
+  Wrote  210 events → output\events_surface.json
+  Wrote   10 events → output\events_under.json
+  Wrote    0 events → output\events_review.json
+  Wrote    0 events → output\events_low_interest.json
+  Wrote    0 events → output\events_geofail.json
+
+  [export] master=220  surface=210  under=10  review=0  low_interest=0  geofail=0
+
+========================================
+  Venue sites scraped:  220
+  Duplicates removed:   0
+  → Approved:           220
+  → Pending:            0
+  → GeoReview:          0  ← run geo_review_tool.py to fix
+  → GeoFail:            0
+========================================
+
+  Log saved to: log_venues.txt
+========================================
+
+Done. Press Enter to close...

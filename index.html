@@ -199,6 +199,8 @@ input[type="date"]:focus { border-color:var(--accent); }
   position:fixed; bottom:52px; right:16px;
   z-index:200;
   width:200px;
+  max-height:calc(100vh - 80px);
+  overflow-y:auto;
   background:var(--panel);
   border:1px solid var(--border);
   border-radius:var(--radius);
@@ -508,12 +510,13 @@ function _popup(ev) {
   const city    = ev.City||ev.city||'Gent';
   const date    = ev.Date_Start||(ev.start_datetime||'').slice(0,10)||'';
   const time    = ev.Hour_Start||(ev.start_datetime||'').slice(11,16)||'';
-  const srcUrl  = ev.Source_url||ev.source_url||'';
-  const tikUrl  = ev.Tickets_url||ev.tickets_url||'';
-  const going   = ev.Going||ev.going||'';
-  const intrstd = ev.Interested||ev.interested||'';
-  const price   = ev.Price||ev.price||'';
-  const desc    = ev.Description||ev.description||'';
+  const srcUrl   = ev.Source_url||ev.source_url||'';
+  const tikUrl   = ev.Tickets_url||ev.tickets_url||'';
+  const venueUrl = ev.Venue_url||ev.venue_url||'';
+  const going    = ev.Going||ev.going||'';
+  const intrstd  = ev.Interested||ev.interested||'';
+  const price    = ev.Price||ev.price||'';
+  const desc     = ev.Description||ev.description||'';
 
   const locFull = [venue,addr,city].filter(Boolean).join(', ');
   const mapsUrl = 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(locFull);
@@ -527,6 +530,7 @@ function _popup(ev) {
     if (going)       h += `<div class="p-line" style="color:var(--faint)">${going} going${intrstd?' · '+intrstd+' interested':''}</div>`;
     if (desc)        h += `<div class="p-desc">${desc.slice(0,200)}</div>`;
     if (srcUrl)      h += `<a class="p-link" href="${srcUrl}" target="_blank">→ source</a>`;
+    if (venueUrl)    h += `<a class="p-link" href="${venueUrl}" target="_blank">→ venue page</a>`;
     if (tikUrl)      h += `<a class="p-link" href="${tikUrl}" target="_blank">→ tickets</a>`;
   } else {
     if (venue||addr) h += `<div class="p-line">📍 <a href="${mapsUrl}" target="_blank">${venue||addr}</a></div>`;
@@ -535,6 +539,7 @@ function _popup(ev) {
     if (intrstd||going) h += `<div class="p-line" style="color:var(--faint)">${[intrstd&&intrstd+' interested',going&&going+' going'].filter(Boolean).join(' · ')}</div>`;
     if (desc)        h += `<div class="p-desc">${desc.slice(0,200)}</div>`;
     if (srcUrl)      h += `<a class="p-link" href="${srcUrl}" target="_blank">View event →</a>`;
+    if (venueUrl)    h += `<a class="p-link" href="${venueUrl}" target="_blank">Venue page →</a>`;
     if (tikUrl)      h += `<a class="p-link" href="${tikUrl}" target="_blank">Tickets →</a>`;
   }
   return h;

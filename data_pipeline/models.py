@@ -6,7 +6,8 @@ Sheet columns (order matches to_sheets_row):
 ID | Title | Date_Start | Hour_Start | Date_End | Hour_End |
 Venue | Room | Address | City | Lat | Lng |
 Genre | Price | Source_url | Tickets_url |
-Status | Description | Interested | Going | Geo_guess_address
+Status | Description | Interested | Going | Geo_guess_address | Venue_url |
+Source_type | Layer
 """
 
 from dataclasses import dataclass, field, asdict
@@ -51,6 +52,7 @@ class Event:
     source_type:        str   = ""
     source_name:        str   = ""
     source_url:         str   = ""
+    venue_url:          str   = ""   # set when FB+venue merged: holds the venue website link
     tickets_url:        str   = ""
 
     # Pipeline
@@ -80,7 +82,7 @@ class Event:
             return f"{d}.{m}.{y}"
 
         def _time(iso):
-            if not iso or len(iso) < 16: return ""
+            if not iso or len(iso) < 16: return "?"
             return iso[11:16]
 
         return [
@@ -104,7 +106,10 @@ class Event:
             self.description,
             self.interested,
             self.going,
-            self.geo_guess_address,   # column 21 — new
+            self.geo_guess_address,
+            self.venue_url,
+            self.source_type,
+            self.layer,
         ]
 
     @staticmethod
@@ -114,5 +119,5 @@ class Event:
             "Venue","Room","Address","City","Lat","Lng",
             "Genre","Price","Source_url","Tickets_url",
             "Status","Description","Interested","Going",
-            "Geo_guess_address",   # new column
+            "Geo_guess_address","Venue_url","Source_type","Layer",
         ]
