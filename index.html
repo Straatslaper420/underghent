@@ -377,6 +377,9 @@ let activeTile = 'event';
 let markers = L.markerClusterGroup({maxClusterRadius:50,chunkedLoading:true});
 map.addLayer(markers);
 
+let venueMarkers = L.layerGroup();
+venueMarkers.addTo(map);
+
 /* ── ENTRY ───────────────────────────────────────────────── */
 function enterMap() {
   document.getElementById('entry').classList.add('gone');
@@ -562,18 +565,54 @@ function renderEvents(events) {
   document.getElementById('counter').textContent = n+' events';
 }
 
+/* ── VENUE BUBBLES ───────────────────────────────────────── */
+async function loadVenues() {
+  try {
+    const r    = await fetch('config/venues.json');
+    const data = await r.json();
+    data.venues.forEach(v => {
+      if (!v.lat || !v.lng) return;
+      const circle = L.circleMarker([v.lat, v.lng], {
+        radius: 8, color: '#2b6b3d', fillColor: '#2b6b3d',
+        fillOpacity: 0.18, weight: 2,
+      });
+      let popup = `<div class="p-title">${v.canonical_name}</div>`;
+      if (v.address) popup += `<div class="p-line">${v.address}</div>`;
+      if (v.website) popup += `<a class="p-link" href="${v.website}" target="_blank">Website →</a>`;
+      circle.bindPopup(popup, {maxWidth:260});
+      venueMarkers.addLayer(circle);
+    });
+  } catch(e) {
+    console.error('Could not load venues.json', e);
+  }
+}
+
 /* ── LOAD ────────────────────────────────────────────────── */
 async function loadData() {
   try {
     const r   = await fetch(SHEET_CSV);
     const csv = await r.text();
     const p   = Papa.parse(csv,{header:true,skipEmptyLines:true});
-    allEvents = p.data.map(e=>({
-      ...e,
-      source_type: (e.source_type||e.Source_type||'facebook').toLowerCase(),
-      layer:       (e.layer||e.Layer||'review').toLowerCase(),
-      status:      (e.status||e.Status||'').toLowerCase(),
-    }));
+    allEvents = p.data.map(e=>{
+      const layer = (e.layer||e.Layer||'review').toLowerCase();
+      const rawSrc = (e.source_type||e.Source_type||'').toLowerCase().trim();
+      let source_type;
+      if (rawSrc) {
+        source_type = rawSrc;
+      } else if (layer === 'venue' || layer === 'venue_site') {
+        source_type = 'venue_site';
+      } else if (layer === 'collective') {
+        source_type = 'collective_site';
+      } else {
+        source_type = 'facebook';
+      }
+      return {
+        ...e,
+        source_type,
+        layer,
+        status: (e.status||e.Status||'').toLowerCase(),
+      };
+    });
     renderEvents(_filtered());
   } catch(e) {
     document.getElementById('counter').textContent='⚠ Could not load events';
@@ -582,6 +621,7 @@ async function loadData() {
 }
 
 loadData();
+loadVenues();
 </script>
 </body>
 </html>
