@@ -582,20 +582,8 @@ function _filtered() {
     // In event mode: show surface + review layer events
     // In under mode: show under + review layer events
     const layer = (ev.layer||ev.Layer||'review').toLowerCase();
-
-    // New logic for time-based filtering
-    // Check if event is between 19:55-23:59 and labeled "under"
-    const isLateNightUnderEvent = _isLateNightUnderEvent(ev);
-
-    // Surface events should not appear in underground layer
     if (mode === 'event' && layer === 'under') return false;
-    // In underground mode, only show under events or late night under events
-    if (mode === 'under' && layer === 'surface') {
-      // Allow late night under events in underground layer
-      if (!isLateNightUnderEvent) return false;
-    }
-    // In underground mode, show under events (including late night ones)
-    if (mode === 'under' && layer === 'under') return true;
+    if (mode === 'under' && layer === 'surface') return false;
 
     if (!activeSrcs.has(src)) return false;
 
@@ -744,28 +732,6 @@ function closeSidebar() {
   sidebarOpen = false;
 }
 
-/* ── Helper function to determine if an event is a late night "under" event ────────────────── */
-function _isLateNightUnderEvent(event) {
-  // Check if event is labeled as "under" layer and happens between 19:55-23:59
-  const layer = (event.layer||event.Layer||'review').toLowerCase();
-  const time = event.Hour_Start || (event.start_datetime || '').slice(11,16) || '';
-
-  // Check if it's an "under" event and happens in late evening
-  if (layer === 'under' && time) {
-    // Parse the time to check if it's in the late evening range (19:55-23:59)
-    const timeParts = time.split(':');
-    if (timeParts.length >= 2) {
-      const hour = parseInt(timeParts[0]);
-      const minute = parseInt(timeParts[1]);
-      // Check if time is between 19:55 and 23:59
-      if (hour >= 19 || (hour === 19 && minute >= 55) || hour >= 20 && hour <= 23) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
 /* ── VENUE BUBBLES ───────────────────────────────────────── */
 async function loadVenues() {
   try {
@@ -773,7 +739,7 @@ async function loadVenues() {
     const data = await r.json();
     data.venues.forEach(v => {
       if (!v.lat || !v.lng) return;
-      const abbr = getVenueInitials(v.canonical_name || '??');
+      const abbr = (v.canonical_name || '??').slice(0,2).toUpperCase();
       const icon = L.divIcon({
         html: `<div class="venue-bubble">${abbr}</div>`,
         className: '', iconSize: [32,32], iconAnchor: [16,16],
@@ -784,23 +750,6 @@ async function loadVenues() {
     });
   } catch(e) {
     console.error('Could not load venues.json', e);
-  }
-}
-
-/* ── Helper function to get venue initials ────────────────────────────────────────── */
-function getVenueInitials(name) {
-  if (!name || name === '??') return '??';
-
-  // Split the name into words and take the first letter of each significant word
-  const words = name.trim().split(/\s+/);
-  if (words.length === 1) {
-    // For single word names, return first 2 characters
-    return words[0].substring(0, 2).toUpperCase();
-  } else {
-    // For multi-word names, take first letter of first word and first letter of last word
-    const first = words[0].charAt(0).toUpperCase();
-    const last = words[words.length - 1].charAt(0).toUpperCase();
-    return first + last;
   }
 }
 
