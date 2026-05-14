@@ -321,9 +321,7 @@ body.under .sidebar-event-title {
   text-transform:uppercase; letter-spacing:0.03em;
 }
 .sidebar-event-meta { font-size:11px; color:var(--muted); margin-bottom:3px; }
-.sidebar-event-link {
-  font-size:11px; color:var(--accent); text-decoration:none;
-}
+.sidebar-event-link { font-size:11px; color:var(--accent); text-decoration:none; display:inline-block; margin-top:2px; }
 .sidebar-event-link:hover { text-decoration:underline; }
 
 /* ── ENTRY OVERLAY ──────────────────────────────────────────*/
@@ -432,7 +430,6 @@ const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQHer0RSLW98_
 /* ── STATE ───────────────────────────────────────────────── */
 let mode        = 'event';
 let allEvents   = [];
-// FIX: removed dead 'activeLayer' variable
 let activeSrcs  = new Set(['facebook','venue_site','collective_site']);
 let dateStart   = null, dateEnd = null;
 let portalsOpen = false;
@@ -509,7 +506,6 @@ function toggleSrc(s) {
 function applyFilters() {
   const s = document.getElementById('d0').value;
   const e = document.getElementById('d1').value;
-  // FIX: clear dates when inputs are empty, not just set them
   dateStart = s ? new Date(s+'T00:00:00') : null;
   dateEnd   = e ? new Date(e+'T23:59:59') : null;
   renderEvents(_filtered());
@@ -522,7 +518,6 @@ function resetFilter() {
   renderEvents(_filtered());
 }
 
-// FIX: helper to keep the date input fields in sync with JS state
 function _syncDateInputs() {
   const fmt = d => d.getFullYear()+'-'
     +String(d.getMonth()+1).padStart(2,'0')+'-'
@@ -535,7 +530,7 @@ function quickDate(offset) {
   const d = new Date(); d.setDate(d.getDate() + offset);
   dateStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   dateEnd   = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23,59,59);
-  _syncDateInputs(); // FIX: show the active date in the inputs
+  _syncDateInputs();
   renderEvents(_filtered());
 }
 
@@ -543,8 +538,6 @@ function thisWeekend() {
   const d   = new Date();
   const day = d.getDay(); // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
 
-  // FIX: find the correct Friday for the current weekend
-  // Fri(5)→0, Sat(6)→-1, Sun(0)→-2, Mon–Thu→days until next Fri
   let fridayOffset;
   if      (day === 5) fridayOffset = 0;
   else if (day === 6) fridayOffset = -1;
@@ -561,7 +554,7 @@ function thisWeekend() {
 
   dateStart = fri;
   dateEnd   = sun;
-  _syncDateInputs(); // FIX: show the active dates in the inputs
+  _syncDateInputs();
   renderEvents(_filtered());
 }
 
@@ -572,39 +565,45 @@ function _parseDate(s) {
   return null;
 }
 
+/* ── FILTER ──────────────────────────────────────────────── */
+/*
+  Layer logic:
+    event mode → show surface + review events only (NOT under)
+    under mode → show under events only (NOT surface, NOT review)
+
+  Surface events never appear in under mode.
+  Under events never appear in event mode.
+  Review events only appear in event mode (they're unclassified, leaning mainstream).
+*/
 function _filtered() {
   return allEvents.filter(ev => {
-    const status = (ev.Status||ev.status||'').toLowerCase().trim();
+    // Only show approved events on the map
+    const status = (ev.Status || ev.status || '').toLowerCase().trim();
     if (status !== 'approved') return false;
 
-    const src = (ev.source_type||ev.Source_type||'facebook').toLowerCase();
+    const layer = (ev.layer || ev.Layer || 'review').toLowerCase();
+    const src   = (ev.source_type || ev.Source_type || 'facebook').toLowerCase();
 
-    // In event mode: show surface + review layer events
-    // In under mode: show under + review layer events
-    const layer = (ev.layer||ev.Layer||'review').toLowerCase();
-
-    // New logic for time-based filtering
-    // Check if event is between 19:55-23:59 and labeled "under"
-    const isLateNightUnderEvent = _isLateNightUnderEvent(ev);
-
-    // Surface events should not appear in underground layer
-    if (mode === 'event' && layer === 'under') return false;
-    // In underground mode, only show under events or late night under events
-    if (mode === 'under' && layer === 'surface') {
-      // Allow late night under events in underground layer
-      if (!isLateNightUnderEvent) return false;
+    // Layer gating — clean and simple
+    if (mode === 'event') {
+      // event mode: surface and review visible, under hidden
+      if (layer === 'under') return false;
+    } else {
+      // under mode: only under visible, surface and review hidden
+      if (layer !== 'under') return false;
     }
-    // In underground mode, show under events (including late night ones)
-    if (mode === 'under' && layer === 'under') return true;
 
+    // Source toggle filter
     if (!activeSrcs.has(src)) return false;
 
+    // Date range filter
     if (dateStart || dateEnd) {
       const d = _parseDate(ev.Date_Start || ev.start_datetime);
       if (!d) return false;
       if (dateStart && d < dateStart) return false;
       if (dateEnd   && d > dateEnd)   return false;
     }
+
     return true;
   });
 }
@@ -688,6 +687,23 @@ function renderEvents(events) {
   document.getElementById('counter').textContent = n+' events';
 }
 
+/* ── VENUE INITIALS ──────────────────────────────────────── */
+/*
+  Rules for abbreviating venue names into 2-character bubble labels:
+  - Single word: first 2 chars  (e.g. "Charlatan" → "CH")
+  - Multiple words: first char of first + first char of last word
+    (e.g. "Minus One" → "MO", "De Centrale" → "DC")
+  All uppercase.
+*/
+function _venueInitials(name) {
+  if (!name || name === '??') return '??';
+  const words = name.trim().split(/\s+/);
+  if (words.length === 1) {
+    return words[0].substring(0, 2).toUpperCase();
+  }
+  return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
+}
+
 /* ── VENUE SIDEBAR ───────────────────────────────────────── */
 let sidebarOpen = false;
 
@@ -744,28 +760,6 @@ function closeSidebar() {
   sidebarOpen = false;
 }
 
-/* ── Helper function to determine if an event is a late night "under" event ────────────────── */
-function _isLateNightUnderEvent(event) {
-  // Check if event is labeled as "under" layer and happens between 19:55-23:59
-  const layer = (event.layer||event.Layer||'review').toLowerCase();
-  const time = event.Hour_Start || (event.start_datetime || '').slice(11,16) || '';
-
-  // Check if it's an "under" event and happens in late evening
-  if (layer === 'under' && time) {
-    // Parse the time to check if it's in the late evening range (19:55-23:59)
-    const timeParts = time.split(':');
-    if (timeParts.length >= 2) {
-      const hour = parseInt(timeParts[0]);
-      const minute = parseInt(timeParts[1]);
-      // Check if time is between 19:55 and 23:59
-      if (hour >= 19 || (hour === 19 && minute >= 55) || hour >= 20 && hour <= 23) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
 /* ── VENUE BUBBLES ───────────────────────────────────────── */
 async function loadVenues() {
   try {
@@ -773,7 +767,7 @@ async function loadVenues() {
     const data = await r.json();
     data.venues.forEach(v => {
       if (!v.lat || !v.lng) return;
-      const abbr = getVenueInitials(v.canonical_name || '??');
+      const abbr = _venueInitials(v.canonical_name || '??');
       const icon = L.divIcon({
         html: `<div class="venue-bubble">${abbr}</div>`,
         className: '', iconSize: [32,32], iconAnchor: [16,16],
@@ -787,32 +781,16 @@ async function loadVenues() {
   }
 }
 
-/* ── Helper function to get venue initials ────────────────────────────────────────── */
-function getVenueInitials(name) {
-  if (!name || name === '??') return '??';
-
-  // Split the name into words and take the first letter of each significant word
-  const words = name.trim().split(/\s+/);
-  if (words.length === 1) {
-    // For single word names, return first 2 characters
-    return words[0].substring(0, 2).toUpperCase();
-  } else {
-    // For multi-word names, take first letter of first word and first letter of last word
-    const first = words[0].charAt(0).toUpperCase();
-    const last = words[words.length - 1].charAt(0).toUpperCase();
-    return first + last;
-  }
-}
-
-/* ── LOAD ────────────────────────────────────────────────── */
+/* ── LOAD DATA FROM GOOGLE SHEETS ────────────────────────── */
 async function loadData() {
   try {
     const r   = await fetch(SHEET_CSV);
     const csv = await r.text();
     const p   = Papa.parse(csv,{header:true,skipEmptyLines:true});
-    allEvents = p.data.map(e=>{
-      const layer = (e.layer||e.Layer||'review').toLowerCase();
-      const rawSrc = (e.source_type||e.Source_type||'').toLowerCase().trim();
+    allEvents = p.data.map(e => {
+      const layer  = (e.layer || e.Layer || 'review').toLowerCase();
+      const rawSrc = (e.source_type || e.Source_type || '').toLowerCase().trim();
+      // Fallback: infer source_type from layer if not explicitly set
       let source_type;
       if (rawSrc) {
         source_type = rawSrc;
@@ -827,12 +805,12 @@ async function loadData() {
         ...e,
         source_type,
         layer,
-        status: (e.status||e.Status||'').toLowerCase(),
+        status: (e.status || e.Status || '').toLowerCase(),
       };
     });
     renderEvents(_filtered());
   } catch(e) {
-    document.getElementById('counter').textContent='⚠ Could not load events';
+    document.getElementById('counter').textContent = '⚠ Could not load events';
     console.error(e);
   }
 }
