@@ -2,17 +2,70 @@ Storage: Google Sheets  (Events / GeoReview / GeoFail tabs)
 
 ========================================
   Loading existing event IDs...
-  Events: 0  GeoReview: 0  GeoFail: 0
-  Loaded 106 venue coord references from Events sheet
-  Local venue cache: 108 venues
+  Events: 0  GeoReview: 39  GeoFail: 0
+  Loaded 132 venue coord references from Events sheet
+  Local venue cache: 134 venues
 
 ========================================
   UPDATING SOCIAL COUNTS (interested / going)
   [facebook] Collected social counts for 294 events
-  No social count changes detected
+  Updating 5 events with new social counts...
+  Updated 5 rows in GeoReview
 
 ========================================
   FACEBOOK INGESTION
+  [facebook] Processing fifth_batch (1).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (10).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (11).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (12).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (13).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (14).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (15).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (16).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (17).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (18).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (19).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (2).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (20).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (21).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (22).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (23).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (24).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (25).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (26).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (3).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (4).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (5).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (6).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (7).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (8).json
+    Found 0 raw events
+  [facebook] Processing fifth_batch (9).json
+    Found 0 raw events
   [facebook] Processing fourth_batch (1).json
     Found 2 raw events
   [facebook] Processing fourth_batch (10).json
@@ -103,8 +156,8 @@ Storage: Google Sheets  (Events / GeoReview / GeoFail tabs)
     Found 0 raw events
   [facebook] Processing thirdbatch (5).json
     Found 0 raw events
-  [facebook] Total new events: 294
-  [facebook] Geo: exact=364  geo_review=57  unresolved=0  (sum=421)
+  [facebook] Total new events: 255
+  [facebook] Geo: exact=387  geo_review=34  unresolved=0  (sum=421)
 
 ========================================
   VENUE WEBSITE INGESTION
@@ -130,7 +183,7 @@ Storage: Google Sheets  (Events / GeoReview / GeoFail tabs)
   [venue_ingest] Scraping BROEI → https://www.broei.be/agenda
     Found 97 events, 97 new
   [venue_ingest] Scraping Trefpunt → https://trefpunt.be/agenda/
-    Found 13 events, 13 new
+    Found 12 events, 12 new
   [venue_ingest] Scraping Kinky Star → https://kinkystar.com/programma
     Found 0 events, 0 new
   [venue_ingest] Scraping Copa DOK → https://www.copadok.be/line-up
@@ -149,37 +202,37 @@ Storage: Google Sheets  (Events / GeoReview / GeoFail tabs)
 
 ========================================
   DEDUPLICATION
-  Total raw new events: 508
-  approved=267  geo_review=39  pending=112  dups=3  geofail=0
+  Total raw new events: 468
+  approved=266  geo_review=1  pending=111  dups=3  geofail=0
 
 ========================================
   WRITING TO STORAGE
-    Wrote 382 rows to 'Events' in 1 API call
-    Wrote 39 rows to 'GeoReview' in 1 API call
-  Events: 382  GeoReview: 39  GeoFail: 0
+    Wrote 380 rows to 'Events' in 1 API call
+    Wrote 1 rows to 'GeoReview' in 1 API call
+  Events: 380  GeoReview: 1  GeoFail: 0
 
 ========================================
   EXPORTING JSON FILES
-  Wrote  505 events → output\events_master.json
-  Wrote  232 events → output\events_surface.json
+  Wrote  465 events → output\events_master.json
+  Wrote  231 events → output\events_surface.json
   Wrote   35 events → output\events_under.json
-  Wrote  151 events → output\events_review.json
+  Wrote  112 events → output\events_review.json
   Wrote   87 events → output\events_low_interest.json
-  Wrote   39 events → output\events_geofail.json
+  Wrote    1 events → output\events_geofail.json
 
-  [export] master=505  surface=232  under=35  review=151  low_interest=87  geofail=39
+  [export] master=465  surface=231  under=35  review=112  low_interest=87  geofail=1
 
 ========================================
-  Facebook:      294
-  Venue sites:   214
+  Facebook:      255
+  Venue sites:   213
   Collectives:   0
   Duplicates:    3
-  → Approved:    267
-  → GeoReview:   39  ← run geo_review_tool.py to fix these
-  → Pending:     112
+  → Approved:    266
+  → GeoReview:   1  ← run geo_review_tool.py to fix these
+  → Pending:     111
   → Low interest:87
   → GeoFail:     0
 
-  !! 39 events need location verification.
+  !! 1 events need location verification.
      Run: python geo_review_tool.py
 ========================================
