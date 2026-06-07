@@ -263,9 +263,29 @@ tooling/
 
 ## Notes
 
-- **Two separate git repos:** the outer `underghent_v2/` and the nested `frontline/`.
-- **`frontline/index.html`** (~43 KB) is the canonical frontend SPA. The root-level `index.html` has been removed.
-- **`pipeline/`** is the heart of the project — TypeScript, organized as: `commands/` (CLI) → `pipeline/` (stage logic) → `scrapers/` (per-source) → `lib/` (utilities) → `export/` (sinks).
-- **Scraper sources** fall into three categories: `agendas/` (iCal feeds), `aggregators/` (multi-venue sites, including Facebook via Apify), `venues/` (individual venue pages using Playwright or Cheerio).
-- **Score enricher removed:** `enrich-score.ts` command and `enrichers/score.ts` are gone; `config/scoring.json` has been replaced by `config/facebook.json` for the Facebook aggregator.
-- **Facebook scraper** is intentionally excluded from the main `npm run pipeline` chain — run `npm run scrape:facebook` separately since it depends on Apify and has different rate-limit characteristics.
+- **One git repo now:** everything lives under a single `underghent_v2/.git`.
+  The nested `frontline/.git` and the stray `frontline/frontline/` folder have
+  been removed. Aider is still scoped to *editing* only the `frontline/` folder,
+  but it no longer has its own repo — one history, one remote
+  (`Straatslaper420/underghent`), one `main` branch.
+- **Live site = root `index.html`, served by GitHub Pages from `main` root.**
+  Root `index.html` is the canonical *served* file. `frontline/index.html` holds
+  an identical copy and is the working file for frontend edits; the two are kept
+  in sync manually for now (a Pages deploy Action to auto-publish `frontline/`
+  is still pending). ~43 KB single-file SPA either way.
+- **Secrets excluded from the repo:** a root `.gitignore` keeps
+  `credentials.json` and `.env` out of git. `underghent_agent.py` was removed
+  (it held a hardcoded OpenRouter key); it still exists in the local backup zip
+  if ever needed.
+- **`pipeline/`** is the heart of the project — TypeScript, organized as:
+  `commands/` (CLI) → `pipeline/` (stage logic) → `scrapers/` (per-source) →
+  `lib/` (utilities) → `export/` (sinks).
+- **Scraper sources** fall into three categories: `agendas/` (iCal feeds),
+  `aggregators/` (multi-venue sites, including Facebook via Apify), `venues/`
+  (individual venue pages using Playwright or Cheerio).
+- **Score enricher removed:** `enrich-score.ts` command and `enrichers/score.ts`
+  are gone; `config/scoring.json` has been replaced by `config/facebook.json`
+  for the Facebook aggregator.
+- **Facebook scraper** is intentionally excluded from the main `npm run pipeline`
+  chain — run `npm run scrape:facebook` separately since it depends on Apify and
+  has different rate-limit characteristics.
