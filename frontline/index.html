@@ -739,6 +739,12 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQHer0RSLW98_1WHGS-6y8JB38ClUC9MmM6bxtKrdkv2MOG5cmYI8T2ghl9uSxNEn7ichRihuLWPmHN/pub?output=csv';
 
+// Facebook events live in a separate "fb_events" tab of the SAME published workbook.
+// Put that tab's gid below (Sheets → File → Share → Publish to web → pick "fb_events",
+// or copy the gid=NNN number from the tab's URL). These rows feed the FB filter only.
+const FB_EVENTS_GID = '1095868420'; // fb_events tab
+const FB_CSV = SHEET_CSV + '&gid=' + FB_EVENTS_GID;
+
 /* ── URGENT.FM WEEKLY SCHEDULE ─────────────────────────────── */
 // day index: 0=Sun,1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat
 // slots: [startHour, "Show Name"]
@@ -1166,25 +1172,38 @@ function renderEvents(events) {
 }
 
 /* ── LOAD DATA ─────────────────────────────────────────────── */
+async function _fetchSheet(url) {
+  const r   = await fetch(url);
+  const csv = await r.text();
+  return Papa.parse(csv, {header:true, skipEmptyLines:true}).data;
+}
+
+function _normRow(e, source_type) {
+  return {
+    ...e,
+    source_type,
+    layer:  'review',
+    status: (e.status || '').toLowerCase().trim(),
+  };
+}
+
 async function loadData() {
   try {
-    const r   = await fetch(SHEET_CSV);
-    const csv = await r.text();
-    const p   = Papa.parse(csv, {header:true, skipEmptyLines:true});
-    allEvents = p.data.map(e => {
-      const aggId      = (e.aggregator_id || '').trim();
-      const collective = (e.collective    || '').trim();
-      let source_type;
-      if (collective)  source_type = 'collective_site';
-      else if (!aggId) source_type = 'venue_site';
-      else             source_type = 'facebook';
-      return {
-        ...e,
-        source_type,
-        layer:  'review',
-        status: (e.status || '').toLowerCase().trim(),
-      };
+    // Main "Events" tab = venue + collective sources.
+    // Facebook events come exclusively from the separate "fb_events" tab,
+    // and feed the FB filter (source_type === 'facebook').
+    const [mainRows, fbRows] = await Promise.all([
+      _fetchSheet(SHEET_CSV),
+      _fetchSheet(FB_CSV),
+    ]);
+
+    const mainEvents = mainRows.map(e => {
+      const collective = (e.collective || '').trim();
+      return _normRow(e, collective ? 'collective_site' : 'venue_site');
     });
+    const fbEvents = fbRows.map(e => _normRow(e, 'facebook'));
+
+    allEvents = [...mainEvents, ...fbEvents];
     renderEvents(_filtered());
   } catch(err) {
     document.getElementById('sig-top').textContent = '[ ERROR ]';
