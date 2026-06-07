@@ -1,0 +1,10 @@
+node_modules/
+dist/
+data/raw/
+data/canonical.json
+data/events.json
+data/review-queue.json
+config/credentials.json
+.env
+*.log
+*.tmp

@@ -1,0 +1,96 @@
+<!doctype html>
+<!--
+  Frontend baseline — open this in a browser (or have Odysseus browser MCP load it)
+  and it loads frontline/index.html in an iframe + Performance API + records:
+    DOMContentLoaded, load, JS heap size, # of events rendered, time-to-interactive proxy.
+  Writes a JSON blob you can download or scrape via console.
+-->
+<meta charset="utf-8" />
+<title>underghent frontend timing</title>
+<style>
+  body { font: 14px/1.5 ui-monospace, monospace; padding: 1rem; }
+  pre { background: #111; color: #0f0; padding: 1rem; overflow: auto; }
+  iframe { width: 100%; height: 60vh; border: 1px solid #444; }
+  button { padding: .5rem 1rem; margin-right: .5rem; }
+</style>
+
+<h1>Frontline timing harness</h1>
+<p>
+  <button onclick="run()">Run measurement</button>
+  <button onclick="copyJson()">Copy JSON</button>
+  <button onclick="downloadJson()">Download JSON</button>
+</p>
+<pre id="out">click "Run measurement"…</pre>
+<iframe id="frame" src="about:blank"></iframe>
+
+<script>
+let lastResult = null
+
+async function run() {
+  const out = document.getElementById('out')
+  const frame = document.getElementById('frame')
+  const targetUrl = '../frontline/index.html'
+
+  out.textContent = 'loading…'
+  const t0 = performance.now()
+  frame.src = targetUrl
+
+  await new Promise(res => frame.addEventListener('load', res, { once: true }))
+  const tLoad = performance.now() - t0
+
+  // Give the page a tick to settle, then sample
+  await new Promise(r => setTimeout(r, 500))
+
+  const win = frame.contentWindow
+  const doc = frame.contentDocument
+  const perf = win.performance
+  const nav  = perf.getEntriesByType('navigation')[0] || {}
+  const res  = perf.getEntriesByType('resource').map(r => ({
+    name: r.name.split('/').pop(),
+    duration: Math.round(r.duration),
+    transferSize: r.transferSize,
+  }))
+
+  // Heuristic: how many event cards are in the DOM
+  const eventNodes = doc.querySelectorAll('[data-event-id], .event, .event-card, li[data-id]').length
+
+  // JS heap (Chromium only)
+  const heap = win.performance.memory ? {
+    usedMb: Math.round(win.performance.memory.usedJSHeapSize / 1024 / 1024),
+    totalMb: Math.round(win.performance.memory.totalJSHeapSize / 1024 / 1024),
+  } : null
+
+  lastResult = {
+    generatedAt: new Date().toISOString(),
+    url: targetUrl,
+    iframeLoadMs: Math.round(tLoad),
+    navigationTiming: {
+      domContentLoadedMs: Math.round(nav.domContentLoadedEventEnd ?? 0),
+      loadMs: Math.round(nav.loadEventEnd ?? 0),
+      transferSize: nav.transferSize ?? null,
+    },
+    domNodes: doc.getElementsByTagName('*').length,
+    eventNodesGuess: eventNodes,
+    heap,
+    resources: res,
+    slowestResources: [...res].sort((a, b) => b.duration - a.duration).slice(0, 10),
+    heaviestResources: [...res].sort((a, b) => (b.transferSize || 0) - (a.transferSize || 0)).slice(0, 10),
+  }
+
+  out.textContent = JSON.stringify(lastResult, null, 2)
+}
+
+function copyJson() {
+  if (!lastResult) return
+  navigator.clipboard.writeText(JSON.stringify(lastResult, null, 2))
+}
+
+function downloadJson() {
+  if (!lastResult) return
+  const blob = new Blob([JSON.stringify(lastResult, null, 2)], { type: 'application/json' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = 'frontend-baseline.json'
+  a.click()
+}
+</script>

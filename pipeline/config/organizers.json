@@ -1,0 +1,18 @@
+{
+  "organizers": [
+    {
+      "id": "acidica",
+      "name": "Acidica",
+      "aliases": ["acidica"],
+      "genres": ["acid", "techno"],
+      "weight": -0.3
+    },
+    {
+      "id": "africa_unite",
+      "name": "Africa Unite",
+      "aliases": ["africa unite", "africaunite"],
+      "genres": ["reggae", "dub", "roots"],
+      "weight": -0.3
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+# Secrets — never commit
+credentials.json
+.env
+
+# Deps & caches
+node_modules/
+__pycache__/
+*.pyc
+
+# Agent caches
+.aider*
+.claude/
+.claire/

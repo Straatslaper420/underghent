@@ -1,0 +1,2750 @@
+{
+  "stopwords": [
+    "dub",
+    "trap",
+    "electro",
+    "core",
+    "rave",
+    "wave",
+    "bass",
+    "edm",
+    "raw",
+    "go",
+    "acid",
+    "tek"
+  ],
+  "genres": [
+    {
+      "id": "inl",
+      "label": "Industrial & Gothic",
+      "parent": null,
+      "keywords": [
+        "industrial",
+        "gothic"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "met",
+      "label": "Heavy Metal",
+      "parent": null,
+      "keywords": [
+        "heavy metal"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "rnr",
+      "label": "Rock 'n' Roll (R'n'r)",
+      "parent": null,
+      "keywords": [
+        "rock n roll"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "gld",
+      "label": "Golden Age / Classic Rock",
+      "parent": null,
+      "keywords": [
+        "golden age",
+        "classic rock"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "pwv",
+      "label": "Punk Rock / New Wave",
+      "parent": null,
+      "keywords": [
+        "punk rock",
+        "new wave"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "hcp",
+      "label": "Hardcore Punk",
+      "parent": null,
+      "keywords": [
+        "hardcore punk"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "alt",
+      "label": "Alternative Rock / Indie",
+      "parent": null,
+      "keywords": [
+        "alternative rock",
+        "indie"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "con",
+      "label": "Contemporary Rock",
+      "parent": null,
+      "keywords": [
+        "contemporary rock"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "pop",
+      "label": "Pop Music",
+      "parent": null,
+      "keywords": [
+        "pop music"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "cou",
+      "label": "Country",
+      "parent": null,
+      "keywords": [
+        "country"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "rnb",
+      "label": "Rhythm 'n' Blues (R&b)",
+      "parent": null,
+      "keywords": [
+        "rhythm n blues",
+        "rnb",
+        "r b"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "gos",
+      "label": "Gospel & Pioneers",
+      "parent": null,
+      "keywords": [
+        "gospel",
+        "pioneers"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "blu",
+      "label": "Blues",
+      "parent": null,
+      "keywords": [
+        "blues"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "jaz",
+      "label": "Jazz",
+      "parent": null,
+      "keywords": [
+        "jazz"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "jam",
+      "label": "Jamaican (Music) / Reggae",
+      "parent": null,
+      "keywords": [
+        "jamaican",
+        "reggae"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "rap",
+      "label": "Rap / Hip-Hop Music",
+      "parent": null,
+      "keywords": [
+        "rap",
+        "hip hop music"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "brb",
+      "label": "Breakbeat",
+      "parent": null,
+      "keywords": [
+        "breakbeat"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dnb",
+      "label": "Drum 'n' Bass (D'n'b) / Jungle",
+      "parent": null,
+      "keywords": [
+        "drum n bass",
+        "jungle",
+        "dnb",
+        "d b",
+        "drum and bass"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "hct",
+      "label": "Hardcore Techno",
+      "parent": null,
+      "keywords": [
+        "hardcore techno"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "tec",
+      "label": "Techno",
+      "parent": null,
+      "keywords": [
+        "techno",
+        "acid techno",
+        "dub techno",
+        "psychedelic techno",
+        "trance techno"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "hou",
+      "label": "House",
+      "parent": null,
+      "keywords": [
+        "house"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "tra",
+      "label": "Trance",
+      "parent": null,
+      "keywords": [
+        "trance"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dtp",
+      "label": "Downtempo / Ambient",
+      "parent": null,
+      "keywords": [
+        "downtempo",
+        "ambient"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "alt01",
+      "label": "Jangle Pop / Indie Rock (& Paisley Underground)",
+      "parent": "alt",
+      "keywords": [
+        "jangle pop",
+        "indie rock"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "alt02",
+      "label": "Noise Rock",
+      "parent": "alt",
+      "keywords": [
+        "noise rock"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "alt03",
+      "label": "Dream Pop & Shoegaze",
+      "parent": "alt",
+      "keywords": [
+        "dream pop",
+        "shoegaze"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "alt04",
+      "label": "Grunge",
+      "parent": "alt",
+      "keywords": [
+        "grunge"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "alt05",
+      "label": "Rap Rock, Rapcore & Funk Metal",
+      "parent": "alt",
+      "keywords": [
+        "rap rock rapcore",
+        "funk metal"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "alt06",
+      "label": "Skate Punk & Pop Punk",
+      "parent": "alt",
+      "keywords": [
+        "skate punk",
+        "pop punk"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "alt07",
+      "label": "Alternative Rock / Indie Ii",
+      "parent": "alt",
+      "keywords": [
+        "alternative rock",
+        "indie ii"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "alt08",
+      "label": "Post-Grunge",
+      "parent": "alt",
+      "keywords": [
+        "post grunge"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "alt09",
+      "label": "Post-Rock",
+      "parent": "alt",
+      "keywords": [
+        "post rock"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "blu01",
+      "label": "Country Blues / Folk Blues (& Delta Blues)",
+      "parent": "blu",
+      "keywords": [
+        "country blues",
+        "folk blues"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "blu02",
+      "label": "Vaudeville / Classic Blues",
+      "parent": "blu",
+      "keywords": [
+        "vaudeville",
+        "classic blues"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "blu03",
+      "label": "Boogie Woogie / Piano Blues",
+      "parent": "blu",
+      "keywords": [
+        "boogie woogie",
+        "piano blues"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "blu04",
+      "label": "(Electric) Texas Blues",
+      "parent": "blu",
+      "keywords": [
+        "texas blues"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "blu05",
+      "label": "Jump Blues",
+      "parent": "blu",
+      "keywords": [
+        "jump blues"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "blu06",
+      "label": "Chicago Blues / City Blues / Urban Blues",
+      "parent": "blu",
+      "keywords": [
+        "chicago blues",
+        "city blues",
+        "urban blues"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "blu07",
+      "label": "West Coast Blues",
+      "parent": "blu",
+      "keywords": [
+        "west coast blues"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "blu08",
+      "label": "Louisiana Blues / Swamp Blues",
+      "parent": "blu",
+      "keywords": [
+        "louisiana blues",
+        "swamp blues"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "blu09",
+      "label": "British Blues & Blues Rock",
+      "parent": "blu",
+      "keywords": [
+        "british blues",
+        "blues rock"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "blu10",
+      "label": "Texas Bluesrock & Modern Electric Blues",
+      "parent": "blu",
+      "keywords": [
+        "texas bluesrock",
+        "modern electric blues"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "blu11",
+      "label": "Soul Blues (Southern Soul Ii)",
+      "parent": "blu",
+      "keywords": [
+        "soul blues"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "blu12",
+      "label": "Hill Country Blues & Trance Blues",
+      "parent": "blu",
+      "keywords": [
+        "hill country blues",
+        "trance blues"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "brb01",
+      "label": "Electro",
+      "parent": "brb",
+      "keywords": [],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "brb02",
+      "label": "Freestyle & Breakdance",
+      "parent": "brb",
+      "keywords": [
+        "freestyle",
+        "breakdance"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "brb03",
+      "label": "Florida Breaks (& Funky Breaks)",
+      "parent": "brb",
+      "keywords": [
+        "florida breaks"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "brb04",
+      "label": "Trip Hop",
+      "parent": "brb",
+      "keywords": [
+        "trip hop"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "brb05",
+      "label": "Chemical Breaks & Big Beat",
+      "parent": "brb",
+      "keywords": [
+        "chemical breaks",
+        "big beat"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "brb06",
+      "label": "UK Garage (2-Step & Speed Garage)",
+      "parent": "brb",
+      "keywords": [
+        "uk garage"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "brb07",
+      "label": "Nu Skool Breaks",
+      "parent": "brb",
+      "keywords": [
+        "nu skool breaks"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "brb08",
+      "label": "Broken Beats",
+      "parent": "brb",
+      "keywords": [
+        "broken beats"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "brb09",
+      "label": "Breakbeat Garage & Grime",
+      "parent": "brb",
+      "keywords": [
+        "breakbeat garage"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "brb10",
+      "label": "Bassline & UK Funky",
+      "parent": "brb",
+      "keywords": [
+        "bassline",
+        "uk funky"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "brb11",
+      "label": "Edm Trap / Trapstep",
+      "parent": "brb",
+      "keywords": [
+        "edm trap",
+        "trapstep"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "con01",
+      "label": "Post-Britpop",
+      "parent": "con",
+      "keywords": [
+        "post britpop"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "con02",
+      "label": "Emo-Rock",
+      "parent": "con",
+      "keywords": [
+        "emo rock"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "con03",
+      "label": "Garage & Post-Punk Revivals / Nu-Rawk",
+      "parent": "con",
+      "keywords": [
+        "post punk revivals",
+        "nu rawk"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "con04",
+      "label": "New Prog / Nu Prog / Post Prog (Rock)",
+      "parent": "con",
+      "keywords": [
+        "new prog",
+        "nu prog",
+        "post prog"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "con05",
+      "label": "Indietronica & Chillwave",
+      "parent": "con",
+      "keywords": [
+        "indietronica",
+        "chillwave"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "con06",
+      "label": "Dance-Punk & Nu Rave",
+      "parent": "con",
+      "keywords": [
+        "dance punk",
+        "nu rave"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "con07",
+      "label": "Indie Folk & Freakfolk / New Weird America",
+      "parent": "con",
+      "keywords": [
+        "indie folk",
+        "freakfolk",
+        "new weird america"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "cou01",
+      "label": "Classic Country / Hillbilly",
+      "parent": "cou",
+      "keywords": [
+        "classic country",
+        "hillbilly"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "cou02",
+      "label": "Western Swing",
+      "parent": "cou",
+      "keywords": [
+        "western swing"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "cou03",
+      "label": "Honky Tonk / Hardcore Country",
+      "parent": "cou",
+      "keywords": [
+        "honky tonk",
+        "hardcore country"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "cou04",
+      "label": "Bluegrass",
+      "parent": "cou",
+      "keywords": [
+        "bluegrass"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "cou05",
+      "label": "Bakersfield",
+      "parent": "cou",
+      "keywords": [
+        "bakersfield"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "cou06",
+      "label": "Nashville / Countrypolitan",
+      "parent": "cou",
+      "keywords": [
+        "nashville",
+        "countrypolitan"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "cou07",
+      "label": "Country Pop & Country Rock",
+      "parent": "cou",
+      "keywords": [
+        "country pop",
+        "country rock"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "cou08",
+      "label": "Progressive Country & Outlaw Country",
+      "parent": "cou",
+      "keywords": [
+        "progressive country",
+        "outlaw country"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "cou09",
+      "label": "Urban Country",
+      "parent": "cou",
+      "keywords": [
+        "urban country"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "cou10",
+      "label": "Contemporary Country / Neotraditionalists",
+      "parent": "cou",
+      "keywords": [
+        "contemporary country",
+        "neotraditionalists"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "cou11",
+      "label": "Americana / Alternative Country",
+      "parent": "cou",
+      "keywords": [
+        "americana",
+        "alternative country"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "dnb01",
+      "label": "Old Skool Jungle & Old Skool Drum 'n' Bass",
+      "parent": "dnb",
+      "keywords": [
+        "old skool jungle",
+        "old skool drum n bass"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dnb02",
+      "label": "Darkcore & Darkstep",
+      "parent": "dnb",
+      "keywords": [
+        "darkcore",
+        "darkstep"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dnb03",
+      "label": "Hardstep & Techstep",
+      "parent": "dnb",
+      "keywords": [
+        "hardstep",
+        "techstep"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dnb04",
+      "label": "Jump Up",
+      "parent": "dnb",
+      "keywords": [
+        "jump up"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dnb05",
+      "label": "Intelligent / Ambient Drum 'n' Bass & Jazzstep",
+      "parent": "dnb",
+      "keywords": [
+        "intelligent",
+        "ambient drum n bass",
+        "jazzstep"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dnb06",
+      "label": "Neurofunk",
+      "parent": "dnb",
+      "keywords": [
+        "neurofunk"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dnb07",
+      "label": "Liquid Funk",
+      "parent": "dnb",
+      "keywords": [
+        "liquid funk"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dnb08",
+      "label": "Dubstep",
+      "parent": "dnb",
+      "keywords": [
+        "dubstep"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dnb09",
+      "label": "Post-Dubstep",
+      "parent": "dnb",
+      "keywords": [
+        "post dubstep"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dnb10",
+      "label": "Future Bass / Future Garage",
+      "parent": "dnb",
+      "keywords": [
+        "future bass",
+        "future garage"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dtp01",
+      "label": "Musique Concrete",
+      "parent": "dtp",
+      "keywords": [
+        "musique concrete"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dtp02",
+      "label": "Lounge / Exotica / Space Age Pop",
+      "parent": "dtp",
+      "keywords": [
+        "lounge",
+        "exotica",
+        "space age pop"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dtp03",
+      "label": "Minimalism",
+      "parent": "dtp",
+      "keywords": [
+        "minimalism"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dtp04",
+      "label": "Muzak / Elevator Music",
+      "parent": "dtp",
+      "keywords": [
+        "muzak",
+        "elevator music"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dtp05",
+      "label": "Synth / Electronica",
+      "parent": "dtp",
+      "keywords": [
+        "synth",
+        "electronica"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dtp06",
+      "label": "Ambient",
+      "parent": "dtp",
+      "keywords": [],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dtp07",
+      "label": "Bit Music / VGM (Chiptune & 8-Bit)",
+      "parent": "dtp",
+      "keywords": [
+        "bit music",
+        "vgm"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dtp08",
+      "label": "New Age",
+      "parent": "dtp",
+      "keywords": [
+        "new age"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dtp09",
+      "label": "Ambient House / Chill-Out",
+      "parent": "dtp",
+      "keywords": [
+        "ambient house",
+        "chill out"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dtp11",
+      "label": "Ambient Breaks & Illbient",
+      "parent": "dtp",
+      "keywords": [
+        "ambient breaks",
+        "illbient"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dtp12",
+      "label": "Glitch / Clicks 'n' Cuts",
+      "parent": "dtp",
+      "keywords": [
+        "glitch",
+        "clicks n cuts"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dtp13",
+      "label": "Digital Minimalism / Lowercase",
+      "parent": "dtp",
+      "keywords": [
+        "digital minimalism",
+        "lowercase"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "dtp14",
+      "label": "Synthwave & Vaporwave",
+      "parent": "dtp",
+      "keywords": [
+        "synthwave",
+        "vaporwave"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "gld01",
+      "label": "(Mersey)beat / British Invasion",
+      "parent": "gld",
+      "keywords": [
+        "british invasion"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "gld02",
+      "label": "Folk Rock",
+      "parent": "gld",
+      "keywords": [
+        "folk rock"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "gld03",
+      "label": "Psychedelic / Acid Rock & Psychedelia",
+      "parent": "gld",
+      "keywords": [
+        "psychedelic",
+        "acid rock",
+        "psychedelia"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "gld04",
+      "label": "Hard Rock",
+      "parent": "gld",
+      "keywords": [
+        "hard rock"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "gld05",
+      "label": "Progressive Rock, Art Rock & Symphonic Rock",
+      "parent": "gld",
+      "keywords": [
+        "progressive rock art rock",
+        "symphonic rock"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "gld06",
+      "label": "Glam Rock / Glitter Rock / Shock Rock",
+      "parent": "gld",
+      "keywords": [
+        "glam rock",
+        "glitter rock",
+        "shock rock"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "gld07",
+      "label": "Southern Rock",
+      "parent": "gld",
+      "keywords": [
+        "southern rock"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "gld08",
+      "label": "Heartland Rock & A.O.R. (Adult Oriented Rock)",
+      "parent": "gld",
+      "keywords": [
+        "heartland rock"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "gos01",
+      "label": "(Negro) Spirituals & Worksongs",
+      "parent": "gos",
+      "keywords": [
+        "spirituals",
+        "worksongs"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "gos02",
+      "label": "Traditional Gospel",
+      "parent": "gos",
+      "keywords": [
+        "traditional gospel"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "gos03",
+      "label": "Ragtime & Stride",
+      "parent": "gos",
+      "keywords": [
+        "ragtime",
+        "stride"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "gos04",
+      "label": "Modern Gospel",
+      "parent": "gos",
+      "keywords": [
+        "modern gospel"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "gos05",
+      "label": "Relipop & -Rock / CCM (Contemporary Christian Music)",
+      "parent": "gos",
+      "keywords": [
+        "relipop",
+        "ccm"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "hcp01",
+      "label": "Original Hardcore (Punk)",
+      "parent": "hcp",
+      "keywords": [
+        "original hardcore"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "hcp02",
+      "label": "Crossover Thrash",
+      "parent": "hcp",
+      "keywords": [
+        "crossover thrash"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "hcp03",
+      "label": "Grindcore",
+      "parent": "hcp",
+      "keywords": [
+        "grindcore"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "hcp04",
+      "label": "Post-Hardcore, Emo(core) & Screamo",
+      "parent": "hcp",
+      "keywords": [
+        "post hardcore emo"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "hcp05",
+      "label": "Math Rock & Mathcore",
+      "parent": "hcp",
+      "keywords": [
+        "math rock",
+        "mathcore"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "hcp06",
+      "label": "Metalcore / NWOAHM (New Wave Of American Heavy Metal)",
+      "parent": "hcp",
+      "keywords": [
+        "metalcore",
+        "nwoahm"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "hcp07",
+      "label": "Synthcore & Crunkcore",
+      "parent": "hcp",
+      "keywords": [
+        "synthcore",
+        "crunkcore"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "hct01",
+      "label": "New Beat",
+      "parent": "hct",
+      "keywords": [
+        "new beat"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "hct02",
+      "label": "Hardcore Techno / Rave",
+      "parent": "hct",
+      "keywords": [
+        "hardcore techno"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "hct03",
+      "label": "Breakbeat Hardcore (Rave Ii)",
+      "parent": "hct",
+      "keywords": [
+        "breakbeat hardcore"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "hct04",
+      "label": "(Early) Gabber",
+      "parent": "hct",
+      "keywords": [
+        "gabber"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "hct05",
+      "label": "Happy Hardcore & Bouncy Techno",
+      "parent": "hct",
+      "keywords": [
+        "happy hardcore",
+        "bouncy techno"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "hct06",
+      "label": "Speedcore, Frenchcore & Terrorcore",
+      "parent": "hct",
+      "keywords": [
+        "speedcore frenchcore",
+        "terrorcore"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "hct07",
+      "label": "Digital Hardcore & Breakcore",
+      "parent": "hct",
+      "keywords": [
+        "digital hardcore",
+        "breakcore"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "hct08",
+      "label": "UK Hardcore & Freeform / Trancecore & Acidcore",
+      "parent": "hct",
+      "keywords": [
+        "uk hardcore",
+        "freeform",
+        "trancecore",
+        "acidcore"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "hct09",
+      "label": "Hardstyle (& Jumpstyle)",
+      "parent": "hct",
+      "keywords": [
+        "hardstyle"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "hct10",
+      "label": "Nu Style (Gabber) / Mainstream Hardcore",
+      "parent": "hct",
+      "keywords": [
+        "nu style",
+        "mainstream hardcore"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "hou01",
+      "label": "Chicago House & Garage House",
+      "parent": "hou",
+      "keywords": [
+        "chicago house",
+        "garage house"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "hou02",
+      "label": "Acid House",
+      "parent": "hou",
+      "keywords": [
+        "acid house"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "hou03",
+      "label": "Hip House & Eurodance",
+      "parent": "hou",
+      "keywords": [
+        "hip house",
+        "eurodance"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "hou04",
+      "label": "Deep House",
+      "parent": "hou",
+      "keywords": [
+        "deep house"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "hou05",
+      "label": "Nrg, Hard NRG & (Uk) Hard House",
+      "parent": "hou",
+      "keywords": [
+        "nrg hard nrg",
+        "hard house"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "hou06",
+      "label": "French House & Funky House",
+      "parent": "hou",
+      "keywords": [
+        "french house",
+        "funky house"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "hou07",
+      "label": "Microhouse / Minimal House",
+      "parent": "hou",
+      "keywords": [
+        "microhouse",
+        "minimal house"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "hou08",
+      "label": "Ghetto House, Ghettotech & Juke",
+      "parent": "hou",
+      "keywords": [
+        "ghetto house ghettotech"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "hou09",
+      "label": "Electro House & Dutch House",
+      "parent": "hou",
+      "keywords": [
+        "electro house",
+        "dutch house"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "hou10",
+      "label": "Fidget House & Complextro",
+      "parent": "hou",
+      "keywords": [
+        "fidget house",
+        "complextro"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "hou11",
+      "label": "Moombahton",
+      "parent": "hou",
+      "keywords": [
+        "moombahton"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "hou12",
+      "label": "Progressive House",
+      "parent": "hou",
+      "keywords": [
+        "progressive house"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "inl01",
+      "label": "Krautrock",
+      "parent": "inl",
+      "keywords": [
+        "krautrock"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "inl02",
+      "label": "(Avant-Garde) Industrial",
+      "parent": "inl",
+      "keywords": [
+        "industrial"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "inl03",
+      "label": "Gothic Rock & Deathrock",
+      "parent": "inl",
+      "keywords": [
+        "gothic rock",
+        "deathrock"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "inl04",
+      "label": "Electronic Body Music",
+      "parent": "inl",
+      "keywords": [
+        "electronic body music"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "inl05",
+      "label": "Noise Music",
+      "parent": "inl",
+      "keywords": [
+        "noise music"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "inl06",
+      "label": "Dark Ambient / Dark Industrial",
+      "parent": "inl",
+      "keywords": [
+        "dark ambient",
+        "dark industrial"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "inl07",
+      "label": "Darkwave & Coldwave",
+      "parent": "inl",
+      "keywords": [
+        "darkwave",
+        "coldwave"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "inl08",
+      "label": "Industrial Rock / Industrial Metal",
+      "parent": "inl",
+      "keywords": [
+        "industrial rock",
+        "industrial metal"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "inl09",
+      "label": "Electro-Industrial / Aggreppo",
+      "parent": "inl",
+      "keywords": [
+        "electro industrial",
+        "aggreppo"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "inl10",
+      "label": "Futurepop",
+      "parent": "inl",
+      "keywords": [
+        "futurepop"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "inl11",
+      "label": "Minimal Wave / Synth & Minimal Industrial (Revival)",
+      "parent": "inl",
+      "keywords": [
+        "minimal wave",
+        "synth",
+        "minimal industrial"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "jam01",
+      "label": "Mento",
+      "parent": "jam",
+      "keywords": [
+        "mento"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "jam02",
+      "label": "Ska",
+      "parent": "jam",
+      "keywords": [
+        "ska"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "jam03",
+      "label": "Rocksteady",
+      "parent": "jam",
+      "keywords": [
+        "rocksteady"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "jam04",
+      "label": "(Roots) Reggae",
+      "parent": "jam",
+      "keywords": [
+        "roots reggae"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "jam05",
+      "label": "Dub",
+      "parent": "jam",
+      "keywords": [],
+      "weight": 3,
+      "aliases": [
+        "dub reggae",
+        "dub soundsystem",
+        "dub sound system",
+        "steppers",
+        "king tubby",
+        "roots dub",
+        "stepping",
+        "steppa",
+        "kingstep",
+        "dub circus",
+        "rockers"
+      ]
+    },
+    {
+      "id": "jam06",
+      "label": "Lover's Rock & UK Reggae",
+      "parent": "jam",
+      "keywords": [
+        "lover s rock",
+        "uk reggae"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "jam07",
+      "label": "Ska Revival (2-Tone), Ska Punk & Skacore",
+      "parent": "jam",
+      "keywords": [
+        "ska revival ska punk",
+        "skacore"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "jam08",
+      "label": "Dancehall",
+      "parent": "jam",
+      "keywords": [
+        "dancehall"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "jam09",
+      "label": "Ragga",
+      "parent": "jam",
+      "keywords": [
+        "ragga"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "jam10",
+      "label": "Reggae Fusion & Bhangramuffin",
+      "parent": "jam",
+      "keywords": [
+        "reggae fusion",
+        "bhangramuffin"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "jam11",
+      "label": "Reggaetón & Latin Rap",
+      "parent": "jam",
+      "keywords": [
+        "reggaeton",
+        "latin rap"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "jaz01",
+      "label": "New Orleans Jazz & Dixieland Jazz",
+      "parent": "jaz",
+      "keywords": [
+        "new orleans jazz",
+        "dixieland jazz"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "jaz02",
+      "label": "Chicago Jazz",
+      "parent": "jaz",
+      "keywords": [
+        "chicago jazz"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "jaz03",
+      "label": "Swing / Big Band",
+      "parent": "jaz",
+      "keywords": [
+        "big band"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "jaz04",
+      "label": "Third Stream / Progressive Jazz & Modal Jazz",
+      "parent": "jaz",
+      "keywords": [
+        "third stream",
+        "progressive jazz",
+        "modal jazz"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "jaz05",
+      "label": "New Orleans & Dixieland Jazz Revivals",
+      "parent": "jaz",
+      "keywords": [
+        "new orleans",
+        "dixieland jazz revivals"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "jaz06",
+      "label": "Bebop",
+      "parent": "jaz",
+      "keywords": [
+        "bebop"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "jaz07",
+      "label": "Cool Jazz & West Coast Jazz",
+      "parent": "jaz",
+      "keywords": [
+        "cool jazz",
+        "west coast jazz"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "jaz08",
+      "label": "Hard Bop",
+      "parent": "jaz",
+      "keywords": [
+        "hard bop"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "jaz09",
+      "label": "Soul Jazz / Jazz Funk",
+      "parent": "jaz",
+      "keywords": [
+        "soul jazz",
+        "jazz funk"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "jaz10",
+      "label": "Free Jazz / Avant-Garde (Jazz)",
+      "parent": "jaz",
+      "keywords": [
+        "free jazz",
+        "avant garde"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "jaz11",
+      "label": "Fusion / Jazz Rock",
+      "parent": "jaz",
+      "keywords": [
+        "fusion",
+        "jazz rock"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "jaz12",
+      "label": "Smooth Jazz",
+      "parent": "jaz",
+      "keywords": [
+        "smooth jazz"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "jaz14",
+      "label": "Acid Jazz / Jazzdance",
+      "parent": "jaz",
+      "keywords": [
+        "acid jazz",
+        "jazzdance"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "jaz15",
+      "label": "Nu Jazz / Electro Jazz",
+      "parent": "jaz",
+      "keywords": [
+        "nu jazz",
+        "electro jazz"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "jaz16",
+      "label": "Nordic Jazz",
+      "parent": "jaz",
+      "keywords": [
+        "nordic jazz"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "jaz17",
+      "label": "Electro Swing",
+      "parent": "jaz",
+      "keywords": [
+        "electro swing"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "met01",
+      "label": "Classic Metal",
+      "parent": "met",
+      "keywords": [
+        "classic metal"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "met02",
+      "label": "Progressive Metal",
+      "parent": "met",
+      "keywords": [
+        "progressive metal"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "met03",
+      "label": "Power Metal",
+      "parent": "met",
+      "keywords": [
+        "power metal"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "met04",
+      "label": "Glam Metal / Hair Metal / Pop Metal",
+      "parent": "met",
+      "keywords": [
+        "glam metal",
+        "hair metal",
+        "pop metal"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "met05",
+      "label": "NWOBHM (New Wave Of British Heavy Metal)",
+      "parent": "met",
+      "keywords": [
+        "nwobhm"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "met06",
+      "label": "Thrash Metal",
+      "parent": "met",
+      "keywords": [
+        "thrash metal"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "met07",
+      "label": "Extreme Metal (Black I & Speed)",
+      "parent": "met",
+      "keywords": [
+        "extreme metal"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "met08",
+      "label": "Doom Metal",
+      "parent": "met",
+      "keywords": [
+        "doom metal"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "met09",
+      "label": "Death Metal",
+      "parent": "met",
+      "keywords": [
+        "death metal"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "met10",
+      "label": "Stoner Metal / Rock & Sludge Metal / Rock",
+      "parent": "met",
+      "keywords": [
+        "stoner metal",
+        "sludge metal"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "met11",
+      "label": "Black Metal",
+      "parent": "met",
+      "keywords": [
+        "black metal"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "met12",
+      "label": "Symphonic Metal & Gothic Metal",
+      "parent": "met",
+      "keywords": [
+        "symphonic metal",
+        "gothic metal"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "met13",
+      "label": "Nu Metal & Rap Metal",
+      "parent": "met",
+      "keywords": [
+        "nu metal",
+        "rap metal"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "pop01",
+      "label": "Brill Building Pop & Crooners",
+      "parent": "pop",
+      "keywords": [
+        "brill building pop",
+        "crooners"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "pop02",
+      "label": "Bubblegum & Teenybop",
+      "parent": "pop",
+      "keywords": [
+        "bubblegum",
+        "teenybop"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "pop03",
+      "label": "Singer/songwriter",
+      "parent": "pop",
+      "keywords": [
+        "singer",
+        "songwriter"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "pop04",
+      "label": "(Early) Pop Rock & Power Pop",
+      "parent": "pop",
+      "keywords": [
+        "pop rock",
+        "power pop"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "pop05",
+      "label": "Soft Rock / Adult Contemporary (A.c.)",
+      "parent": "pop",
+      "keywords": [
+        "soft rock",
+        "adult contemporary"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "pop06",
+      "label": "Hi-NRG / Eurodisco",
+      "parent": "pop",
+      "keywords": [
+        "hi nrg",
+        "eurodisco"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "pop07",
+      "label": "Discopop / Post-Disco",
+      "parent": "pop",
+      "keywords": [
+        "discopop",
+        "post disco"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "pop08",
+      "label": "Indie Pop (Twee)",
+      "parent": "pop",
+      "keywords": [
+        "indie pop"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "pop09",
+      "label": "Asian Pop",
+      "parent": "pop",
+      "keywords": [
+        "asian pop"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "pop10",
+      "label": "Britpop",
+      "parent": "pop",
+      "keywords": [
+        "britpop"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "pop11",
+      "label": "Dance Pop",
+      "parent": "pop",
+      "keywords": [
+        "dance pop"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "pop12",
+      "label": "Electroclash (Nu Wave)",
+      "parent": "pop",
+      "keywords": [
+        "electroclash"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "pop13",
+      "label": "Electropop",
+      "parent": "pop",
+      "keywords": [
+        "electropop"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "pop14",
+      "label": "Schlager",
+      "parent": "pop",
+      "keywords": [
+        "schlager"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "pwv01",
+      "label": "Pub Rock & Proto Punk",
+      "parent": "pwv",
+      "keywords": [
+        "pub rock",
+        "proto punk"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "pwv02",
+      "label": "Punk Rock",
+      "parent": "pwv",
+      "keywords": [
+        "punk rock"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "pwv03",
+      "label": "Anarcho-Punk, Crust Punk & D-Beat / Discore",
+      "parent": "pwv",
+      "keywords": [
+        "anarcho punk crust punk",
+        "d beat",
+        "discore"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "pwv04",
+      "label": "Post-Punk",
+      "parent": "pwv",
+      "keywords": [
+        "post punk"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "pwv05",
+      "label": "No Wave",
+      "parent": "pwv",
+      "keywords": [
+        "no wave"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "pwv06",
+      "label": "New Wave",
+      "parent": "pwv",
+      "keywords": [
+        "new wave"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "pwv07",
+      "label": "Horror Punk & Psychobilly",
+      "parent": "pwv",
+      "keywords": [
+        "horror punk",
+        "psychobilly"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "pwv08",
+      "label": "Synthpop & New Romantics",
+      "parent": "pwv",
+      "keywords": [
+        "synthpop",
+        "new romantics"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "rap01",
+      "label": "Old Skool Rap Pioneers",
+      "parent": "rap",
+      "keywords": [
+        "old skool rap pioneers"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "rap02",
+      "label": "Golden Age Rap (& Hardcore Rap)",
+      "parent": "rap",
+      "keywords": [
+        "golden age rap"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "rap03",
+      "label": "Miami Bass & Bounce",
+      "parent": "rap",
+      "keywords": [
+        "miami bass"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "rap04",
+      "label": "(West Coast) Gangsta Rap",
+      "parent": "rap",
+      "keywords": [
+        "gangsta rap"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "rap05",
+      "label": "Jazz Rap / Native Tongue",
+      "parent": "rap",
+      "keywords": [
+        "jazz rap",
+        "native tongue"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "rap06",
+      "label": "Progressive Rap / Nu Skool Rap",
+      "parent": "rap",
+      "keywords": [
+        "progressive rap",
+        "nu skool rap"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "rap07",
+      "label": "(Dirty) South Rap, Crunk & Snap",
+      "parent": "rap",
+      "keywords": [
+        "south rap crunk"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "rap08",
+      "label": "East Coast Gangsta Rap",
+      "parent": "rap",
+      "keywords": [
+        "east coast gangsta rap"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "rap09",
+      "label": "Trap & Drill",
+      "parent": "rap",
+      "keywords": [
+        "trap",
+        "drill"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "rap10",
+      "label": "Urban Breaks (Nu R&B Ii)",
+      "parent": "rap",
+      "keywords": [
+        "urban breaks"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "rap11",
+      "label": "Glitch Hop & Wonky",
+      "parent": "rap",
+      "keywords": [
+        "glitch hop"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "rnb01",
+      "label": "(Early) Rhythm 'n' Blues",
+      "parent": "rnb",
+      "keywords": [
+        "rhythm n blues"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "rnb02",
+      "label": "Doo Wop",
+      "parent": "rnb",
+      "keywords": [
+        "doo wop"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "rnb03",
+      "label": "Memphis Soul / Deep Soul / Southern Soul",
+      "parent": "rnb",
+      "keywords": [
+        "memphis soul",
+        "deep soul",
+        "southern soul"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "rnb04",
+      "label": "Chicago Soul & Detroit Soul (Motown)",
+      "parent": "rnb",
+      "keywords": [
+        "chicago soul",
+        "detroit soul"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "rnb05",
+      "label": "Philly Soul",
+      "parent": "rnb",
+      "keywords": [
+        "philly soul"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "rnb06",
+      "label": "Early Funk & P-Funk",
+      "parent": "rnb",
+      "keywords": [
+        "early funk",
+        "p funk"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "rnb07",
+      "label": "Disco",
+      "parent": "rnb",
+      "keywords": [
+        "disco"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "rnb08",
+      "label": "Go-Go (& Bounce Beat)",
+      "parent": "rnb",
+      "keywords": [
+        "go go",
+        "bounce beat"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "rnb09",
+      "label": "Deep Funk / Rare Groove & Nu Funk",
+      "parent": "rnb",
+      "keywords": [
+        "deep funk",
+        "rare groove",
+        "nu funk"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "rnb10",
+      "label": "Boogie / Electrofunk",
+      "parent": "rnb",
+      "keywords": [
+        "boogie",
+        "electrofunk"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "rnb11",
+      "label": "New Jack Swing / Swingbeat",
+      "parent": "rnb",
+      "keywords": [
+        "new jack swing",
+        "swingbeat"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "rnb12",
+      "label": "Neo Soul / Nu Soul",
+      "parent": "rnb",
+      "keywords": [
+        "neo soul",
+        "nu soul"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "rnb13",
+      "label": "Urban Soul / Pop (Nu R&B I)",
+      "parent": "rnb",
+      "keywords": [
+        "urban soul"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "rnb14",
+      "label": "Nu Disco & Funktronica",
+      "parent": "rnb",
+      "keywords": [
+        "nu disco",
+        "funktronica"
+      ],
+      "weight": 2,
+      "aliases": []
+    },
+    {
+      "id": "rnr01",
+      "label": "Skiffle (Revival)",
+      "parent": "rnr",
+      "keywords": [
+        "skiffle"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "rnr02",
+      "label": "Rock 'n Roll & Rockabilly",
+      "parent": "rnr",
+      "keywords": [
+        "rock n roll",
+        "rockabilly"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "rnr03",
+      "label": "American & British Folk Revival",
+      "parent": "rnr",
+      "keywords": [
+        "american",
+        "british folk revival"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "rnr04",
+      "label": "Surf Rock / Instrumental",
+      "parent": "rnr",
+      "keywords": [
+        "surf rock"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "rnr05",
+      "label": "Garage Rock",
+      "parent": "rnr",
+      "keywords": [
+        "garage rock"
+      ],
+      "weight": 1,
+      "aliases": []
+    },
+    {
+      "id": "tec01",
+      "label": "Detroit Techno",
+      "parent": "tec",
+      "keywords": [
+        "detroit techno"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "tec02",
+      "label": "(Free)tek(k)no / Hardtek",
+      "parent": "tec",
+      "keywords": [
+        "freetekno",
+        "free tekno",
+        "tekno",
+        "hardtek"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "tec03",
+      "label": "Ambient Techno & IDM (Intelligent Dance Music)",
+      "parent": "tec",
+      "keywords": [
+        "ambient techno",
+        "idm"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "tec04",
+      "label": "Industrial Techno & Schranz",
+      "parent": "tec",
+      "keywords": [
+        "industrial techno",
+        "schranz"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "tec05",
+      "label": "Minimal Techno",
+      "parent": "tec",
+      "keywords": [
+        "minimal techno"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "tec06",
+      "label": "Tech House",
+      "parent": "tec",
+      "keywords": [
+        "tech house"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "tec07",
+      "label": "Tech Trance",
+      "parent": "tec",
+      "keywords": [
+        "tech trance"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "tec08",
+      "label": "Hardtechno (Schranz Ii)",
+      "parent": "tec",
+      "keywords": [
+        "hardtechno",
+        "hard techno"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "tra01",
+      "label": "Classic Trance & Acid Trance",
+      "parent": "tra",
+      "keywords": [
+        "classic trance",
+        "acid trance"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "tra03",
+      "label": "Ibiza House & Dream House",
+      "parent": "tra",
+      "keywords": [
+        "ibiza house",
+        "dream house"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "tra04",
+      "label": "Goa Trance & Psytrance",
+      "parent": "tra",
+      "keywords": [
+        "goa trance",
+        "psytrance"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "tra05",
+      "label": "Progressive Trance",
+      "parent": "tra",
+      "keywords": [
+        "progressive trance"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "tra06",
+      "label": "Eurotrance & Vocal Trance",
+      "parent": "tra",
+      "keywords": [
+        "eurotrance",
+        "vocal trance"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "tra07",
+      "label": "Hardtrance",
+      "parent": "tra",
+      "keywords": [
+        "hardtrance"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "tra08",
+      "label": "Uplifting Trance / Epic Trance",
+      "parent": "tra",
+      "keywords": [
+        "uplifting trance",
+        "epic trance"
+      ],
+      "weight": 3,
+      "aliases": []
+    },
+    {
+      "id": "tra09",
+      "label": "Neo-Trance",
+      "parent": "tra",
+      "keywords": [
+        "neo trance"
+      ],
+      "weight": 3,
+      "aliases": []
+    }
+  ]
+}

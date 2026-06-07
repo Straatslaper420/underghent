@@ -1,0 +1,16 @@
+in terminal
+
+
+cd C:\Users\Jotte\Desktop\underghent_v2\frontline
+
+
+aider --model openrouter/qwen/qwen3-235b-a22b index.html
+
+
+or
+
+
+
+aider --model openrouter/google/gemini-2.5-pro-exp-03-19 index.html
+
+^^bigger but still free

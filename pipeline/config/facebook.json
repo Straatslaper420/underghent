@@ -1,0 +1,15 @@
+{
+  "actorId": "apify/facebook-events-scraper",
+  "discoveryMode": "discovery",
+  "maxEventsPerSource": 5,
+  "skipPastEvents": true,
+  "lookaheadDays": 92,
+  "musicOnly": false,
+  "proxy": { "useApifyProxy": true, "apifyProxyGroups": ["RESIDENTIAL"] },
+  "discovery": {
+    "searchQueries": [],
+    "startUrls": ["https://www.facebook.com/events/explore/gent/102155463159279"]
+  },
+  "venues": { "startUrls": [] },
+  "ghentBounds": { "latMin": 49.49, "latMax": 51.51, "lngMin": 2.54, "lngMax": 6.41 }
+}

@@ -1,0 +1,34 @@
+{
+  "name": "underghent-pipeline",
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "scrape:aggregators": "tsx src/commands/scrape-aggregators.ts",
+    "scrape:venues": "tsx src/commands/scrape-venues.ts",
+    "scrape:agendas": "tsx src/commands/scrape-agendas.ts",
+    "scrape:facebook": "tsx src/commands/scrape-facebook.ts",
+    "scrape:facebook:to-sheet": "tsx src/commands/scrape-facebook.ts --to-sheet",
+    "normalize": "tsx src/commands/normalize.ts",
+    "dedupe": "tsx src/commands/dedupe.ts",
+    "enrich:artists": "tsx src/commands/enrich-artists.ts",
+    "enrich:genre": "tsx src/commands/enrich-genre.ts",
+    "enrich:geo": "tsx src/commands/enrich-geo.ts",
+    "pull-geo": "tsx src/commands/pull-geo-from-sheet.ts",
+    "pull-facebook": "tsx src/commands/pull-facebook-from-sheet.ts",
+    "export": "tsx src/commands/export.ts",
+    "pipeline": "npm run scrape:aggregators && npm run scrape:venues && npm run scrape:agendas && npm run normalize && npm run dedupe && npm run enrich:artists && npm run enrich:genre && npm run enrich:geo && npm run pull-geo && npm run export"
+  },
+  "dependencies": {
+    "apify-client": "^2.23.4",
+    "cheerio": "^1.0.0",
+    "dotenv": "^16.4.0",
+    "googleapis": "^140.0.0",
+    "playwright": "^1.44.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.11.0",
+    "typescript": "^5.4.0"
+  }
+}

@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNDERGHENT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css"/>
+<style>
+/* ── RESET ─────────────────────────────────────────────────── */
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html,body { height:100%; overflow:hidden; }
+body {
+  font-family:'JetBrains Mono',monospace;
+  background:#141219;
+  color:#e6e0ea;
+}
+
+/* ── CRT SCANLINE OVERLAY ──────────────────────────────────── */
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  pointer-events:none;
+  background:repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    rgba(0,0,0,0.03) 3px,
+    rgba(0,0,0,0.03) 4px
+  );
+}
+
+/* ── MAP ───────────────────────────────────────────────────── */
+#map {
+  position:fixed;
+  inset:0;
+  z-index:1;
+}
+
+/* ── HEADER ────────────────────────────────────────────────── */
+#header {
+  position:fixed;
+  top:0; left:0; right:0;
+  height:44px;
+  z-index:200;
+  background:#1c1b21;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 16px;
+}
+
+#wordmark {
+  position:relative;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:0.32em;
+  color:#e6e0ea;
+  text-transform:uppercase;
+  user-select:none;
+  flex-shrink:0;
+}
+#wordmark::after {
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(0,0,0,0.18) 2px,
+    rgba(0,0,0,0.18) 4px
+  );
+}
+
+#tagline {
+  font-size:10px;
+  font-weight:500;
+  letter-spacing:0.20em;
+  color:#cac4d4;
+  text-transform:uppercase;
+  animation:glitch 5s infinite;
+  flex:1;
+  text-align:center;
+}
+
+@keyframes glitch {
+  0%   { text-shadow:none; clip-path:none; opacity:1; }
+  1%   { text-shadow:2px 0 #aad1a6, -2px 0 #ff6060; clip-path:inset(8% 0 88% 0); }
+  2%   { text-shadow:none; clip-path:none; }
+  3%   { text-shadow:-1px 0 #aad1a6; clip-path:inset(55% 0 38% 0); }
+  4%   { clip-path:none; text-shadow:none; }
+  6%   { text-shadow:1px 0 #ff6060; }
+  7%   { text-shadow:none; }
+  44%  { text-shadow:none; clip-path:none; }
+  45%  { text-shadow:3px 0 #aad1a6, -3px 0 #ff6060; clip-path:inset(40% 0 52% 0); }
+  46%  { text-shadow:none; clip-path:none; }
+  47%  { clip-path:inset(70% 0 18% 0); }
+  48%  { clip-path:none; }
+  79%  { text-shadow:none; }
+  80%  { text-shadow:2px 0 #ff6060, -1px 0 #aad1a6; clip-path:inset(20% 0 72% 0); }
+  81%  { text-shadow:none; clip-path:none; }
+  100% { text-shadow:none; clip-path:none; }
+}
+
+#header-right {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-shrink:0;
+}
+
+#live-indicator {
+  display:flex;
+  align-items:center;
+  gap:5px;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.14em;
+  color:#aad1a6;
+}
+
+#live-dot {
+  font-size:7px;
+  animation:blink 1.4s infinite;
+}
+@keyframes blink {
+  0%,100% { opacity:1; }
+  50%      { opacity:0.25; }
+}
+
+#signal-bars {
+  font-size:10px;
+  color:#cac4d4;
+  letter-spacing:0.06em;
+}
+
+.hdr-btn {
+  width:24px; height:24px;
+  border:1px solid rgba(255,255,255,0.06);
+  background:none;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px;
+  color:#938e9d;
+  font-family:'JetBrains Mono',monospace;
+  transition:border-color 0.2s, color 0.2s;
+}
+.hdr-btn:hover { border-color:#9d88f0; color:#ccbeff; }
+
+/* ── SIDEBAR TOGGLE BTN ────────────────────────────────────── */
+#sidebar-toggle {
+  width:32px; height:32px;
+  border:none;
+  background:none;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+  padding:0;
+  margin-right:8px;
+  transition:opacity 0.2s;
+}
+#sidebar-toggle img {
+  width:32px; height:32px;
+  object-fit:cover;
+  display:block;
+  filter:grayscale(60%) brightness(0.5) contrast(1.2);
+  transition:filter 0.2s;
+}
+#sidebar-toggle:hover img,
+#sidebar-toggle.open img {
+  filter:grayscale(20%) brightness(0.75) contrast(1.1);
+}
+
+/* ── SIDEBAR ───────────────────────────────────────────────── */
+#sidebar-overlay {
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:149;
+  pointer-events:none;
+}
+#sidebar-overlay.open { display:block; }
+
+#sidebar {
+  position:fixed;
+  top:44px; left:0;
+  width:210px;
+  height:calc(100vh - 44px - 32px);
+  z-index:150;
+  background:#1c1b21;
+  border-right:1px solid rgba(255,255,255,0.06);
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  display:flex;
+  flex-direction:column;
+  overflow-y:auto;
+  overflow-x:hidden;
+  transform:translateX(-100%);
+  transition:transform 0.2s ease;
+}
+#sidebar.open { transform:translateX(0); }
+#sidebar::-webkit-scrollbar { width:3px; }
+#sidebar::-webkit-scrollbar-track { background:transparent; }
+#sidebar::-webkit-scrollbar-thumb { background:#484552; }
+
+.sb-section {
+  padding:12px 14px;
+}
+
+.section-label {
+  display:block;
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:0.22em;
+  color:#938e9d;
+  text-transform:uppercase;
+  margin-bottom:10px;
+}
+
+/* Date inputs — stacked */
+.date-row {
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  margin-bottom:8px;
+}
+.date-wrap {
+  position:relative;
+  width:100%;
+}
+.date-prefix {
+  position:absolute;
+  left:7px; top:50%;
+  transform:translateY(-50%);
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:0.08em;
+  color:#938e9d;
+  pointer-events:none;
+  z-index:1;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+input[type="date"] {
+  width:100%;
+  padding:6px 6px 6px 46px;
+  background:#141219;
+  color:#e6e0ea;
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:0;
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;
+  outline:none;
+  transition:border-color 0.2s;
+  -webkit-appearance:none;
+  appearance:none;
+  color-scheme:dark;
+}
+input[type="date"]:focus { border-color:#9d88f0; }
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter:invert(0.5) sepia(0) hue-rotate(0deg);
+  cursor:pointer;
+  opacity:0.5;
+}
+
+/* Quick pills */
+.pills {
+  display:flex;
+  gap:4px;
+  margin-bottom:10px;
+  width:100%;
+}
+.pill {
+  flex:1;
+  padding:4px 0;
+  text-align:center;
+  border:1px solid rgba(255,255,255,0.06);
+  background:none;
+  color:#938e9d;
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:border-color 0.15s, color 0.15s, background 0.15s;
+}
+.pill:hover { border-color:#9d88f0; color:#ccbeff; }
+.pill.active { border-color:#9d88f0; color:#ccbeff; background:rgba(157,136,240,0.08); }
+
+/* Source toggles */
+.src-toggles {
+  display:flex;
+  gap:4px;
+}
+.src-toggle {
+  padding:5px 10px;
+  border:1px solid rgba(255,255,255,0.06);
+  background:none;
+  color:#938e9d;
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:border-color 0.15s, color 0.15s, background 0.15s;
+}
+.src-toggle.on {
+  border-color:#9d88f0;
+  color:#ccbeff;
+  background:rgba(157,136,240,0.10);
+}
+.src-toggle:hover { border-color:#9d88f0; color:#ccbeff; }
+
+/* Dotted divider */
+.divider {
+  border:none;
+  border-top:1px dashed rgba(255,255,255,0.08);
+  flex-shrink:0;
+}
+
+/* Signal counter */
+#signal-counter {
+  display:flex;
+  flex-direction:column;
+  margin-top:2px;
+}
+#sig-top {
+  font-size:20px;
+  font-weight:700;
+  letter-spacing:-0.01em;
+  color:#ccbeff;
+  line-height:1.25;
+  text-align:left;
+}
+#sig-bot {
+  font-size:20px;
+  font-weight:700;
+  letter-spacing:-0.01em;
+  color:#ccbeff;
+  line-height:1.25;
+  text-align:right;
+}
+
+/* Scene portals */
+.portal-link {
+  display:block;
+  padding:7px 0;
+  border-bottom:1px dotted rgba(255,255,255,0.07);
+  color:#cac4d4;
+  text-decoration:none;
+  font-size:11px;
+  letter-spacing:0.06em;
+  transition:color 0.15s;
+}
+.portal-link:last-of-type { border-bottom:none; }
+.portal-link::before { content:'→  '; color:#484552; }
+.portal-link:hover { color:#ccbeff; }
+.portal-link:hover::before { color:#9d88f0; }
+
+/* Sidebar bottom */
+#sidebar-bottom {
+  margin-top:auto;
+  padding:12px 14px;
+  border-top:1px solid rgba(255,255,255,0.06);
+  flex-shrink:0;
+}
+
+/* ── CUSTOM POPUP WRAPPER ──────────────────────────────────── */
+.leaflet-popup-content-wrapper {
+  background:#141219 !important;
+  color:#e6e0ea !important;
+  border-top:1px solid rgba(255,255,255,0.06) !important;
+  border-right:1px solid rgba(255,255,255,0.06) !important;
+  border-bottom:1px solid rgba(255,255,255,0.06) !important;
+  border-left:2px solid #9d88f0 !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  font-family:'JetBrains Mono',monospace !important;
+  padding:0 !important;
+}
+.leaflet-popup-content {
+  margin:14px !important;
+  width:262px !important;
+}
+.leaflet-popup-tip-container { display:none !important; }
+.leaflet-popup-close-button {
+  color:#938e9d !important;
+  font-size:14px !important;
+  top:6px !important;
+  right:6px !important;
+  padding:0 !important;
+  width:20px !important;
+  height:20px !important;
+  line-height:20px !important;
+  text-align:center !important;
+}
+.leaflet-popup-close-button:hover { color:#ccbeff !important; }
+
+.pop-title {
+  font-size:15px;
+  font-weight:700;
+  letter-spacing:0.04em;
+  color:#e6e0ea;
+  text-transform:uppercase;
+  margin-bottom:11px;
+  line-height:1.2;
+  padding-right:16px;
+}
+.pop-row {
+  font-size:10px;
+  color:#cac4d4;
+  margin-bottom:4px;
+  line-height:1.4;
+  letter-spacing:0.04em;
+}
+.pop-row .lbl {
+  color:#938e9d;
+  font-size:9px;
+  letter-spacing:0.10em;
+}
+.pop-divider {
+  border:none;
+  border-top:1px dotted rgba(255,255,255,0.08);
+  margin:10px 0;
+}
+.pop-links {
+  display:flex;
+  gap:14px;
+}
+.pop-link {
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:0.14em;
+  color:#9d88f0;
+  text-decoration:none;
+  text-transform:uppercase;
+  transition:color 0.15s;
+}
+.pop-link::before { content:'→ '; }
+.pop-link:hover { color:#ccbeff; }
+
+/* ── CLUSTER ICONS ─────────────────────────────────────────── */
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large {
+  background:transparent !important;
+  border:none !important;
+}
+.marker-cluster-small div,
+.marker-cluster-medium div,
+.marker-cluster-large div {
+  background:#141219 !important;
+  color:#9d88f0 !important;
+  border:1px solid #9d88f0 !important;
+  border-radius:0 !important;
+  font-family:'JetBrains Mono',monospace !important;
+  font-size:10px !important;
+  font-weight:700 !important;
+  width:32px !important;
+  height:32px !important;
+  line-height:32px !important;
+  margin-left:0 !important;
+  margin-top:0 !important;
+}
+
+/* ── ZOOM CONTROLS ─────────────────────────────────────────── */
+.leaflet-control-zoom {
+  margin-bottom:42px !important;
+  margin-left:10px !important;
+  border:none !important;
+}
+.leaflet-control-zoom a {
+  background:#1c1b21 !important;
+  color:#cac4d4 !important;
+  border:1px solid rgba(255,255,255,0.06) !important;
+  border-radius:0 !important;
+  font-family:'JetBrains Mono',monospace !important;
+  font-size:14px !important;
+  line-height:26px !important;
+  width:26px !important;
+  height:26px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+.leaflet-control-zoom a:hover {
+  background:#201f25 !important;
+  color:#ccbeff !important;
+  border-color:#9d88f0 !important;
+}
+.leaflet-bar { box-shadow:none !important; }
+
+/* ── BOTTOM BAR ────────────────────────────────────────────── */
+#bottom-bar {
+  position:fixed;
+  bottom:0; left:0; right:0;
+  height:32px;
+  z-index:200;
+  background:#1c1b21;
+  border-top:1px solid rgba(255,255,255,0.06);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 14px;
+  font-size:9px;
+  font-weight:500;
+  letter-spacing:0.10em;
+  color:#938e9d;
+  gap:10px;
+}
+#coords { white-space:nowrap; flex-shrink:0; }
+
+/* ── MARQUEE — true single-copy scroll ─────────────────────── */
+#marquee-wrap {
+  flex:1;
+  overflow:hidden;
+  min-width:0;
+  position:relative;
+}
+#marquee-inner {
+  display:inline-block;
+  white-space:nowrap;
+  will-change:transform;
+}
+/* JS drives the animation so no CSS keyframe needed here */
+
+#signal-count {
+  white-space:nowrap;
+  flex-shrink:0;
+  color:#aad1a6;
+  letter-spacing:0.12em;
+}
+
+/* ── RADIO CONTROLS ────────────────────────────────────────── */
+#radio-controls {
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex-shrink:0;
+}
+
+#radio-btn {
+  white-space:nowrap;
+  padding:0 8px;
+  height:20px;
+  border:1px solid rgba(255,255,255,0.06);
+  background:none;
+  color:#938e9d;
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:border-color 0.2s, color 0.2s;
+}
+
+/* radio-btn dot blink on first unmute */
+@keyframes radio-dot-blink {
+  0%,100% { opacity:1; }
+  50%      { opacity:0.15; }
+}
+.radio-dot-blink {
+  animation: radio-dot-blink 0.5s infinite;
+}
+#radio-btn:hover { border-color:#9d88f0; color:#ccbeff; }
+#radio-btn.is-live {
+  border-color:rgba(170,209,166,0.40);
+  color:#aad1a6;
+}
+
+/* Volume slider */
+#vol-slider {
+  -webkit-appearance:none;
+  appearance:none;
+  width:60px;
+  height:3px;
+  background:rgba(255,255,255,0.10);
+  outline:none;
+  cursor:pointer;
+  border:none;
+  opacity:0.5;
+  transition:opacity 0.2s;
+}
+#vol-slider:hover { opacity:1; }
+#vol-slider::-webkit-slider-thumb {
+  -webkit-appearance:none;
+  width:9px; height:9px;
+  background:#aad1a6;
+  cursor:pointer;
+}
+#vol-slider::-moz-range-thumb {
+  width:9px; height:9px;
+  background:#aad1a6;
+  border:none;
+  cursor:pointer;
+}
+#vol-slider.muted {
+  background:rgba(255,255,255,0.06);
+}
+#vol-slider.muted::-webkit-slider-thumb { background:#484552; }
+#vol-slider.muted::-moz-range-thumb     { background:#484552; }
+
+.map-style-btn.active { border-color:#9d88f0; color:#ccbeff; }
+
+/* ── MOBILE PORTRAIT ───────────────────────────────────────── */
+@media (max-width: 600px) and (orientation: portrait) {
+
+  /* Header: hide tagline and decorative items, keep wordmark + menu + live dot */
+  #tagline        { display:none; }
+  #signal-bars    { display:none; }
+  #live-indicator { display:none; }
+  .hdr-btn        { display:none; }
+
+  /* Give wordmark room to breathe now that tagline is gone */
+  #header { justify-content:flex-start; gap:10px; }
+  #header-right { gap:6px; }
+
+  /* Bottom bar: hide coords and signal count, let marquee + radio fill the bar */
+  #coords        { display:none; }
+  #signal-count  { display:none; }
+
+  /* Radio button: slightly more tap-friendly */
+  #radio-btn { padding:0 10px; height:22px; }
+}
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<!-- HEADER -->
+<header id="header">
+  <button id="sidebar-toggle" onclick="toggleSidebar()" title="Menu"><img src="data:image/jpeg;base64,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" alt="menu"></button>
+  <span id="wordmark">UNDERGHENT</span>
+  <span id="tagline">// GHENT UNDERGROUND SOUND //</span>
+  <div id="header-right">
+    <span id="live-indicator">
+      <span id="live-dot">●</span>&nbsp;LIVE
+    </span>
+    <span id="signal-bars">▓▓▓░ 68%</span>
+    <button class="hdr-btn map-style-btn" id="btn-dark"   onclick="setMapStyle('dark')"   title="Dark map">◼</button>
+    <button class="hdr-btn map-style-btn" id="btn-sunset" onclick="setMapStyle('sunset')" title="Sunset map">◈</button>
+    <button class="hdr-btn map-style-btn" id="btn-light"  onclick="setMapStyle('light')"  title="Light map">◻</button>
+  </div>
+</header>
+
+<div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+
+  <!-- FILTERS -->
+  <div class="sb-section">
+    <span class="section-label">FILTERS</span>
+    <div class="date-row">
+      <div class="date-wrap">
+        <span class="date-prefix">FROM &gt;</span>
+        <input type="date" id="d0">
+      </div>
+      <div class="date-wrap">
+        <span class="date-prefix">TO &gt;</span>
+        <input type="date" id="d1">
+      </div>
+    </div>
+    <div class="pills">
+      <button class="pill" id="pill-today" onclick="quickPill('today')">TODAY</button>
+      <button class="pill" id="pill-tmr"   onclick="quickPill('tmr')">TMR</button>
+      <button class="pill" id="pill-wkd"   onclick="quickPill('wkd')">WKD</button>
+    </div>
+    <div class="src-toggles">
+      <button class="src-toggle on" id="s-facebook"        onclick="toggleSrc('facebook')">FB</button>
+      <button class="src-toggle on" id="s-venue_site"      onclick="toggleSrc('venue_site')">VENUE</button>
+      <button class="src-toggle on" id="s-collective_site" onclick="toggleSrc('collective_site')">DIY</button>
+    </div>
+    <div style="margin-top:8px;">
+      <button class="src-toggle on" id="f-ghent" onclick="toggleGhent()">GHENT ONLY</button>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SIGNAL -->
+  <div class="sb-section">
+    <span class="section-label">SIGNAL</span>
+    <div id="signal-counter">
+  <span id="sig-top">[ 0 EVENTS</span>
+  <span id="sig-bot">DETECTED ]</span>
+</div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SCENE PORTALS -->
+  <div class="sb-section">
+    <span class="section-label">SCENE PORTALS</span>
+    <a class="portal-link" href="https://www.goabase.net/party/country/be" target="_blank">Goabase</a>
+    <a class="portal-link" href="https://www.reggae.be" target="_blank">Reggae.be</a>
+    <a class="portal-link" href="https://www.fomostation.be/radar/" target="_blank">FOMO Station</a>
+    <a class="portal-link" href="https://vndg.be/" target="_blank">VNDG</a>
+    <a class="portal-link" href="https://www.charlatan.be/agenda" target="_blank">Charlatan</a>
+    <a class="portal-link" href="https://kompassklub.com/agenda/" target="_blank">Kompass</a>
+    <a class="portal-link" href="https://www.viernulvier.gent/nl/agenda" target="_blank">Viernulvier</a>
+    <a class="portal-link" href="https://www.minus-one.be" target="_blank">Minus One</a>
+  </div>
+
+
+</aside>
+
+<!-- BOTTOM BAR -->
+<div id="bottom-bar">
+  <span id="coords">LAT 51.054 · LNG 3.717 · GENT, BE</span>
+  <div id="marquee-wrap">
+    <span id="marquee-inner"></span>
+  </div>
+  <span id="signal-count">[ 0 SIGNALS ACTIVE ]</span>
+  <div id="radio-controls">
+    <button id="radio-btn" onclick="toggleRadio()">◎ URGENT.FM</button>
+    <input type="range" id="vol-slider" min="0" max="1" step="0.02" value="0.2" class="muted" oninput="setVolume(this.value)">
+  </div>
+</div>
+
+<audio id="radio" src="https://urgentstream.radiostudio.be/live" preload="none"></audio>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+<script>
+
+const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQHer0RSLW98_1WHGS-6y8JB38ClUC9MmM6bxtKrdkv2MOG5cmYI8T2ghl9uSxNEn7ichRihuLWPmHN/pub?output=csv';
+
+/* ── URGENT.FM WEEKLY SCHEDULE ─────────────────────────────── */
+// day index: 0=Sun,1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat
+// slots: [startHour, "Show Name"]
+// last show of day runs until first slot of next day (or 07:00)
+const SCHEDULE = {
+  0: [ // Zondag
+    [7,  'Listen Up'],
+    [11, "Boenk D'erop!"],
+    [13, 'Loman'],
+    [14, 'Tweeden Asem'],
+    [16, 'Wax Doctors'],
+    [18, 'Wowsville!'],
+    [19, 'Badmeaningood'],
+    [20, 'Moustachemusic Radio'],
+    [21, 'Ghostdogsradio'],
+    [22, 'Icarus.fm'],
+    [0,  'Ctrl Alt Delete / Buikgewoel'],
+    [2,  'Listen Up'],
+  ],
+  1: [ // Maandag
+    [7,  'Listen Up'],
+    [15, 'Radyo Dolmuş'],
+    [17, 'Relaas'],
+    [18, 'Sjamaandag'],
+    [19, 'Radio Taxi'],
+    [21, 'Buck Up Dat Sound'],
+    [22, 'Rubadub Rhythm System'],
+    [23, 'Calamari Collective'],
+    [1,  'Listen Up'],
+  ],
+  2: [ // Dinsdag
+    [7,  'Listen Up'],
+    [9,  'Onder Constructie'],
+    [12, 'MIDI'],
+    [13, 'Onder Constructie'],
+    [17, 'Sonic Safari'],
+    [18, 'Tapijtparel'],
+    [19, 'Boogieville / Foxy Music'],
+    [20, 'Mélange Etrange'],
+    [21, 'Liquid Flavaz'],
+    [22, 'Opendex Radio'],
+    [23, 'Alt F4'],
+    [1,  'Listen Up'],
+  ],
+  3: [ // Woensdag
+    [7,  'Sluimerstand'],
+    [8,  'Listen Up'],
+    [14, 'Luminous Belge'],
+    [16, 'Stardust Illuminator'],
+    [18, 'Miriam FM'],
+    [19, '40 Fingers Cartel'],
+    [21, 'Helter Skelter'],
+    [22, 'Rommelkot'],
+    [0,  'Buiten Dienst'],
+    [2,  'Listen Up'],
+  ],
+  4: [ // Donderdag
+    [7,  'Listen Up'],
+    [9,  'Onder Constructie'],
+    [12, 'MIDI'],
+    [13, 'Onder Constructie'],
+    [19, 'De La Chaud'],
+    [20, 'Nightfalls Radio'],
+    [22, 'PHASEFOUR'],
+    [0,  'Listen Up'],
+  ],
+  5: [ // Vrijdag
+    [7,  'Listen Up'],
+    [10, 'Wangedrag'],
+    [12, 'Listen Up'],
+    [13, 'Hijack'],
+    [14, 'Listen Up'],
+    [15, 'Landlocked Therapy'],
+    [16, 'Fragile Circus'],
+    [18, 'Freestyle Fusion'],
+    [19, 'Thank God It\'s Friday'],
+    [20, 'FOMO'],
+    [22, 'Breaxity'],
+    [0,  'The Wrong Lane / Loaded'],
+    [2,  'Listen Up'],
+  ],
+  6: [ // Zaterdag
+    [7,  'Listen Up'],
+    [11, 'Rockaula'],
+    [12, 'Het Concertief Geheugen'],
+    [13, 'Kuleshov'],
+    [15, 'Neon Dreams Radio'],
+    [16, 'Op De Radio'],
+    [17, 'Resonantie'],
+    [18, 'Cluster Flux'],
+    [20, 'No Shit Like Deep Radio'],
+    [22, 'Charged'],
+    [6,  'Listen Up'],
+  ],
+};
+
+function getCurrentShow() {
+  const now  = new Date();
+  const day  = now.getDay();
+  const hour = now.getHours();
+
+  // Convert schedule slots to comparable minutes-since-midnight (with overnight wrap)
+  const slots = SCHEDULE[day] || [];
+  // Find the last slot whose start hour <= now, accounting for overnight (hour < 7 = late night)
+  // We treat hours 0-6 as 24-30 for sorting purposes
+  const toSort = h => h < 7 ? h + 24 : h;
+  const nowSort = toSort(hour);
+
+  let current = null;
+  for (const [h, name] of slots) {
+    if (toSort(h) <= nowSort) current = name;
+  }
+  // If nothing matched, check previous day's late slots
+  if (!current) {
+    const prevDay = (day + 6) % 7;
+    const prevSlots = SCHEDULE[prevDay] || [];
+    for (const [h, name] of prevSlots) {
+      if (h < 7) current = name; // overnight slot
+    }
+  }
+  return current || 'Urgent.fm';
+}
+
+/* ── MARQUEE — seamless JS scroll, show name at end ────────── */
+const marqueeInner = document.getElementById('marquee-inner');
+const marqueeWrap  = document.getElementById('marquee-wrap');
+let marqueePos     = 0;
+let marqueeRAF     = null;
+let marqueeTextW   = 0;
+const marqueeSpeed = 0.4;
+let radioLive      = false; // declared here so getShowColor() works on first init
+
+function getShowColor() {
+  return radioLive ? '#aad1a6' : '#938e9d';
+}
+
+function updateShowColor() {
+  const c = getShowColor();
+  marqueeInner.querySelectorAll('.show-name').forEach(el => el.style.color = c);
+}
+
+function initMarquee() {
+  if (marqueeRAF) cancelAnimationFrame(marqueeRAF);
+
+  const color = getShowColor();
+  const show  = getCurrentShow().toUpperCase();
+  const plain = 'UNDERGHENT IS NOT RESPONSIBLE FOR YOUR NIGHT \u00a0\u00b7\u00a0 STAY UNDERGROUND \u00a0\u00b7\u00a0 DO NOT SHARE COORDINATES \u00a0\u00b7\u00a0 NOW ON URGENT.FM:\u00a0';
+  const unit  = `${plain}<span class="show-name" style="color:${color};font-weight:700;">${show}</span>\u00a0\u00a0\u00b7\u00a0\u00a0`;
+
+  // Measure one unit width by rendering it temporarily
+  marqueeInner.innerHTML = unit;
+  const unitW = marqueeInner.scrollWidth;
+  const containerW = marqueeWrap.offsetWidth;
+
+  // How many copies needed to fill container + 1 extra for seamless wrap
+  const copies = Math.ceil((containerW + unitW) / unitW) + 2;
+  marqueeInner.innerHTML = Array(copies).fill(unit).join('');
+  marqueeTextW = unitW;
+  marqueePos = 0;
+
+  function step() {
+    marqueePos -= marqueeSpeed;
+    if (marqueePos <= -marqueeTextW) marqueePos += marqueeTextW;
+    marqueeInner.style.transform = `translateX(${marqueePos}px)`;
+    marqueeRAF = requestAnimationFrame(step);
+  }
+  marqueeRAF = requestAnimationFrame(step);
+}
+
+setInterval(() => initMarquee(), 60000);
+window.addEventListener('load', initMarquee);
+
+/* ── SIDEBAR TOGGLE ────────────────────────────────────────── */
+function toggleSidebar() {
+  const sb  = document.getElementById('sidebar');
+  const btn = document.getElementById('sidebar-toggle');
+  const ov  = document.getElementById('sidebar-overlay');
+  const open = sb.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  ov.classList.toggle('open', open);
+}
+
+/* ── STATE ─────────────────────────────────────────────────── */
+let allEvents  = [];
+let activeSrcs = new Set(['facebook','venue_site','collective_site']);
+let ghentOnly  = true;
+let dateStart  = null;
+let dateEnd    = null;
+let activePill = null;
+
+/* ── MAP ───────────────────────────────────────────────────── */
+const map = L.map('map', {zoomControl:false}).setView([51.0543, 3.7174], 13);
+L.control.zoom({position:'bottomleft'}).addTo(map);
+
+const darkTile = L.tileLayer(
+  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  {attribution:'© OpenStreetMap © CARTO', maxZoom:19}
+);
+const lightTile = L.tileLayer(
+  'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+  {attribution:'© OpenStreetMap © CARTO', maxZoom:19}
+);
+const sunsetTile = L.tileLayer(
+  'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+  {attribution:'© OpenStreetMap © CARTO', maxZoom:19}
+);
+darkTile.addTo(map);
+let activeTile = darkTile;
+
+const markerCluster = L.markerClusterGroup({
+  maxClusterRadius: 50,
+  chunkedLoading: true,
+  iconCreateFunction(cluster) {
+    return L.divIcon({
+      html: `<div style="width:32px;height:32px;background:#141219;border:1px solid #9d88f0;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#9d88f0;">${cluster.getChildCount()}</div>`,
+      className: '',
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+    });
+  },
+});
+map.addLayer(markerCluster);
+
+/* ── GHENT TOGGLE ──────────────────────────────────────────── */
+function toggleGhent() {
+  ghentOnly = !ghentOnly;
+  document.getElementById('f-ghent').classList.toggle('on', ghentOnly);
+  renderEvents(_filtered());
+}
+
+/* ── MAP STYLE OVERRIDE ────────────────────────────────────── */
+function setMapStyle(style) {
+  document.querySelectorAll('.map-style-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + style).classList.add('active');
+  map.removeLayer(activeTile);
+  if (style === 'dark')   { darkTile.addTo(map);   activeTile = darkTile; }
+  if (style === 'sunset') { sunsetTile.addTo(map); activeTile = sunsetTile; }
+  if (style === 'light')  { lightTile.addTo(map);  activeTile = lightTile; }
+}
+
+/* ── SOURCE TOGGLES ────────────────────────────────────────── */
+function toggleSrc(s) {
+  if (activeSrcs.has(s)) activeSrcs.delete(s);
+  else activeSrcs.add(s);
+  document.getElementById('s-' + s).classList.toggle('on', activeSrcs.has(s));
+  renderEvents(_filtered());
+}
+
+/* ── DATE FILTERS ──────────────────────────────────────────── */
+document.getElementById('d0').addEventListener('change', () => {
+  const v = document.getElementById('d0').value;
+  dateStart = v ? new Date(v + 'T00:00:00') : null;
+  clearPill();
+  renderEvents(_filtered());
+});
+document.getElementById('d1').addEventListener('change', () => {
+  const v = document.getElementById('d1').value;
+  dateEnd = v ? new Date(v + 'T23:59:59') : null;
+  clearPill();
+  renderEvents(_filtered());
+});
+
+function _syncInputs() {
+  const fmt = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  document.getElementById('d0').value = dateStart ? fmt(dateStart) : '';
+  document.getElementById('d1').value = dateEnd   ? fmt(dateEnd)   : '';
+}
+
+function clearPill() {
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  activePill = null;
+}
+
+function quickPill(id) {
+  if (activePill === id) {
+    dateStart = null; dateEnd = null;
+    document.getElementById('d0').value = '';
+    document.getElementById('d1').value = '';
+    clearPill();
+    renderEvents(_filtered());
+    return;
+  }
+  clearPill();
+  activePill = id;
+  document.getElementById('pill-' + id).classList.add('active');
+
+  if (id === 'today') {
+    const d = new Date();
+    dateStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    dateEnd   = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23,59,59);
+  } else if (id === 'tmr') {
+    const d = new Date(); d.setDate(d.getDate() + 1);
+    dateStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    dateEnd   = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23,59,59);
+  } else if (id === 'wkd') {
+    const d   = new Date();
+    const day = d.getDay();
+    let fri;
+    if      (day === 5) fri = 0;
+    else if (day === 6) fri = -1;
+    else if (day === 0) fri = -2;
+    else                fri = 5 - day;
+    const f = new Date(d); f.setDate(d.getDate() + fri); f.setHours(0,0,0,0);
+    const s = new Date(f); s.setDate(f.getDate() + 2); s.setHours(23,59,59,999);
+    dateStart = f; dateEnd = s;
+  }
+  _syncInputs();
+  renderEvents(_filtered());
+}
+
+function _parseDate(s) {
+  if (!s) return null;
+  s = s.trim();
+  if (s.includes('.')) {
+    const p = s.split('.');
+    if (p.length >= 3) return new Date(+p[2], +p[1]-1, +p[0]);
+  }
+  if (s.includes('-')) return new Date(s.slice(0,10) + 'T00:00:00');
+  return null;
+}
+
+/* ── FILTER ────────────────────────────────────────────────── */
+function _filtered() {
+  return allEvents.filter(ev => {
+    if ((ev.status || '').toLowerCase().trim() !== 'approved') return false;
+    if (!activeSrcs.has(ev.source_type || 'facebook')) return false;
+    if (dateStart || dateEnd) {
+      const d = _parseDate(ev.date_start);
+      if (!d) return false;
+      if (dateStart && d < dateStart) return false;
+      if (dateEnd   && d > dateEnd)   return false;
+    }
+    if (ghentOnly) {
+      const lat = parseFloat((ev.latitude  || '').toString().replace(',', '.'));
+      const lng = parseFloat((ev.longitude || '').toString().replace(',', '.'));
+      if (isNaN(lat) || isNaN(lng)) return false;
+      if (lat < 51.00 || lat > 51.12 || lng < 3.65 || lng > 3.80) return false;
+    }
+    return true;
+  });
+}
+
+/* ── MARKER ICON ───────────────────────────────────────────── */
+function _icon(ev) {
+  const raw = ev.date_start || '';
+  let label = '??';
+  if (raw.includes('.')) {
+    const p = raw.split('.');
+    label = p[0].padStart(2,'0') + '.' + p[1].padStart(2,'0');
+  } else if (raw.length >= 10) {
+    label = raw.slice(8,10) + '.' + raw.slice(5,7);
+  }
+  return L.divIcon({
+    html: `<div style="background:#141219;color:#aad1a6;border:1px solid rgba(170,209,166,0.30);padding:2px 6px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;white-space:nowrap;letter-spacing:0.06em;">■ ${label}</div>`,
+    className: '',
+    iconSize: [58, 18],
+    iconAnchor: [29, 9],
+  });
+}
+
+/* ── POPUP CONTENT ─────────────────────────────────────────── */
+function _popup(ev) {
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  const title   = (ev.title || 'UNTITLED').toUpperCase();
+  const venue   = ev.venue   || '';
+  const date    = ev.date_start || '';
+  const time    = ev.hour_start || '';
+  const genre   = [ev.genre, ev.subgenre].filter(Boolean).join(' / ');
+  const artists = ev.artists  || '';
+  const going   = ev.going    || '';
+  const intrstd = ev.interested || '';
+  const srcUrl  = (ev.source_url || '').trim();
+  const tikUrl  = (ev.ticket_url || '').trim();
+
+  let dateDisplay = '';
+  if (date.includes('-') && date.length >= 10) {
+    dateDisplay = date.slice(8,10) + '.' + date.slice(5,7) + '.' + date.slice(0,4);
+  } else {
+    dateDisplay = date;
+  }
+
+  const row = (lbl, val) => val
+    ? `<div class="pop-row"><span class="lbl">// ${lbl}:</span> ${esc(val)}</div>`
+    : '';
+
+  let h = `<div class="pop-title">${esc(title)}</div>`;
+  h += row('VENUE',      venue);
+  h += row('DATE',       dateDisplay);
+  h += row('TIME',       time);
+  h += row('GENRE',      genre);
+  h += row('ARTISTS',    artists);
+  h += row('GOING',      going);
+  h += row('INTERESTED', intrstd);
+
+  const links = [];
+  if (srcUrl) links.push(`<a class="pop-link" href="${esc(srcUrl)}" target="_blank" rel="noopener">SOURCE</a>`);
+  if (tikUrl) links.push(`<a class="pop-link" href="${esc(tikUrl)}" target="_blank" rel="noopener">TICKETS</a>`);
+  if (links.length) {
+    h += `<hr class="pop-divider"><div class="pop-links">${links.join('')}</div>`;
+  }
+  return h;
+}
+
+/* ── RENDER ────────────────────────────────────────────────── */
+function renderEvents(events) {
+  markerCluster.clearLayers();
+  let n = 0;
+  events.forEach(ev => {
+    let lat = (ev.latitude  || '').toString().replace(',', '.');
+    let lng = (ev.longitude || '').toString().replace(',', '.');
+    lat = parseFloat(lat); lng = parseFloat(lng);
+    if (isNaN(lat) || isNaN(lng)) return;
+    const m = L.marker([lat, lng], {icon: _icon(ev)});
+    m.bindPopup(_popup(ev), {maxWidth:290});
+    markerCluster.addLayer(m);
+    n++;
+  });
+  // Sidebar: filtered count
+  document.getElementById('sig-top').textContent = `[ ${n} EVENTS`;
+  document.getElementById('sig-bot').textContent = `DETECTED ]`;
+  // Bottom bar: total approved (unfiltered)
+  const total = allEvents.filter(ev => (ev.status || '').toLowerCase().trim() === 'approved').length;
+  document.getElementById('signal-count').textContent = `[ ${total} EVENTS INC. ]`;
+}
+
+/* ── LOAD DATA ─────────────────────────────────────────────── */
+async function loadData() {
+  try {
+    const r   = await fetch(SHEET_CSV);
+    const csv = await r.text();
+    const p   = Papa.parse(csv, {header:true, skipEmptyLines:true});
+    allEvents = p.data.map(e => {
+      const aggId      = (e.aggregator_id || '').trim();
+      const collective = (e.collective    || '').trim();
+      let source_type;
+      if (collective)  source_type = 'collective_site';
+      else if (!aggId) source_type = 'venue_site';
+      else             source_type = 'facebook';
+      return {
+        ...e,
+        source_type,
+        layer:  'review',
+        status: (e.status || '').toLowerCase().trim(),
+      };
+    });
+    renderEvents(_filtered());
+  } catch(err) {
+    document.getElementById('sig-top').textContent = '[ ERROR ]';
+    document.getElementById('sig-bot').textContent = '';
+    console.error('Failed to load sheet:', err);
+  }
+}
+
+/* ── RADIO ─────────────────────────────────────────────────── */
+const radio     = document.getElementById('radio');
+const radioBtn  = document.getElementById('radio-btn');
+const volSlider = document.getElementById('vol-slider');
+
+radio.volume = 0.2;
+
+let firstUnmute = true;
+let blinkTimer  = null;
+
+function setLive(state) {
+  radioLive = state;
+  if (state) {
+    radioBtn.textContent = '● URGENT.FM';
+    radioBtn.classList.add('is-live');
+    volSlider.classList.remove('muted');
+  } else {
+    radioBtn.textContent = '◎ URGENT.FM';
+    radioBtn.classList.remove('is-live');
+    volSlider.classList.add('muted');
+  }
+  updateShowColor();
+}
+
+function reconnect() {
+  if (!radioLive) return;
+  radio.load();
+  radio.volume = parseFloat(volSlider.value);
+  radio.play().catch(() => {});
+  if (marqueeRAF) cancelAnimationFrame(marqueeRAF);
+  initMarquee();
+}
+
+radio.addEventListener('ended', reconnect);
+radio.addEventListener('error', () => { setTimeout(reconnect, 3000); });
+
+function toggleRadio() {
+  if (!radioLive) {
+    setLive(true);
+    if (firstUnmute) {
+      firstUnmute = false;
+      // Blink the dot for 2 seconds on first unmute
+      radioBtn.querySelector ? null : null; // no-op
+      radioBtn.classList.add('radio-dot-blink');
+      blinkTimer = setTimeout(() => {
+        radioBtn.classList.remove('radio-dot-blink');
+      }, 5000);
+    }
+    radio.volume = parseFloat(volSlider.value);
+    radio.play().catch(() => { setLive(false); });
+  } else {
+    if (blinkTimer) { clearTimeout(blinkTimer); blinkTimer = null; }
+    radioBtn.classList.remove('radio-dot-blink');
+    setLive(false);
+    radio.pause();
+  }
+}
+
+function setVolume(val) {
+  radio.volume = parseFloat(val);
+}
+
+document.getElementById('btn-dark').classList.add('active');
+loadData();
+</script>
+</body>
+</html>
