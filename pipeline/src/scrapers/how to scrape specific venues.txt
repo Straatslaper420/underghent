@@ -1,0 +1,18 @@
+1. Run any of the 9 venues individually — scrape-venues.ts now accepts SOURCE_IDs as args:
+
+
+cd C:\Users\Jotte\Desktop\underghent_v2\pipeline
+npm run scrape:venues -- asgaard            # just asgaard
+npm run scrape:venues -- asgaard charlatan  # a couple
+npm run scrape:venues                       # all 9 (unchanged)
+
+Valid ids: funke chinastraat asgaard kinkystar broei crossover molotov charlatan clubsauvage. 
+Unknown names are warned about; a no-match exits non-zero.
+
+2. New standalone pull-venues — pulls manual edits in the Venues tab back into config/venues.json:
+
+npm run pull-venues
+New lib pull-venues-from-sheet.ts + command pull-venues-from-sheet.ts.
+Merges by id: matching venues are updated in place (file order preserved), rows with a new id are appended, and local venues missing from the sheet are kept, never deleted — so a stray blank row can't wipe data.
+Blank/unparseable cells fall back to the existing local value (least-destructive).
+Only rewrites the file when something actually changed (tested: updated=0 added=0 → no write).

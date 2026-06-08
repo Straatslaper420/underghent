@@ -44,7 +44,7 @@ export interface RawReggaebeEvent extends RawEventBase {
 }
 
 export interface RawVenueEvent extends RawEventBase {
-  _source:     'funke' | 'chinastraat' | 'asgaard' | 'kinkystar' | 'broei' | 'thecrossover' | 'molotov' | 'charlatan' | 'kompass' | 'wintercircus'
+  _source:     'funke' | 'chinastraat' | 'asgaard' | 'kinkystar' | 'broei' | 'thecrossover' | 'molotov' | 'charlatan' | 'clubsauvage' | 'kompass' | 'wintercircus'
   venue_id:    string
   venue_name:  string
   hour_start:  string | null

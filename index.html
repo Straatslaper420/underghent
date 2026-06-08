@@ -613,6 +613,177 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 .map-style-btn.active { border-color:#9d88f0; color:#ccbeff; }
 
+/* ── VENUE CIRCLES ─────────────────────────────────────────── */
+.venue-circle {
+  width:34px; height:34px;
+  border-radius:50%;
+  background:#141219;
+  border:1.5px solid #aad1a6;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px; font-weight:700;
+  color:#aad1a6;
+  letter-spacing:0.01em;
+  position:relative;
+  cursor:pointer;
+  transition:transform 0.15s, box-shadow 0.15s, border-color 0.15s, color 0.15s;
+}
+.venue-circle:hover,
+.venue-circle.active {
+  transform:scale(1.18);
+  border-color:#ccffc8;
+  color:#ccffc8;
+  box-shadow:0 0 12px rgba(170,209,166,0.45);
+  z-index:1000;
+}
+.venue-circle.empty {
+  border-color:rgba(147,142,157,0.45);
+  color:#6f6a78;
+}
+.venue-circle.empty:hover {
+  border-color:#938e9d;
+  color:#cac4d4;
+  box-shadow:0 0 8px rgba(147,142,157,0.3);
+}
+.vc-count {
+  position:absolute;
+  top:-6px; right:-6px;
+  min-width:15px; height:15px;
+  padding:0 3px;
+  border-radius:8px;
+  background:#9d88f0;
+  color:#141219;
+  font-size:8px; font-weight:700;
+  line-height:15px;
+  text-align:center;
+  letter-spacing:0;
+}
+
+/* ── VENUE FEED (right slide-in) ───────────────────────────── */
+#venue-feed {
+  position:fixed;
+  top:44px; right:0;
+  width:340px;
+  max-width:90vw;
+  height:calc(100vh - 44px - 32px);
+  z-index:180;
+  background:#1c1b21;
+  border-left:2px solid #aad1a6;
+  display:flex;
+  flex-direction:column;
+  transform:translateX(100%);
+  transition:transform 0.25s ease;
+}
+#venue-feed.open { transform:translateX(0); }
+
+#vf-header {
+  position:relative;
+  padding:14px 16px 13px;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  flex-shrink:0;
+}
+#vf-close {
+  position:absolute;
+  top:10px; right:12px;
+  width:22px; height:22px;
+  border:1px solid rgba(255,255,255,0.06);
+  background:none;
+  color:#938e9d;
+  cursor:pointer;
+  font-family:'JetBrains Mono',monospace;
+  font-size:14px; line-height:1;
+}
+#vf-close:hover { border-color:#9d88f0; color:#ccbeff; }
+#vf-init {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:30px; height:30px;
+  border-radius:50%;
+  border:1.5px solid #aad1a6;
+  color:#aad1a6;
+  font-size:10px; font-weight:700;
+  margin-bottom:9px;
+}
+#vf-name {
+  font-size:15px; font-weight:700;
+  letter-spacing:0.04em;
+  text-transform:uppercase;
+  color:#e6e0ea;
+  padding-right:26px;
+  line-height:1.2;
+}
+#vf-meta {
+  margin-top:7px;
+  font-size:9px;
+  letter-spacing:0.10em;
+  color:#938e9d;
+  text-transform:uppercase;
+}
+#vf-web {
+  display:inline-block;
+  margin-top:9px;
+  font-size:9px; font-weight:700;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+  color:#9d88f0;
+  text-decoration:none;
+}
+#vf-web::before { content:'→ '; }
+#vf-web:hover { color:#ccbeff; }
+
+#vf-list {
+  flex:1;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding:6px 14px 18px;
+}
+#vf-list::-webkit-scrollbar { width:3px; }
+#vf-list::-webkit-scrollbar-track { background:transparent; }
+#vf-list::-webkit-scrollbar-thumb { background:#484552; }
+
+.vf-card {
+  padding:11px 0;
+  border-bottom:1px dotted rgba(255,255,255,0.08);
+}
+.vf-card:last-child { border-bottom:none; }
+.vf-date {
+  font-size:9px; font-weight:700;
+  letter-spacing:0.10em;
+  color:#aad1a6;
+  margin-bottom:5px;
+}
+.vf-title {
+  font-size:12px; font-weight:700;
+  letter-spacing:0.02em;
+  color:#e6e0ea;
+  text-transform:uppercase;
+  line-height:1.25;
+  margin-bottom:5px;
+}
+.vf-row {
+  font-size:9px;
+  color:#cac4d4;
+  letter-spacing:0.04em;
+  line-height:1.45;
+}
+.vf-row .lbl { color:#938e9d; }
+.vf-links { margin-top:7px; display:flex; gap:12px; }
+.vf-link {
+  font-size:8px; font-weight:700;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:#9d88f0;
+  text-decoration:none;
+}
+.vf-link::before { content:'→ '; }
+.vf-link:hover { color:#ccbeff; }
+.vf-empty {
+  padding:22px 4px;
+  font-size:10px;
+  color:#938e9d;
+  letter-spacing:0.06em;
+  line-height:1.7;
+}
+
 /* ── MOBILE PORTRAIT ───────────────────────────────────────── */
 @media (max-width: 600px) and (orientation: portrait) {
 
@@ -708,13 +879,29 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     <a class="portal-link" href="https://www.reggae.be" target="_blank">Reggae.be</a>
     <a class="portal-link" href="https://www.fomostation.be/radar/" target="_blank">FOMO Station</a>
     <a class="portal-link" href="https://vndg.be/" target="_blank">VNDG</a>
-    <a class="portal-link" href="https://www.charlatan.be/agenda" target="_blank">Charlatan</a>
-    <a class="portal-link" href="https://kompassklub.com/agenda/" target="_blank">Kompass</a>
-    <a class="portal-link" href="https://www.viernulvier.gent/nl/agenda" target="_blank">Viernulvier</a>
-    <a class="portal-link" href="https://www.minus-one.be" target="_blank">Minus One</a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- VENUE PORTALS -->
+  <div class="sb-section">
+    <span class="section-label">VENUE PORTALS</span>
+    <div id="venue-portals"></div>
   </div>
 
 
+</aside>
+
+<!-- VENUE FEED -->
+<aside id="venue-feed">
+  <div id="vf-header">
+    <button id="vf-close" onclick="closeVenueFeed()" title="Close">×</button>
+    <span id="vf-init"></span>
+    <div id="vf-name"></div>
+    <div id="vf-meta"></div>
+    <a id="vf-web" href="#" target="_blank" rel="noopener" style="display:none;"></a>
+  </div>
+  <div id="vf-list"></div>
 </aside>
 
 <!-- BOTTOM BAR -->
@@ -968,6 +1155,187 @@ const markerCluster = L.markerClusterGroup({
 });
 map.addLayer(markerCluster);
 
+/* ── VENUES ────────────────────────────────────────────────── */
+// Mirror of pipeline/config/venues.json (+ short map initials). Drives the
+// venue circles, the right-side feed, and the VENUE PORTALS sidebar list.
+const VENUES = [
+  {id:'charlatan',   initials:'CH', name:'Charlatan',          area:'City Centre',  lat:51.05603186841703, lng:3.7285059220882286, website:'https://www.charlatan.be',     scrape_url:'https://www.charlatan.be/agenda',        aliases:['charlatan','de charlatan','cafe charlatan']},
+  {id:'kompass',     initials:'KP', name:'Kompass',            area:'Muide',        lat:51.06836775216201, lng:3.723787570557093,  website:'https://kompassklub.com',      scrape_url:'https://kompassklub.com/event-list/',    aliases:['kompass','kompass klub','kompass club','kompass klup']},
+  {id:'viernulvier', initials:'VN', name:'VIERNULVIER',        area:'City Centre',  lat:51.04785719025603, lng:3.727390868709035,  website:'https://www.viernulvier.gent', scrape_url:'https://www.viernulvier.gent/nl/agenda', aliases:['viernulvier','vooruit','de vooruit','vooruit concertzaal','4nulvier','4 nul vier','kunstencentrum viernulvier','viernulvier concertzaal','viernulvier café']},
+  {id:'minusone',    initials:'M1', name:'Minus One',          area:'Brugse Poort', lat:51.064983789821206,lng:3.7170938380275604, website:'https://www.minus-one.be',     scrape_url:'https://www.minus-one.be/agenda',        aliases:['minus one','minus 1','minus-one','minus one gent','joc minus one']},
+  {id:'chinastraat', initials:'CS', name:'Chinastraat',        area:'Dampoort',     lat:51.07292204573162, lng:3.7352400275105238, website:null,                           scrape_url:'https://chinastraat.be',                 aliases:['chinastraat','china straat','chinastraat gent']},
+  {id:'vierdeZaal',  initials:'VZ', name:'Vierde Zaal',        area:null,           lat:51.03703524099016, lng:3.76571949754381,   website:null,                           scrape_url:'https://vierdezaal.gent/agenda',         aliases:['vierde zaal','4e zaal','4dezaal','de vierde zaal','4de zaal','vierdezaal']},
+  {id:'wintercircus',initials:'WC', name:'Wintercircus',       area:'City Centre',  lat:51.04823127912577, lng:3.728013926379643,  website:null,                           scrape_url:'https://www.wintercircus.be/en/agenda',  aliases:['wintercircus','winter circus','club wintercircus']},
+  {id:'baudelopark', initials:'BP', name:'Baudelopark',        area:'City Centre',  lat:51.05846956553006, lng:3.7303613975448613, website:null,                           scrape_url:null,                                     aliases:['baudelopark','baudelo','baudelo park']},
+  {id:'funke',       initials:'FU', name:'FUNKE',              area:'City Centre',  lat:51.0571191,        lng:3.7276669,          website:'https://funke.gent/',          scrape_url:'https://funke.gent/agenda',              aliases:['funke','cafe funke','funke gent']},
+  {id:'asgaard',     initials:'AS', name:'Asgaard',            area:null,           lat:51.0367699,        lng:3.7659118,          website:null,                           scrape_url:'https://asgaard.be/programma',           aliases:['asgaard','asgaard gentbrugge','asgaard gent']},
+  {id:'missy_sippy', initials:'MS', name:'Missy Sippy',        area:'City Centre',  lat:51.05445833867116, lng:3.7226740110387766, website:'https://www.missy-sippy.be',    scrape_url:null,                                     aliases:['missy sippy','missy sippy blues','missy sippy blues & roots club','missy sippy blues and roots club']},
+  {id:'shoonya',     initials:'SH', name:'Shoonya Dance Centre',area:'Dampoort',    lat:51.063525166973676,lng:3.7342634398745163, website:'https://www.shoonyadance.com',  scrape_url:null,                                     aliases:['shoonya','shoonya dance','shoonya dance centre','shoonya dance gent','stapelplein 41']},
+  {id:'hotclub',     initials:'HC', name:'Hot Club Gent',      area:'City Centre',  lat:51.05638448302568, lng:3.722551682203568,  website:'https://www.hotclub.gent',     scrape_url:'https://www.hotclub.gent/programma.php', aliases:['hot club gent','hot club','hotclub gent']},
+  {id:'decentrale',  initials:'DC', name:'De Centrale',        area:'Dampoort',     lat:51.06151194618855, lng:3.7343752687757483, website:'https://www.decentrale.be',     scrape_url:'https://www.decentrale.be/en/agenda',    aliases:['de centrale','centrale gent','intercultureel muziekcentrum']},
+  {id:'ha_concerts', initials:'HA', name:'Ha Concerts',        area:'City Centre',  lat:51.04995797741283, lng:3.723342946222628,  website:'https://www.haconcerts.be',     scrape_url:'https://www.haconcerts.be/nl/concertagenda', aliases:['ha concerts','haconcerts','ha','ha gent','de handelsbeurs']},
+  {id:'thecrossover',initials:'CR', name:'The Crossover',      area:null,           lat:51.111710298125985,lng:3.7400412829803122, website:'https://www.thecrossover.be',   scrape_url:'https://www.thecrossover.be/',           aliases:['the crossover','crossover music pub','crossover gent']},
+  {id:'zebrastraat', initials:'ZB', name:'Zebrastraat',        area:null,           lat:51.03997086700192, lng:3.733814466397537,  website:'https://www.zebrastraat.be',    scrape_url:'https://www.zebrastraat.be/nl/agenda',   aliases:['zebrastraat','zebra straat','zebrastraat gent']},
+  {id:'broei',       initials:'BR', name:'BROEI',              area:'Muide',        lat:51.06276151712576, lng:3.7304432980316027, website:'https://www.broei.be',          scrape_url:'https://www.broei.be/agenda',            aliases:['broei','broei gent','broei vzw']},
+  {id:'trefpunt',    initials:'TP', name:'Trefpunt',           area:'City Centre',  lat:51.05629940833704, lng:3.7271136986516025, website:'https://trefpunt.be',           scrape_url:'https://trefpunt.be/agenda/',            aliases:['trefpunt','trefpunt gent','trefpunt festival']},
+  {id:'kinkystar',   initials:'KS', name:'Kinky Star',         area:'City Centre',  lat:51.055966233961335,lng:3.7285570259706775, website:'https://kinkystar.com',         scrape_url:'https://kinkystar.com/programma',        aliases:['kinky star','kinkystar','kinky star gent']},
+  {id:'copadok',     initials:'CD', name:'Copa DOK',           area:'Muide',        lat:51.07048447071386, lng:3.7364126971363967, website:'https://www.copadok.be',        scrape_url:'https://www.copadok.be/line-up',         aliases:['copa dok','copadok','copa dok gent','copa']},
+  {id:'debijloke',   initials:'BL', name:'De Bijloke',         area:'City Centre',  lat:51.043784604116425,lng:3.719343036800827,  website:'https://www.bijloke.be',        scrape_url:'https://www.bijloke.be/nl/programma',    aliases:['de bijloke','bijloke','muziekcentrum de bijloke','bijloke gent','kraakhuis']},
+  {id:'molotov',     initials:'MO', name:'Molotov',            area:'City Centre',  lat:51.04070189091864, lng:3.726496810630025,  website:null,                           scrape_url:null,                                     aliases:['molotov','molotov gent','cafe molotov']},
+];
+// Precompute a lowercase alias lookup set per venue (aliases + canonical name).
+VENUES.forEach(v => {
+  v._aliasSet = new Set([...v.aliases, v.name.toLowerCase()]);
+});
+
+// Quick-zoom helper; skips while the map has no size (e.g. before first layout).
+function flyToVenue(v) {
+  const s = map.getSize();
+  if (!s.x || !s.y) { map.setView([v.lat, v.lng], 16); return; }
+  map.flyTo([v.lat, v.lng], 16, {duration: 0.6});
+}
+
+const venueLayer  = L.layerGroup().addTo(map);
+let venueMarkers  = {};   // id -> Leaflet marker
+let venueEventMap = {};   // id -> events[] (current filtered set)
+let currentFeedVenueId = null;
+
+/* Match an event to a known venue: first by name/alias, then by coordinates. */
+function _venueForEvent(ev) {
+  const name = (ev.venue || '').toLowerCase().trim();
+  if (name) {
+    for (const v of VENUES) if (v._aliasSet.has(name)) return v;
+    for (const v of VENUES) for (const a of v._aliasSet) {
+      if (a.length >= 4 && (name.includes(a) || a.includes(name))) return v;
+    }
+  }
+  const lat = parseFloat((ev.latitude  || '').toString().replace(',', '.'));
+  const lng = parseFloat((ev.longitude || '').toString().replace(',', '.'));
+  if (!isNaN(lat) && !isNaN(lng)) {
+    let best = null, bestD = Infinity;
+    for (const v of VENUES) {
+      const d = Math.abs(v.lat - lat) + Math.abs(v.lng - lng);
+      if (d < bestD) { bestD = d; best = v; }
+    }
+    if (best && bestD < 0.0012) return best; // ~ within ~90m
+  }
+  return null;
+}
+
+function _venueIcon(v, count) {
+  const cls   = count > 0 ? 'venue-circle' : 'venue-circle empty';
+  const badge = count > 0 ? `<span class="vc-count">${count}</span>` : '';
+  return L.divIcon({
+    html: `<div class="${cls}">${v.initials}${badge}</div>`,
+    className: '',
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
+  });
+}
+
+function buildVenueMarkers() {
+  venueLayer.clearLayers();
+  venueMarkers = {};
+  VENUES.forEach(v => {
+    const evs = venueEventMap[v.id] || [];
+    const m = L.marker([v.lat, v.lng], {icon: _venueIcon(v, evs.length), zIndexOffset: 600});
+    m.on('click', () => openVenueFeed(v.id));
+    venueLayer.addLayer(m);
+    venueMarkers[v.id] = m;
+    if (v.id === currentFeedVenueId) {
+      const el = m.getElement();
+      if (el) el.querySelector('.venue-circle')?.classList.add('active');
+    }
+  });
+}
+
+/* ── VENUE FEED (right panel) ──────────────────────────────── */
+function _feedCard(ev) {
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const title = (ev.title || 'UNTITLED').toUpperCase();
+  const date  = ev.date_start || '';
+  let dd = date;
+  if (date.includes('-') && date.length >= 10) dd = date.slice(8,10) + '.' + date.slice(5,7) + '.' + date.slice(0,4);
+  const time    = ev.hour_start || '';
+  const genre   = [ev.genre, ev.subgenre].filter(Boolean).join(' / ');
+  const artists = ev.artists || '';
+  const src = (ev.source_url || '').trim();
+  const tik = (ev.ticket_url || '').trim();
+
+  let h = '<div class="vf-card">';
+  h += `<div class="vf-date">${esc(dd)}${time ? ' · ' + esc(time) : ''}</div>`;
+  h += `<div class="vf-title">${esc(title)}</div>`;
+  if (genre)   h += `<div class="vf-row"><span class="lbl">// </span>${esc(genre)}</div>`;
+  if (artists) h += `<div class="vf-row"><span class="lbl">// </span>${esc(artists)}</div>`;
+  const links = [];
+  if (src) links.push(`<a class="vf-link" href="${esc(src)}" target="_blank" rel="noopener">SOURCE</a>`);
+  if (tik) links.push(`<a class="vf-link" href="${esc(tik)}" target="_blank" rel="noopener">TICKETS</a>`);
+  if (links.length) h += `<div class="vf-links">${links.join('')}</div>`;
+  h += '</div>';
+  return h;
+}
+
+function renderVenueFeedList(v) {
+  const evs  = venueEventMap[v.id] || [];
+  const meta = document.getElementById('vf-meta');
+  meta.textContent = `${evs.length} EVENT${evs.length === 1 ? '' : 'S'}` + (v.area ? ' · ' + v.area.toUpperCase() : '');
+  const list = document.getElementById('vf-list');
+  list.innerHTML = evs.length
+    ? evs.map(_feedCard).join('')
+    : '<div class="vf-empty">// NO SIGNALS IN RANGE<br>Adjust the date filters or check back later.</div>';
+}
+
+function openVenueFeed(id) {
+  const v = VENUES.find(x => x.id === id);
+  if (!v) return;
+  currentFeedVenueId = id;
+
+  document.querySelectorAll('.venue-circle.active').forEach(e => e.classList.remove('active'));
+  const el = venueMarkers[id] && venueMarkers[id].getElement();
+  if (el) el.querySelector('.venue-circle')?.classList.add('active');
+
+  document.getElementById('vf-init').textContent = v.initials;
+  document.getElementById('vf-name').textContent = v.name;
+  const web = document.getElementById('vf-web');
+  const url = v.website || v.scrape_url;
+  if (url) {
+    web.href = url;
+    web.textContent = v.website ? 'WEBSITE' : 'AGENDA';
+    web.style.display = 'inline-block';
+  } else {
+    web.style.display = 'none';
+  }
+  renderVenueFeedList(v);
+  document.getElementById('venue-feed').classList.add('open');
+  flyToVenue(v);
+}
+
+function closeVenueFeed() {
+  currentFeedVenueId = null;
+  document.getElementById('venue-feed').classList.remove('open');
+  document.querySelectorAll('.venue-circle.active').forEach(e => e.classList.remove('active'));
+}
+
+/* ── VENUE PORTALS (sidebar) ───────────────────────────────── */
+function buildVenuePortals() {
+  const c = document.getElementById('venue-portals');
+  c.innerHTML = '';
+  VENUES.slice().sort((a, b) => a.name.localeCompare(b.name)).forEach(v => {
+    const a = document.createElement('a');
+    a.className = 'portal-link';
+    a.textContent = v.name;
+    const url = v.website || v.scrape_url;
+    if (url) { a.href = url; a.target = '_blank'; a.rel = 'noopener'; }
+    else a.href = 'javascript:void(0)';
+    // Hover → quick-zoom the map to this venue.
+    a.addEventListener('mouseenter', () => flyToVenue(v));
+    // Click → also open the venue feed (website, if any, opens in a new tab).
+    a.addEventListener('click', () => openVenueFeed(v.id));
+    c.appendChild(a);
+  });
+}
+buildVenuePortals();
+
 /* ── GHENT TOGGLE ──────────────────────────────────────────── */
 function toggleGhent() {
   ghentOnly = !ghentOnly;
@@ -1152,8 +1520,17 @@ function _popup(ev) {
 /* ── RENDER ────────────────────────────────────────────────── */
 function renderEvents(events) {
   markerCluster.clearLayers();
+  venueEventMap = {};
   let n = 0;
   events.forEach(ev => {
+    // Events at a known venue are represented by that venue's circle + feed,
+    // not by an individual map node.
+    const v = _venueForEvent(ev);
+    if (v) {
+      (venueEventMap[v.id] = venueEventMap[v.id] || []).push(ev);
+      n++;
+      return;
+    }
     let lat = (ev.latitude  || '').toString().replace(',', '.');
     let lng = (ev.longitude || '').toString().replace(',', '.');
     lat = parseFloat(lat); lng = parseFloat(lng);
@@ -1163,6 +1540,18 @@ function renderEvents(events) {
     markerCluster.addLayer(m);
     n++;
   });
+  // Sort each venue's events chronologically for the feed.
+  const byDate = (a, b) => {
+    const da = _parseDate(a.date_start), db = _parseDate(b.date_start);
+    if (!da) return 1; if (!db) return -1;
+    return da - db;
+  };
+  Object.values(venueEventMap).forEach(arr => arr.sort(byDate));
+  buildVenueMarkers();
+  if (currentFeedVenueId) {
+    const v = VENUES.find(x => x.id === currentFeedVenueId);
+    if (v) renderVenueFeedList(v);
+  }
   // Sidebar: filtered count
   document.getElementById('sig-top').textContent = `[ ${n} EVENTS`;
   document.getElementById('sig-bot').textContent = `DETECTED ]`;

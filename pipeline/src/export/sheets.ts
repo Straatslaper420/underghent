@@ -1,5 +1,6 @@
 import { readFileSync, existsSync } from 'fs'
 import type { CanonicalEvent } from '../types/canonical.js'
+import type { VenueRecord } from '../types/registry.js'
 
 export interface SheetsConfig {
   credentialsPath: string
@@ -230,6 +231,66 @@ export async function appendEventsToTab(
   await ensureSheetExists(sheets, config.spreadsheetId, config.worksheetName)
   await appendRows(sheets, config.spreadsheetId, config.worksheetName, events.map(flatten), HEADERS)
   return events.length
+}
+
+// ── Venue registry export ────────────────────────────────────────────────
+// One row per venue from config/venues.json, every field as a column.
+
+const VENUE_HEADERS = [
+  'id', 'canonical_name', 'aliases', 'address', 'lat', 'lng',
+  'underground_weight', 'genres', 'area', 'website', 'scrape_url', 'scrape_type',
+]
+
+function flattenVenue(v: VenueRecord): string[] {
+  const n = (val: unknown): string => (val === null || val === undefined ? '' : String(val))
+  return [
+    n(v.id), n(v.canonical_name),
+    v.aliases.join(', '),
+    n(v.address), n(v.lat), n(v.lng),
+    n(v.underground_weight),
+    v.genres.join(', '),
+    n(v.area), n(v.website), n(v.scrape_url), n(v.scrape_type),
+  ]
+}
+
+// Full refresh: clear the tab then write headers + the current registry snapshot,
+// so re-runs stay in sync with venues.json (no duplicate rows).
+export async function exportVenuesToSheet(
+  venues: VenueRecord[],
+  config: SheetsConfig,
+): Promise<number> {
+  if (!existsSync(config.credentialsPath)) {
+    throw new Error(`Google Sheets credentials not found at ${config.credentialsPath}`)
+  }
+
+  const { google } = await import('googleapis')
+  const creds = JSON.parse(readFileSync(config.credentialsPath, 'utf-8'))
+  const auth  = new google.auth.GoogleAuth({
+    credentials: creds,
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  })
+  const sheets = google.sheets({ version: 'v4', auth })
+
+  await ensureSheetExists(sheets, config.spreadsheetId, config.worksheetName)
+
+  const values = [VENUE_HEADERS, ...venues.map(flattenVenue)]
+
+  await withRetry(() =>
+    sheets.spreadsheets.values.clear({
+      spreadsheetId: config.spreadsheetId,
+      range:         config.worksheetName,
+    })
+  )
+  await withRetry(() =>
+    sheets.spreadsheets.values.update({
+      spreadsheetId:    config.spreadsheetId,
+      range:            `${config.worksheetName}!A1`,
+      valueInputOption: 'RAW',
+      requestBody:      { values },
+    })
+  )
+
+  return venues.length
 }
 
 export async function exportSheets(

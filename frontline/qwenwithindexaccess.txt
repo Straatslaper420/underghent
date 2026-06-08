@@ -14,3 +14,42 @@ or
 aider --model openrouter/google/gemini-2.5-pro-exp-03-19 index.html
 
 ^^bigger but still free
+
+
+Two commands worth knowing:
+
+Check if Aider has work in frontline/ not yet promoted to live:
+--------
+git diff --no-index index.html frontline\index.html
+--------
+(No output = identical/in sync. Output = frontline is ahead, ready to promote.)
+
+If you ever want to promote it yourself (the copy-paste, automated):
+-------------
+Copy-Item frontline\index.html index.html
+git add index.html
+git commit -m "Promote frontline changes to live root index.html"
+git push
+---------------
+But honestly — just let me do that part. Your ideal loop becomes:
+
+Aider improves frontline/index.html, auto-commits.
+You open it in a browser, confirm it looks/works right.
+You tell me: "promote frontline to root" → I copy, commit, push → live in ~1 min.
+
+----------------------------------------------------------------------------------------
+Full folder commit and push (smart)
+
+Manual way (whenever you want full control)
+cd C:\Users\Jotte\Desktop\underghent_v2
+git add -A
+git commit -m "describe what changed"
+git push
+
+
+One-command way (the script I just made)
+From the underghent_v2 folder:
+
+.\sync.ps1                  # auto message like "Sync: 2026-06-07 14:30"
+.\sync.ps1 "what I changed" # your own message
+It stages the whole folder, commits, and pushes — and it's smart: if nothing changed it just pushes any commits that aren't on GitHub yet (e.g. Aider's). Secrets stay protected by .gitignore.
