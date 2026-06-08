@@ -72,6 +72,9 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 #slider::-moz-range-thumb{width:14px;height:22px;background:var(--green);border:0;cursor:pointer}
 .cdate{font-size:9px;color:var(--green);text-align:center;margin-top:6px;
   letter-spacing:3px;text-shadow:0 0 8px var(--green)}
+/* festival mode (Gentse Feesten window): date + logo go gold like the label above the slider */
+.cdate.feesten{color:var(--gold);text-shadow:0 0 8px var(--gold)}
+#logo.feesten{color:var(--gold);text-shadow:0 0 12px var(--gold)}
 
 /* ── Map markers ──────────────────────────────────────── */
 .edot{background:var(--pink);border:2px solid var(--gold);color:#fff;
@@ -94,11 +97,17 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   letter-spacing:1px;line-height:1.4;padding-right:14px}
 .prow{font-size:8px;margin-bottom:4px;letter-spacing:.5px;line-height:1.5}
 .pvenue{color:var(--pink);text-shadow:0 0 4px var(--pink)}
+.pvenue-link,.pvenue-link:link,.pvenue-link:visited,.pvenue-link:hover,.pvenue-link:active{
+  color:var(--pink);text-decoration:underline;text-underline-offset:2px}
 .ptime{color:var(--gold)}
 .pdesc{color:var(--mint);margin-top:6px;line-height:1.6;
   display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .plink{display:inline-block;margin-top:8px;font-size:8px;color:var(--green);
   border:1px solid var(--green);padding:3px 7px;text-decoration:none;letter-spacing:1px}
+/* popup actions row: Details button + event-type hashtags beside it */
+.pactions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+.pactions .plink{margin-top:0}
+.ptags{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
 
 /* source tag (popups + cards) */
 .src{font-size:7px;letter-spacing:1px;padding:2px 5px;border:1px solid;display:inline-block}
@@ -207,7 +216,7 @@ const SAMPLE = [
 // ── State ──────────────────────────────────────────────────────────────────
 let ALL = [];                // merged + deduped events
 let DATES = [];              // sorted unique dates across the merged set
-let activeCat = 'ALL';
+let activeCats = new Set();  // selected types (OR); empty = show all
 let q = '';
 let view = 'map';
 let map = null, markersBuilt = false;
@@ -223,6 +232,10 @@ function dayLabel(d){
   if(isNaN(dt)) return 'DATE TBA';
   return DY[dt.getDay()]+' '+dt.getDate()+' '+MO[dt.getMonth()]+' '+dt.getFullYear();
 }
+// Gentse Feesten 2026 window (inclusive): drives the festival-mode flourishes
+const FEESTEN_START='2026-07-17', FEESTEN_END='2026-07-27';
+function inFeesten(d){ return !!d && d>=FEESTEN_START && d<=FEESTEN_END; }   // 'YYYY-MM-DD' string compare
+function feestenDay(d){ return Math.round((new Date(d+'T12:00:00')-new Date(FEESTEN_START+'T12:00:00'))/864e5)+1; }
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function fmtStat(n){return n>=1000?(n/1000).toFixed(1).replace(/\.0$/,'')+'k':String(n);}
 
@@ -347,7 +360,7 @@ function dedupe(events){
 
 // ── Filtering shared by both views ──────────────────────────────────────────
 function matches(e){
-  if(activeCat!=='ALL' && !(e.categories||[]).includes(activeCat)) return false;
+  if(activeCats.size && !(e.categories||[]).some(c=>activeCats.has(c))) return false;
   if(q){
     const hay=(e.title+' '+e.venue+' '+(e.desc||'')+' '+(e.organizer||'')+' '+
       (e.address||'')+' '+(e.categories||[]).join(' ')).toLowerCase();
@@ -368,9 +381,16 @@ function renderChips(){
   wrap.innerHTML='';
   topCategories(16).forEach(c=>{
     const el=document.createElement('div');
-    el.className='chip'+(c===activeCat?' on':'');
+    const isAll=c==='ALL';
+    const on=isAll?activeCats.size===0:activeCats.has(c);   // ALL lit when nothing selected
+    el.className='chip'+(on?' on':'');
     el.textContent=c;
-    el.onclick=()=>{activeCat=c;renderChips();renderAll();};
+    el.onclick=()=>{
+      if(isAll) activeCats.clear();                          // clear → show everything
+      else if(activeCats.has(c)) activeCats.delete(c);       // toggle this type off
+      else activeCats.add(c);                                // toggle this type on
+      renderChips();renderAll();
+    };
     wrap.appendChild(el);
   });
 }
@@ -420,17 +440,23 @@ function buildMarkers(){
     if(e.lat==null||e.lng==null) return;
     const icon=L.divIcon({
       className:'',
-      html:`<div class="edot src-${e.source}">${dotLbl(e.date)}</div>`,
+      html:`<div class="edot src-${e.source}">${e.time||'TBA'}</div>`,
       iconSize:[54,22],iconAnchor:[27,11]
     });
     const m=L.marker([e.lat,e.lng],{icon});
     const desc=e.desc?`<div class="prow pdesc">${esc(e.desc)}</div>`:'';
-    const link=e.url&&e.url!=='#'?`<a class="plink" href="${esc(e.url)}" target="_blank" rel="noopener">▶ DETAILS</a>`:'';
+    // same hashtag markup/classes the list cards use, so styling matches
+    const tags=(e.categories||[]).slice(0,3).map(t=>`<span class="tag">#${esc(t)}</span>`).join('');
+    const link=e.url&&e.url!=='#'?`<a class="plink" href="${esc(e.url)}" target="_blank" rel="noopener">► DETAILS</a>`:'';
+    const actions=`<div class="pactions">${link}<span class="ptags">${tags}</span></div>`;
+    // venue links out to the marker's coordinates on Google Maps
+    const mapsUrl=`https://www.google.com/maps/search/?api=1&query=${e.lat},${e.lng}`;
+    const venue=`<div class="prow pvenue">◈ <a class="pvenue-link" href="${mapsUrl}" target="_blank" rel="noopener">${esc(e.venue||'VENUE TBA')}</a></div>`;
     m.bindPopup(
-      `<div class="ptitle">▶ ${esc(e.title)} ${srcTag(e.source)}</div>`+
-      `<div class="prow pvenue">◈ ${esc(e.venue||'VENUE TBA')}</div>`+
+      `<div class="ptitle">► ${esc(e.title)}</div>`+
+      venue+
       `<div class="prow ptime">◷ ${dayLabel(e.date)} @ ${e.time||'TBA'}${e.paid?' · TICKETED':' · FREE'}</div>`+
-      desc+link,
+      desc+actions,
       {maxWidth:240,minWidth:190,autoPan:true}
     );
     MARKERS[e.id]=m;
@@ -450,6 +476,12 @@ function renderMap(){
     else if(map.hasLayer(m)) map.removeLayer(m);
   });
   document.getElementById('cdate').textContent = sel?('► '+dayLabel(sel)):'──';
+  // festival mode: yellow date + themed logo while the selected date is in the Feesten window
+  const fest=inFeesten(sel);
+  document.getElementById('cdate').classList.toggle('feesten',fest);
+  const logo=document.getElementById('logo');
+  logo.classList.toggle('feesten',fest);
+  logo.textContent = fest ? 'GHENT//EVENT\\\\SE FEESTEN' : '▶ GHENT // EVENTS ◼';
   return cnt;
 }
 
@@ -458,7 +490,9 @@ function renderBadge(){
   const badge=document.getElementById('badge');
   if(view==='map'){
     const n=renderMap()||0;
-    badge.textContent='■ '+n+' ON '+(DATES[+document.getElementById('slider').value]?dotLbl(DATES[+document.getElementById('slider').value]):'──');
+    const sel=DATES[+document.getElementById('slider').value];
+    const lbl=inFeesten(sel)?('DAY '+feestenDay(sel)):(sel?dotLbl(sel):'──');
+    badge.textContent='■ '+n+' ON '+lbl;
   }else{
     const n=ALL.filter(matches).length;
     badge.textContent='■ '+n+' EVENTS';
