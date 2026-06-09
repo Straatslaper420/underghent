@@ -29,6 +29,8 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   text-shadow:0 0 12px var(--green);user-select:none}
 .badge{font-size:9px;color:var(--pink);letter-spacing:2px;
   text-shadow:0 0 8px var(--pink);white-space:nowrap}
+/* festival mode: the live count badge goes gold while showing a Feesten day */
+.badge.feesten{color:var(--gold);text-shadow:0 0 8px var(--gold)}
 
 /* ── Control bar (filters both views) ─────────────────── */
 #bar{flex-shrink:0;background:var(--bg);border-bottom:1px solid var(--line);
@@ -36,7 +38,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .barrow{display:flex;gap:8px;align-items:center}
 #search{flex:1;min-width:0;background:var(--panel);border:2px solid var(--green);
   color:var(--green);font-family:inherit;font-size:11px;letter-spacing:1px;
-  padding:7px 10px;outline:none}
+  padding:7px 10px;outline:none;text-align:center}
 #search::placeholder{color:#2f6f55}
 #search:focus{box-shadow:0 0 12px rgba(0,255,136,.35)}
 
@@ -54,23 +56,25 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .chip.on{border-color:var(--pink);color:var(--pink);box-shadow:0 0 10px rgba(255,45,120,.4)}
 
 /* ── View containers ──────────────────────────────────── */
-#mapview{flex:1;min-height:0;display:flex;flex-direction:column}
+#mapview{flex:1;min-height:0;display:flex;flex-direction:column;position:relative}
 #map{flex:1;min-height:0}
 #listview{flex:1;min-height:0;overflow-y:auto;display:none}
 
-/* ── Map: date slider ─────────────────────────────────── */
-#controls{flex-shrink:0;background:var(--bg);border-top:3px solid var(--green);
-  padding:9px 18px 12px;box-shadow:0 -2px 20px rgba(0,255,136,.1)}
-.lbl{font-size:8px;color:var(--gold);letter-spacing:3px;text-align:center;
-  margin-bottom:8px;text-shadow:0 0 8px var(--gold)}
-#slider{width:100%;-webkit-appearance:none;appearance:none;height:6px;
-  background:repeating-linear-gradient(90deg,#1a1a3a 0,#1a1a3a 4px,#0a0a1a 4px,#0a0a1a 8px);
-  border:2px solid var(--green);outline:none;cursor:pointer}
-#slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:22px;
+/* ── Map: date slider — vertical, floated on the LEFT over the tiles ──────── */
+#slider{position:absolute;left:12px;top:50%;transform:translateY(-50%);z-index:1000;
+  -webkit-appearance:none;appearance:none;writing-mode:vertical-lr;direction:rtl;
+  width:10px;height:min(58%,300px);margin:0;
+  background:repeating-linear-gradient(0deg,#1a1a3a 0,#1a1a3a 4px,#0a0a1a 4px,#0a0a1a 8px);
+  border:2px solid var(--green);outline:none;cursor:pointer;
+  box-shadow:3px 3px 0 #000,0 0 12px rgba(0,255,136,.25)}
+#slider::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:14px;
   background:var(--green);border:0;cursor:pointer;image-rendering:pixelated;
   clip-path:polygon(20% 0%,80% 0%,100% 20%,100% 80%,80% 100%,20% 100%,0% 80%,0% 20%)}
-#slider::-moz-range-thumb{width:14px;height:22px;background:var(--green);border:0;cursor:pointer}
-.cdate{font-size:9px;color:var(--green);text-align:center;margin-top:6px;
+#slider::-moz-range-thumb{width:22px;height:14px;background:var(--green);border:0;cursor:pointer}
+/* ── Map: current date, solo + centered along the bottom strip ───────────── */
+#controls{flex-shrink:0;background:var(--bg);border-top:3px solid var(--green);
+  padding:11px 18px;box-shadow:0 -2px 20px rgba(0,255,136,.1)}
+.cdate{font-size:12px;color:var(--green);text-align:center;
   letter-spacing:3px;text-shadow:0 0 8px var(--green)}
 /* festival mode (Gentse Feesten window): date + logo go gold like the label above the slider */
 .cdate.feesten{color:var(--gold);text-shadow:0 0 8px var(--gold)}
@@ -130,12 +134,19 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 /* ── List: card feed ──────────────────────────────────── */
 #feed{max-width:620px;margin:0 auto;padding:16px 14px 40px}
 .daygroup{margin-bottom:22px}
-.dayhdr{font-size:9px;letter-spacing:3px;color:var(--gold);text-shadow:0 0 8px var(--gold);
-  padding:6px 0 10px;border-bottom:1px dashed var(--line);margin-bottom:12px}
+/* date header sticks to the top of the scroll area so it's always visible */
+.dayhdr{position:sticky;top:0;z-index:5;background:var(--bg);
+  display:flex;align-items:center;gap:9px;
+  font-size:9.5px;font-weight:bold;letter-spacing:3px;color:var(--gold);text-shadow:0 0 8px var(--gold);
+  padding:9px 0 10px;border-bottom:1px dashed var(--line);margin-bottom:12px}
+/* fat yellow Feesten-day pill, carried up onto the sticky header */
+.daypill{background:var(--gold);color:var(--bg);font-weight:bold;font-size:8px;letter-spacing:1px;
+  padding:3px 7px;text-shadow:none;box-shadow:0 0 10px rgba(255,215,0,.5)}
 .card{display:flex;gap:12px;border:3px solid var(--green);background:#06060f;
   margin-bottom:12px;box-shadow:4px 4px 0 #000,0 0 14px rgba(0,255,136,.12);
   text-decoration:none;color:inherit;transition:transform .08s,box-shadow .12s}
-.card:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 #000,0 0 20px rgba(0,255,136,.28);border-color:var(--gold)}
+/* keep the type-colour edge on hover; just lift + intensify the shadow */
+.card:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 #000,0 0 20px rgba(0,255,136,.28)}
 .thumb{width:84px;flex-shrink:0;background:var(--panel);align-self:stretch;
   border-right:2px solid var(--line);position:relative;overflow:hidden;
   display:flex;align-items:center;justify-content:center}
@@ -165,8 +176,18 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .popstar{position:absolute;top:24px;right:6px;z-index:5;width:22px;height:22px;font-size:13px;
   display:flex;align-items:center;justify-content:center;background:#06060f;border:1px solid var(--line)}
 .popstar.starred{border-color:var(--gold)}
-/* list star: dedicated rail on the RIGHT-HAND side of each card */
-.cstar{display:flex;align-items:center;flex-shrink:0;padding:0 11px;font-size:18px}
+/* list star: dedicated rail on the RIGHT-HAND side of each card (bigger tap target) */
+.cstar{display:flex;align-items:center;flex-shrink:0;padding:0 12px}
+.liststar{font-size:26px;padding:4px}
+
+/* ── Confetti burst when the logo flips into Gentse Feesten mode ───────────── */
+.confetti-layer{position:fixed;inset:0 0 auto 0;height:0;z-index:10001;pointer-events:none}
+.confetti-bit{position:absolute;top:-14px;width:8px;height:13px;opacity:0;
+  animation:confetti-fall linear forwards}
+@keyframes confetti-fall{
+  0%{opacity:1;transform:translate(0,0) rotate(0)}
+  100%{opacity:0;transform:translate(var(--dx),78vh) rotate(var(--rot))}
+}
 
 /* ── Header ★ filter toggle (gold = distinct from the pink view toggle) ────── */
 #starfilter{border:2px solid var(--line);flex-shrink:0;font-size:11px}
@@ -227,9 +248,8 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   <!-- MAP VIEW (default landing) -->
   <div id="mapview">
     <div id="map"></div>
+    <input type="range" id="slider" min="0" value="0" aria-label="Browse dates"/>
     <div id="controls">
-      <div class="lbl">◄◄ DRAG TO BROWSE DATES ►►</div>
-      <input type="range" id="slider" min="0" value="0"/>
       <div class="cdate" id="cdate">──</div>
     </div>
   </div>
@@ -295,6 +315,7 @@ let q = '';
 let view = 'map';
 let starFilterOn = false;          // header ★ filter, persisted to localStorage
 const STARRED = new Set();         // starred event keys, persisted to localStorage
+let wasFeesten = false;            // tracks the Feesten threshold crossing for the confetti burst
 let map = null, markersBuilt = false;
 const MARKERS = {};          // id → leaflet marker (events with coords only)
 
@@ -554,10 +575,12 @@ function renderFeed(){
       const tags=(e.categories||[]).slice(0,3).map(t=>`<span class="tag">#${esc(t)}</span>`).join('');
       const stat=(e.going||e.interested)
         ? `<span class="tag stat">▲ ${fmtStat(e.going||0)} GOING · ${fmtStat(e.interested||0)} INT</span>` : '';
-      return `<a class="card"${href}>
+      // edge colour mirrors the map dot's type colour
+      const edge=eventGroup(e).color;
+      return `<a class="card" style="border-color:${edge}"${href}>
         <div class="thumb">${thumb}</div>
         <div class="cbody">
-          <div class="ctop"><div class="ttl">▶ ${esc(e.title)}</div>${srcTag(e.source)}</div>
+          <div class="ttl">▶ ${esc(e.title)}</div>
           <div class="meta venue">◈ ${esc(e.venue||'VENUE TBA')}${e.address?' · '+esc(e.address):''}</div>
           <div class="meta time">◷ ${e.time?esc(e.time):'TIME TBA'}${e.paid?' · TICKETED':' · FREE'}</div>
           ${e.desc?`<div class="desc">${esc(e.desc)}</div>`:''}
@@ -569,7 +592,9 @@ function renderFeed(){
           title="${on?'Starred — click to remove':'Click to star'}">${on?'★':'☆'}</button></div>
       </a>`;
     }).join('');
-    return `<div class="daygroup"><div class="dayhdr">► ${dayLabel(k)}</div>${cards}</div>`;
+    // during the Feesten window the header carries a fat yellow "DAY N" pill (replaces per-card source tags)
+    const pill=inFeesten(k)?`<span class="daypill">DAY ${feestenDay(k)}</span>`:'';
+    return `<div class="daygroup"><div class="dayhdr">► ${dayLabel(k)}${pill}</div>${cards}</div>`;
   }).join('');
 }
 
@@ -628,6 +653,8 @@ function renderMap(){
   const logo=document.getElementById('logo');
   logo.classList.toggle('feesten',fest);
   logo.textContent = fest ? 'GHENT//EVENT\\\\SE FEESTEN' : '▶ GHENT // EVENTS ◼';
+  if(fest && !wasFeesten) partyConfetti();   // surprise burst on crossing into the Feesten window
+  wasFeesten=fest;
   return cnt;
 }
 
@@ -637,11 +664,14 @@ function renderBadge(){
   if(view==='map'){
     const n=renderMap()||0;
     const sel=DATES[+document.getElementById('slider').value];
-    const lbl=inFeesten(sel)?('DAY '+feestenDay(sel)):(sel?dotLbl(sel):'──');
+    const fest=inFeesten(sel);
+    const lbl=fest?('DAY '+feestenDay(sel)):(sel?dotLbl(sel):'──');
     badge.textContent='■ '+n+' ON '+lbl;
+    badge.classList.toggle('feesten',fest);          // gold while showing a Feesten day
   }else{
     const n=ALL.filter(matches).length;
     badge.textContent='■ '+n+' EVENTS';
+    badge.classList.remove('feesten');
   }
 }
 function renderAll(){
@@ -650,16 +680,37 @@ function renderAll(){
   updateRouteBtn();
 }
 
+// ── Confetti: a one-shot vanilla burst (no libs) over the header on Feesten ──
+function partyConfetti(){
+  const colors=['#00ff88','#ff2d78','#ffd700','#99ffcc','#b14bff'];
+  const layer=document.createElement('div');
+  layer.className='confetti-layer';
+  for(let i=0;i<52;i++){
+    const bit=document.createElement('i');
+    bit.className='confetti-bit';
+    bit.style.left=(Math.random()*100)+'%';
+    bit.style.background=colors[i%colors.length];
+    bit.style.animationDelay=(Math.random()*0.35)+'s';
+    bit.style.animationDuration=(1.2+Math.random()*1.2)+'s';
+    bit.style.setProperty('--dx',(Math.random()*160-80)+'px');
+    bit.style.setProperty('--rot',(Math.random()*900-450)+'deg');
+    layer.appendChild(bit);
+  }
+  document.body.appendChild(layer);
+  setTimeout(()=>layer.remove(),2800);
+}
+
 // ── View toggle ─────────────────────────────────────────────────────────────
 function setView(v){
   view=v;
-  document.querySelectorAll('.tg').forEach(b=>b.classList.toggle('on',b.dataset.view===v));
+  // scope to the view toggle only — never the ★ filter button (also class .tg)
+  document.querySelectorAll('#toggle .tg').forEach(b=>b.classList.toggle('on',b.dataset.view===v));
   document.getElementById('mapview').style.display = v==='map'?'flex':'none';
   document.getElementById('listview').style.display = v==='list'?'block':'none';
   if(v==='map' && map){ buildMarkers(); setTimeout(()=>{map.invalidateSize();renderAll();},0); }
   else renderAll();
 }
-document.querySelectorAll('.tg').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
+document.querySelectorAll('#toggle .tg').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
 
 // ── Search ──────────────────────────────────────────────────────────────────
 document.getElementById('search').addEventListener('input',e=>{
