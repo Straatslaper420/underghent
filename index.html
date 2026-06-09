@@ -88,7 +88,8 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 
 /* ── Map popups ───────────────────────────────────────── */
 .leaflet-popup-content-wrapper{background:#06060f!important;border:3px solid var(--green)!important;
-  border-radius:0!important;box-shadow:4px 4px 0 #000,0 0 16px rgba(0,255,136,.25)!important;padding:0!important}
+  border-radius:0!important;box-shadow:4px 4px 0 #000,0 0 16px rgba(0,255,136,.25)!important;padding:0!important;
+  position:relative}
 .leaflet-popup-content{margin:12px 14px!important;color:var(--green)}
 .leaflet-popup-tip-container{display:none}
 .leaflet-popup-close-button{color:var(--pink)!important;font-size:18px!important;
@@ -154,6 +155,53 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .tag.stat{color:#5c8;border-color:#1a3a2a}
 .empty{text-align:center;color:#456;font-size:10px;letter-spacing:2px;padding:60px 20px}
 #status{font-size:8px;color:#345;letter-spacing:1px;text-align:center;padding:0 0 24px}
+
+/* ── Starring (★) — shared button look, lit gold when starred ──────────────── */
+.starbtn{background:none;border:0;cursor:pointer;font-family:inherit;line-height:1;
+  color:#567;text-shadow:none;padding:2px;font-size:16px;transition:color .1s,text-shadow .1s}
+.starbtn:hover{color:var(--gold);text-shadow:0 0 8px var(--gold)}
+.starbtn.starred{color:var(--gold);text-shadow:0 0 6px var(--gold)}
+/* popup star: a neat 22px box sitting just BELOW Leaflet's close button */
+.popstar{position:absolute;top:24px;right:6px;z-index:5;width:22px;height:22px;font-size:13px;
+  display:flex;align-items:center;justify-content:center;background:#06060f;border:1px solid var(--line)}
+.popstar.starred{border-color:var(--gold)}
+/* list star: dedicated rail on the RIGHT-HAND side of each card */
+.cstar{display:flex;align-items:center;flex-shrink:0;padding:0 11px;font-size:18px}
+
+/* ── Header ★ filter toggle (gold = distinct from the pink view toggle) ────── */
+#starfilter{border:2px solid var(--line);flex-shrink:0;font-size:11px}
+#starfilter.on{background:var(--gold);color:var(--bg);border-color:var(--gold);
+  box-shadow:0 0 10px rgba(255,215,0,.5);text-shadow:none;font-weight:bold}
+
+/* ── Route overlay button: floats over the tiles, bottom-right corner ──────── */
+.routebtn{position:absolute;right:10px;bottom:28px;z-index:1000;
+  background:var(--panel);border:2px solid var(--gold);color:var(--gold);
+  font-family:inherit;font-size:10px;letter-spacing:1px;padding:8px 12px;cursor:pointer;
+  box-shadow:3px 3px 0 #000,0 0 12px rgba(255,215,0,.4);text-shadow:0 0 6px var(--gold)}
+.routebtn:hover{background:var(--gold);color:var(--bg);text-shadow:none}
+.routebtn:disabled{opacity:.4;cursor:not-allowed;border-color:var(--line);color:#567;
+  box-shadow:3px 3px 0 #000;text-shadow:none;background:var(--panel)}
+
+/* ── Route modal ──────────────────────────────────────────────────────────── */
+.rm-overlay{position:fixed;inset:0;z-index:10000;background:rgba(6,6,15,.85);
+  display:flex;align-items:center;justify-content:center;padding:18px}
+.rm-box{width:100%;max-width:360px;background:var(--bg);border:3px solid var(--green);
+  box-shadow:4px 4px 0 #000,0 0 20px rgba(0,255,136,.25);padding:16px}
+.rm-title{font-size:11px;color:var(--gold);text-shadow:0 0 8px var(--gold);letter-spacing:2px;margin-bottom:6px}
+.rm-lbl{display:block;font-size:8px;color:var(--gold);letter-spacing:2px;margin:12px 0 5px}
+.rm-row{display:flex;gap:8px}
+.rm-input{width:100%;min-width:0;background:var(--panel);border:2px solid var(--green);color:var(--green);
+  font-family:inherit;font-size:11px;letter-spacing:1px;padding:7px 9px;outline:none}
+.rm-input:focus{box-shadow:0 0 12px rgba(0,255,136,.35)}
+.rm-btn{background:var(--panel);border:2px solid var(--line);color:#7aa;font-family:inherit;
+  font-size:9px;letter-spacing:1px;padding:7px 10px;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.rm-btn:hover{border-color:var(--gold);color:var(--gold)}
+.rm-btn:disabled{opacity:.5;cursor:not-allowed}
+.rm-primary{border-color:var(--green);color:var(--green)}
+.rm-primary:hover{background:var(--green);color:var(--bg)}
+.rm-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.rm-notice{font-size:8px;color:var(--gold);border:1px solid var(--gold);padding:6px 8px;
+  margin-top:12px;line-height:1.5;letter-spacing:.5px}
 </style>
 </head>
 <body>
@@ -170,6 +218,8 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
         <button class="tg on" data-view="map">MAP</button>
         <button class="tg" data-view="list">LIST</button>
       </div>
+      <button id="starfilter" class="tg" type="button" aria-pressed="false"
+        title="Show starred events only" aria-label="Show starred events only">★</button>
     </div>
     <div id="chips"></div>
   </div>
@@ -188,6 +238,29 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   <div id="listview">
     <div id="feed"></div>
     <div id="status"></div>
+  </div>
+</div>
+
+<!-- ROUTE MODAL (opened by the bottom-right map overlay button) -->
+<div id="routemodal" class="rm-overlay" style="display:none">
+  <div class="rm-box">
+    <div class="rm-title">▶ BUILD WALKING ROUTE</div>
+    <label class="rm-lbl" for="rm-start">START LOCATION</label>
+    <div class="rm-row">
+      <input id="rm-start" class="rm-input" placeholder="Gent-Sint-Pieters" autocomplete="off"/>
+      <button id="rm-geo" type="button" class="rm-btn">USE MY LOCATION</button>
+    </div>
+    <label class="rm-lbl" for="rm-end">END LOCATION</label>
+    <input id="rm-end" class="rm-input" placeholder="Gent-Sint-Pieters" autocomplete="off"/>
+    <div id="rm-daywrap" style="display:none">
+      <label class="rm-lbl" for="rm-day">DAY</label>
+      <select id="rm-day" class="rm-input"></select>
+    </div>
+    <div id="rm-notice" class="rm-notice" style="display:none"></div>
+    <div class="rm-actions">
+      <button id="rm-cancel" type="button" class="rm-btn">CANCEL</button>
+      <button id="rm-build" type="button" class="rm-btn rm-primary">BUILD ROUTE ▶</button>
+    </div>
   </div>
 </div>
 
@@ -217,8 +290,11 @@ const SAMPLE = [
 let ALL = [];                // merged + deduped events
 let DATES = [];              // sorted unique dates across the merged set
 let activeCats = new Set();  // selected types (OR); empty = show all
+let activeGroups = new Set();// selected colored groups (OR'd with activeCats)
 let q = '';
 let view = 'map';
+let starFilterOn = false;          // header ★ filter, persisted to localStorage
+const STARRED = new Set();         // starred event keys, persisted to localStorage
 let map = null, markersBuilt = false;
 const MARKERS = {};          // id → leaflet marker (events with coords only)
 
@@ -300,8 +376,10 @@ function isPaid(row){
   return /[1-9]/.test(price) || /€|eur/.test(price);
 }
 function mapRow(row,source){
+  const sid = pick(row,['event_id','facebook_id','gf_node_id']);   // real stable id, or '' if none
   return {
-    id: pick(row,['event_id','facebook_id','gf_node_id']) || (source+'_'+Math.random().toString(36).slice(2)),
+    id: sid || (source+'_'+Math.random().toString(36).slice(2)),
+    sid,                                                           // empty → eventKey() falls back to a composite
     title: pick(row,['title','gf_title']) || 'UNTITLED',
     venue: pick(row,['venue','gf_venue']),
     address: pick(row,['address','gf_address']),
@@ -358,12 +436,44 @@ function dedupe(events){
   return {kept,removed};
 }
 
+// ── Event-type groups: colored filters + map-dot coloring ───────────────────
+// Each group owns a set of category "stems", matched diacritic-insensitively
+// via startsWith so plurals/apostrophes (CONCERTEN, DJ'S, BALS, POËZIE) all hit.
+const GROUPS = [
+  {key:'MUSIC',  label:'MUSIC',  color:'#b14bff', stems:['DJ','CONCERT']},
+  {key:'DANCE',  label:'DANCE',  color:'#ff2df0', stems:['DANS','BAL']},
+  {key:'WORD',   label:'WORD',   color:'#ff9d2e', stems:['THEATER','COMEDY','LEZING','POEZIE','VERTELLING']},
+  {key:'ACTIVE', label:'ACTIVE', color:'#00ff88', stems:['SPEL','SPORT','WANDELING']},
+  {key:'BOATS',  label:'BOATS',  color:'#2b5bd8', stems:['BOOT']},
+];
+const GROUP_OTHER = {key:'OTHER', color:'#ff2d78'};   // divers/varia/andere + anything unmatched → red
+function cleanCat(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'')
+  .toUpperCase().replace(/[^A-Z0-9 ]+/g,'').trim(); }
+function catGroup(cat){ const c=cleanCat(cat); return GROUPS.find(g=>g.stems.some(st=>c.startsWith(st)))||null; }
+// Dot color: Boats win outright; otherwise first group in list order; else OTHER (red).
+function eventGroup(e){
+  const cats=e.categories||[];
+  if(cats.some(c=>{const g=catGroup(c);return g&&g.key==='BOATS';})) return GROUPS.find(g=>g.key==='BOATS');
+  for(const g of GROUPS){ if(g.key==='BOATS') continue; if(cats.some(c=>catGroup(c)===g)) return g; }
+  return GROUP_OTHER;
+}
+// legible dot text: dark on bright fills, white on dark fills
+function textOn(hex){ const c=hex.replace('#',''); const r=parseInt(c.substr(0,2),16),
+  g=parseInt(c.substr(2,2),16),b=parseInt(c.substr(4,2),16);
+  return (0.299*r+0.587*g+0.114*b)>140?'#06060f':'#fff'; }
+
 // ── Filtering shared by both views ──────────────────────────────────────────
 function matches(e){
-  if(activeCats.size && !(e.categories||[]).some(c=>activeCats.has(c))) return false;
+  if(starFilterOn && !isStarred(eventKey(e))) return false;   // ★ filter ANDs with groups/types/search below
+  const cats=e.categories||[];
+  if(activeGroups.size || activeCats.size){       // OR across selected groups + types
+    const inGroup=[...activeGroups].some(gk=>cats.some(c=>{const g=catGroup(c);return g&&g.key===gk;}));
+    const inType =cats.some(c=>activeCats.has(c));
+    if(!inGroup && !inType) return false;
+  }
   if(q){
     const hay=(e.title+' '+e.venue+' '+(e.desc||'')+' '+(e.organizer||'')+' '+
-      (e.address||'')+' '+(e.categories||[]).join(' ')).toLowerCase();
+      (e.address||'')+' '+cats.join(' ')).toLowerCase();
     if(!hay.includes(q)) return false;
   }
   return true;
@@ -379,16 +489,41 @@ function topCategories(limit){
 function renderChips(){
   const wrap=document.getElementById('chips');
   wrap.innerHTML='';
-  topCategories(16).forEach(c=>{
+  // ALL = master reset, lit only when nothing at all is selected
+  const allOn=activeCats.size===0 && activeGroups.size===0;
+  const allEl=document.createElement('div');
+  allEl.className='chip'+(allOn?' on':'');
+  allEl.textContent='ALL';
+  allEl.onclick=()=>{ activeCats.clear(); activeGroups.clear(); renderChips(); renderAll(); };
+  wrap.appendChild(allEl);
+  // colored group chips first in the row, each tinted by its own group color
+  GROUPS.forEach(g=>{
+    const on=activeGroups.has(g.key);
     const el=document.createElement('div');
-    const isAll=c==='ALL';
-    const on=isAll?activeCats.size===0:activeCats.has(c);   // ALL lit when nothing selected
+    el.className='chip grp'+(on?' on':'');
+    el.textContent=g.label;
+    el.style.borderColor=g.color;                            // inline beats .chip/.chip:hover/.chip.on
+    el.style.color=on?'#06060f':g.color;
+    el.style.background=on?g.color:'var(--panel)';
+    el.style.boxShadow=on?('0 0 10px '+g.color):'';
+    el.onclick=()=>{
+      if(activeGroups.has(g.key)) activeGroups.delete(g.key); else activeGroups.add(g.key);
+      renderChips();renderAll();
+    };
+    wrap.appendChild(el);
+  });
+  // then the per-type chips: the ungrouped misc types pinned first (in this
+  // order, since no group filter covers them), then the frequency-sorted rest
+  const PINNED=['ANDERE','DIVERS','VARIA'];
+  const present=new Set(); ALL.forEach(e=>(e.categories||[]).forEach(c=>present.add(c)));
+  const rest=topCategories(16).filter(c=>c!=='ALL' && !PINNED.includes(c));
+  [...PINNED.filter(c=>present.has(c)), ...rest].forEach(c=>{
+    const el=document.createElement('div');
+    const on=activeCats.has(c);
     el.className='chip'+(on?' on':'');
     el.textContent=c;
     el.onclick=()=>{
-      if(isAll) activeCats.clear();                          // clear → show everything
-      else if(activeCats.has(c)) activeCats.delete(c);       // toggle this type off
-      else activeCats.add(c);                                // toggle this type on
+      if(activeCats.has(c)) activeCats.delete(c); else activeCats.add(c);
       renderChips();renderAll();
     };
     wrap.appendChild(el);
@@ -412,6 +547,7 @@ function renderFeed(){
 
   feed.innerHTML=keys.map(k=>{
     const cards=groups[k].map(e=>{
+      const key=eventKey(e), on=isStarred(key);
       const href=e.url&&e.url!=='#'?` href="${esc(e.url)}" target="_blank" rel="noopener"`:'';
       // native lazy-loading: thousands of remote thumbs, only fetch near-viewport
       const thumb=e.image?`<img loading="lazy" decoding="async" src="${esc(e.image)}" alt="">`:'<span class="ph">◫</span>';
@@ -427,6 +563,10 @@ function renderFeed(){
           ${e.desc?`<div class="desc">${esc(e.desc)}</div>`:''}
           <div class="tags">${tags}${stat}</div>
         </div>
+        <div class="cstar"><button type="button" class="starbtn liststar${on?' starred':''}"
+          data-key="${esc(key)}" aria-pressed="${on?'true':'false'}"
+          aria-label="${on?'Remove from starred':'Add to starred'}"
+          title="${on?'Starred — click to remove':'Click to star'}">${on?'★':'☆'}</button></div>
       </a>`;
     }).join('');
     return `<div class="daygroup"><div class="dayhdr">► ${dayLabel(k)}</div>${cards}</div>`;
@@ -438,9 +578,10 @@ function buildMarkers(){
   if(markersBuilt || !ALL.length) return;   // wait for data; don't latch on empty
   ALL.forEach(e=>{
     if(e.lat==null||e.lng==null) return;
+    const g=eventGroup(e);
     const icon=L.divIcon({
       className:'',
-      html:`<div class="edot src-${e.source}">${e.time||'TBA'}</div>`,
+      html:`<div class="edot" style="background:${g.color};border-color:${g.color};color:${textOn(g.color)}">${e.time||'TBA'}</div>`,
       iconSize:[54,22],iconAnchor:[27,11]
     });
     const m=L.marker([e.lat,e.lng],{icon});
@@ -452,7 +593,12 @@ function buildMarkers(){
     // venue links out to the marker's coordinates on Google Maps
     const mapsUrl=`https://www.google.com/maps/search/?api=1&query=${e.lat},${e.lng}`;
     const venue=`<div class="prow pvenue">◈ <a class="pvenue-link" href="${mapsUrl}" target="_blank" rel="noopener">${esc(e.venue||'VENUE TBA')}</a></div>`;
+    const skey=eventKey(e), son=isStarred(skey);
+    const star=`<button type="button" class="starbtn popstar${son?' starred':''}" data-key="${esc(skey)}"
+      aria-pressed="${son?'true':'false'}" aria-label="${son?'Remove from starred':'Add to starred'}"
+      title="${son?'Starred — click to remove':'Click to star'}">${son?'★':'☆'}</button>`;
     m.bindPopup(
+      star+
       `<div class="ptitle">► ${esc(e.title)}</div>`+
       venue+
       `<div class="prow ptime">◷ ${dayLabel(e.date)} @ ${e.time||'TBA'}${e.paid?' · TICKETED':' · FREE'}</div>`+
@@ -501,6 +647,7 @@ function renderBadge(){
 function renderAll(){
   if(view==='map') renderMap(); else renderFeed();
   renderBadge();
+  updateRouteBtn();
 }
 
 // ── View toggle ─────────────────────────────────────────────────────────────
@@ -589,7 +736,180 @@ async function load(){
   renderAll();
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+//  STARRING + ROUTE BUILDER  (root index.html / GHENTEVENT only)
+//  localStorage keys: "underghent.starred.v1" (array of keys),
+//                     "underghent.starredFilter.v1" ("1"/"0")
+// ════════════════════════════════════════════════════════════════════════════
+const LS_STARRED='underghent.starred.v1';
+const LS_STARFILTER='underghent.starredFilter.v1';
+const TRAVELMODE='walking';
+const DEFAULT_START='Gent-Sint-Pieters';
+
+// Stable key: real source id when present, else a title|date|venue composite
+function eventKey(ev){ return ev.sid || `${ev.title}|${ev.date}|${ev.venue}`; }
+
+function loadStarred(){
+  try{ const a=JSON.parse(localStorage.getItem(LS_STARRED)||'[]');
+       if(Array.isArray(a)) a.forEach(k=>STARRED.add(k)); }catch(e){}
+  try{ starFilterOn = localStorage.getItem(LS_STARFILTER)==='1'; }catch(e){}
+}
+function saveStarred(){    try{ localStorage.setItem(LS_STARRED,JSON.stringify([...STARRED])); }catch(e){} }
+function saveStarFilter(){ try{ localStorage.setItem(LS_STARFILTER, starFilterOn?'1':'0'); }catch(e){} }
+
+function isStarred(key){ return STARRED.has(key); }
+function getStarred(){ return [...STARRED]; }
+
+function setStarVisual(btn,on){
+  btn.textContent = on?'★':'☆';
+  btn.classList.toggle('starred',on);
+  btn.setAttribute('aria-pressed', on?'true':'false');
+  btn.setAttribute('aria-label', on?'Remove from starred':'Add to starred');
+  btn.setAttribute('title', on?'Starred — click to remove':'Click to star');
+}
+// Toggle + persist, reflect on every star button currently in the DOM (list +
+// open popup), refresh the route button, and — only when the ★ filter is on —
+// re-render both views since the visible set changed.
+function toggleStar(key){
+  if(STARRED.has(key)) STARRED.delete(key); else STARRED.add(key);
+  saveStarred();
+  document.querySelectorAll('.starbtn').forEach(btn=>{
+    if(btn.dataset.key===key) setStarVisual(btn,STARRED.has(key));
+  });
+  updateRouteBtn();
+  if(starFilterOn) renderAll(); else renderBadge();
+}
+
+// starred events present in the current dataset
+function starredEvents(){ return ALL.filter(e=>isStarred(eventKey(e))); }
+function starredDays(){ return [...new Set(starredEvents().filter(e=>e.date).map(e=>e.date))].sort(); }
+function soonestDay(days){
+  const today=new Date().toISOString().slice(0,10);
+  return days.find(d=>d>=today) || days[0];
+}
+
+// ── Route overlay button (greyed out when nothing is starred) ───────────────
+function updateRouteBtn(){
+  const btn=document.getElementById('routebtn');
+  if(btn) btn.disabled = starredEvents().length===0;
+}
+
+// ── Route modal ─────────────────────────────────────────────────────────────
+function openRouteModal(){
+  if(!starredEvents().length) return;
+  const days=starredDays();
+  const wrap=document.getElementById('rm-daywrap');
+  const sel=document.getElementById('rm-day');
+  if(days.length>1){                                  // day selector only when starred events span >1 day
+    sel.innerHTML=days.map(d=>`<option value="${esc(d)}">${esc(dayLabel(d))}</option>`).join('');
+    sel.value=soonestDay(days);                       // default soonest upcoming day
+    wrap.style.display='block';
+  }else{
+    wrap.style.display='none';
+  }
+  document.getElementById('rm-notice').style.display='none';
+  document.getElementById('routemodal').style.display='flex';
+  document.getElementById('rm-start').focus();
+}
+function closeRouteModal(){ document.getElementById('routemodal').style.display='none'; }
+
+function buildRoute(){
+  const start=document.getElementById('rm-start').value.trim()||DEFAULT_START;
+  const end  =document.getElementById('rm-end').value.trim()||DEFAULT_START;
+  const days=starredDays();
+  let evs=starredEvents();
+  let chosen=null;
+  if(days.length>1) chosen=document.getElementById('rm-day').value;
+  else if(days.length===1) chosen=days[0];
+  if(chosen) evs=evs.filter(e=>e.date===chosen);
+  evs.sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));   // chronological by start time
+  // prefer the event's own coordinates; otherwise "<venue>, Gent"
+  const waypoints=evs.map(e=>
+    (e.lat!=null&&e.lng!=null) ? `${e.lat},${e.lng}` : `${e.venue||'Gent'}, Gent`);
+  const url='https://www.google.com/maps/dir/?api=1'
+    +'&origin='+encodeURIComponent(start)
+    +'&destination='+encodeURIComponent(end)
+    +'&waypoints='+waypoints.map(encodeURIComponent).join('|')
+    +'&travelmode='+TRAVELMODE;
+  window.open(url,'_blank','noopener');
+  if(waypoints.length>9){                             // non-blocking: route already opened above
+    const n=document.getElementById('rm-notice');
+    n.textContent='⚠ '+waypoints.length+' STOPS — GOOGLE MAPS MAY TRUNCATE VERY LONG ROUTES.';
+    n.style.display='block';
+  }else{
+    closeRouteModal();
+  }
+}
+
+// ── Wire star/route UI once the map + DOM exist ─────────────────────────────
+function initStarUI(){
+  // header ★ filter toggle
+  const ff=document.getElementById('starfilter');
+  ff.classList.toggle('on',starFilterOn);
+  ff.setAttribute('aria-pressed',starFilterOn?'true':'false');
+  ff.addEventListener('click',()=>{
+    starFilterOn=!starFilterOn; saveStarFilter();
+    ff.classList.toggle('on',starFilterOn);
+    ff.setAttribute('aria-pressed',starFilterOn?'true':'false');
+    renderAll();
+  });
+
+  // route overlay button — floated bottom-right inside the map container, above
+  // the tiles but clear of the zoom (top-left) and attribution (bottom-right) controls
+  const rb=document.createElement('button');
+  rb.id='routebtn'; rb.type='button'; rb.className='routebtn'; rb.textContent='▶ ROUTE';
+  rb.title='Build a walking route through your starred events';
+  rb.addEventListener('click',openRouteModal);
+  if(map){
+    map.getContainer().appendChild(rb);
+    if(window.L&&L.DomEvent){ L.DomEvent.disableClickPropagation(rb); L.DomEvent.disableScrollPropagation(rb); }
+    // popups are recreated on each open → delegate star clicks on the map container,
+    // toggling without closing the popup
+    map.getContainer().addEventListener('click',e=>{
+      const b=e.target.closest('.popstar'); if(!b) return;
+      e.preventDefault(); e.stopPropagation();
+      toggleStar(b.dataset.key);
+    });
+    // sync the popup star to current state whenever a popup opens
+    map.on('popupopen',e=>{
+      const el=e.popup.getElement();
+      const b=el&&el.querySelector('.popstar');
+      if(b) setStarVisual(b,isStarred(b.dataset.key));
+    });
+  }
+  updateRouteBtn();
+
+  // list star clicks (delegated; #feed persists across re-renders). stopPropagation
+  // + preventDefault so the card's own navigation never fires.
+  document.getElementById('feed').addEventListener('click',e=>{
+    const b=e.target.closest('.liststar'); if(!b) return;
+    e.preventDefault(); e.stopPropagation();
+    toggleStar(b.dataset.key);
+  });
+
+  // modal controls
+  document.getElementById('rm-cancel').addEventListener('click',closeRouteModal);
+  document.getElementById('rm-build').addEventListener('click',buildRoute);
+  document.getElementById('routemodal').addEventListener('click',e=>{
+    if(e.target.id==='routemodal') closeRouteModal();    // click backdrop to dismiss
+  });
+  document.getElementById('rm-geo').addEventListener('click',()=>{
+    const btn=document.getElementById('rm-geo');
+    if(!navigator.geolocation){ btn.textContent='NO GEO'; return; }
+    btn.textContent='LOCATING…'; btn.disabled=true;
+    navigator.geolocation.getCurrentPosition(
+      pos=>{ document.getElementById('rm-start').value=
+               pos.coords.latitude.toFixed(5)+','+pos.coords.longitude.toFixed(5);
+             btn.textContent='USE MY LOCATION'; btn.disabled=false; },
+      ()=>{ btn.textContent='USE MY LOCATION'; btn.disabled=false; },   // denied/unavailable: skip silently
+      {enableHighAccuracy:false,timeout:8000,maximumAge:60000}
+    );
+  });
+}
+
 initMap();
+loadStarred();
+initStarUI();
 setView('map');
 load();
 </script>
