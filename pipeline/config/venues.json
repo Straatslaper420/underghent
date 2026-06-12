@@ -3,7 +3,7 @@
     {
       "id": "charlatan",
       "canonical_name": "Charlatan",
-      "initials": "CH",
+      "initials": null,
       "aliases": [
         "charlatan",
         "de charlatan",
@@ -28,7 +28,7 @@
     {
       "id": "kompass",
       "canonical_name": "Kompass",
-      "initials": "KP",
+      "initials": null,
       "aliases": [
         "kompass",
         "kompass klub",
@@ -54,7 +54,7 @@
     {
       "id": "viernulvier",
       "canonical_name": "VIERNULVIER",
-      "initials": "VN",
+      "initials": null,
       "aliases": [
         "viernulvier",
         "vooruit",
@@ -87,7 +87,7 @@
     {
       "id": "minusone",
       "canonical_name": "Minus One",
-      "initials": "M1",
+      "initials": null,
       "aliases": [
         "minus one",
         "minus 1",
@@ -115,7 +115,7 @@
     {
       "id": "chinastraat",
       "canonical_name": "Chinastraat",
-      "initials": "CS",
+      "initials": null,
       "aliases": [
         "chinastraat",
         "china straat",
@@ -140,7 +140,7 @@
     {
       "id": "vierdeZaal",
       "canonical_name": "Vierde Zaal",
-      "initials": "VZ",
+      "initials": null,
       "aliases": [
         "vierde zaal",
         "4e zaal",
@@ -168,7 +168,7 @@
     {
       "id": "wintercircus",
       "canonical_name": "Wintercircus",
-      "initials": "WC",
+      "initials": null,
       "aliases": [
         "wintercircus",
         "winter circus",
@@ -193,7 +193,7 @@
     {
       "id": "baudelopark",
       "canonical_name": "Baudelopark",
-      "initials": "BP",
+      "initials": null,
       "aliases": [
         "baudelopark",
         "baudelo",
@@ -218,7 +218,7 @@
     {
       "id": "funke",
       "canonical_name": "FUNKE",
-      "initials": "FU",
+      "initials": null,
       "aliases": [
         "funke",
         "cafe funke",
@@ -244,7 +244,7 @@
     {
       "id": "asgaard",
       "canonical_name": "Asgaard",
-      "initials": "AS",
+      "initials": null,
       "aliases": [
         "asgaard",
         "asgaard gentbrugge",
@@ -268,7 +268,7 @@
     {
       "id": "missy_sippy",
       "canonical_name": "Missy Sippy",
-      "initials": "MS",
+      "initials": null,
       "aliases": [
         "missy sippy",
         "missy sippy blues",
@@ -295,7 +295,7 @@
     {
       "id": "hotclub",
       "canonical_name": "Hot Club Gent",
-      "initials": "HC",
+      "initials": null,
       "aliases": [
         "hot club gent",
         "hot club",
@@ -321,7 +321,7 @@
     {
       "id": "decentrale",
       "canonical_name": "De Centrale",
-      "initials": "DC",
+      "initials": null,
       "aliases": [
         "de centrale",
         "centrale gent",
@@ -347,7 +347,7 @@
     {
       "id": "ha_concerts",
       "canonical_name": "Ha Concerts",
-      "initials": "HA",
+      "initials": null,
       "aliases": [
         "ha concerts",
         "haconcerts",
@@ -375,7 +375,7 @@
     {
       "id": "thecrossover",
       "canonical_name": "The Crossover",
-      "initials": "CR",
+      "initials": null,
       "aliases": [
         "the crossover",
         "crossover music pub",
@@ -401,7 +401,7 @@
     {
       "id": "zebrastraat",
       "canonical_name": "Zebrastraat",
-      "initials": "ZB",
+      "initials": null,
       "aliases": [
         "zebrastraat",
         "zebra straat",
@@ -426,7 +426,7 @@
     {
       "id": "broei",
       "canonical_name": "BROEI",
-      "initials": "BR",
+      "initials": null,
       "aliases": [
         "broei",
         "broei gent",
@@ -454,7 +454,7 @@
     {
       "id": "trefpunt",
       "canonical_name": "Trefpunt",
-      "initials": "TP",
+      "initials": null,
       "aliases": [
         "trefpunt",
         "trefpunt gent",
@@ -481,7 +481,7 @@
     {
       "id": "kinkystar",
       "canonical_name": "Kinky Star",
-      "initials": "KS",
+      "initials": null,
       "aliases": [
         "kinky star",
         "kinkystar",
@@ -508,7 +508,7 @@
     {
       "id": "copadok",
       "canonical_name": "Copa DOK",
-      "initials": "CD",
+      "initials": null,
       "aliases": [
         "copa dok",
         "copadok",
@@ -535,7 +535,7 @@
     {
       "id": "debijloke",
       "canonical_name": "De Bijloke",
-      "initials": "BL",
+      "initials": null,
       "aliases": [
         "de bijloke",
         "bijloke",
@@ -563,7 +563,7 @@
     {
       "id": "molotov",
       "canonical_name": "Molotov",
-      "initials": "MO",
+      "initials": null,
       "aliases": [
         "molotov",
         "molotov gent",
@@ -589,7 +589,7 @@
     {
       "id": "clubwintercircus",
       "canonical_name": "Club Wintercircus",
-      "initials": "CW",
+      "initials": null,
       "aliases": [
         "club wintercircus",
         "cwc",
@@ -610,28 +610,6 @@
       "website": "https://www.clubwintercircus.be",
       "scrape_url": "https://www.clubwintercircus.be/",
       "scrape_type": "html",
-      "hide": false
-    },
-    {
-      "id": "shoonya",
-      "canonical_name": "Shoonya Dance Centre",
-      "initials": "SH",
-      "aliases": [
-        "shoonya",
-        "shoonya dance",
-        "shoonya dance centre",
-        "shoonya dance gent",
-        "stapelplein 41"
-      ],
-      "address": "Stapelplein 41, 9000 Gent",
-      "lat": 51.063525166973676,
-      "lng": 3.7342634398745163,
-      "underground_weight": 0,
-      "genres": [],
-      "area": "Dampoort",
-      "website": "https://www.shoonyadance.com",
-      "scrape_url": null,
-      "scrape_type": null,
       "hide": false
     }
   ]
