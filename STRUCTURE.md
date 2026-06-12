@@ -1,418 +1,144 @@
-# UnderGhent v2 — Project Structure
+# UnderGhent v5 — Project Structure
 
-Generated 2026-06-08. Excludes `.git/`, `.claude/`, `.claire/`, `node_modules/`, `__pycache__/`, and `.aider*` caches.
+Updated 2026-06-12 (v5 rework). Excludes `.git/`, `.claude/`, `.claire/`, `node_modules/`, `__pycache__/`, and `.aider*` caches.
 
 ---
 
 ## What this is
 
-Two separate static sites, both served from the `underghent_v2/` root via GitHub Pages. No backend server — each page fetches publicly-published Google Sheets CSVs on load.
+Two separate static sites served from the repo root via GitHub Pages. No backend server — each page fetches publicly-published Google Sheets CSVs on load. **Google Sheets is the single source of truth**, with a strict per-column ownership model (see below).
 
-### GHENTEVENT — `index.html` (~28 KB)
+### GHENTEVENT — `index.html` (~46 KB)
 
-The **landing page**. Shows Gentse Feesten events and Facebook-scraped events. Contains a hidden secret button that opens the UNDERGHENT site. Data comes from the `fiestenpipeline/` and the Facebook scraper.
+The **landing page** (fully overhauled in v5 — "festival signal on an underground carrier": JetBrains Mono chassis, neon reserved for data, gold for the Feesten). Shows Gentse Feesten + Facebook events.
 
-#### What GHENTEVENT does (`index.html`)
+- **One day at a time**: a horizontal **day rail** along the bottom of the MAP view scrubs through dates (◀ ▶ steppers, drag, keyboard arrows). Ticks per day, today marked green, and the **Gentse Feesten window (17–26 Jul 2026) drawn as a gold segment** with a label — visible from any date.
+- Festival mode while the selected day is inside the window: gold logo (`GHENT//SE FEESTEN`), DAY N badge, one-shot confetti on crossing in.
+- **LIST view follows the selected day** (with an ALL DAYS escape + prev/next). Cards are image-forward (posters from the new `image_url` column).
+- Map markers are per-day layer groups, built lazily and cached; popups carry poster, venue → Google Maps link, time range, tags, ★.
+- Category **group chips** (MUSIC/DANCE/WORD/ACTIVE/BOATS, OR-logic, multi-select) + per-type chips + free-text search.
+- **Starring** (localStorage) + **walking-route builder** (Google Maps waypoints through starred events).
+- Honors the sheet's human columns: `hide` rows never render; `*_override` columns beat scraped values.
+- Hidden **secret gesture** (slam the day rail to the far left 3× within 1.5 s) → UNDERGHENT.
 
-- Two views over one merged dataset, toggled in the header: a **MAP view** (Leaflet, dark CARTO tiles) and a day-grouped **LIST view** (card feed).
-- Fetches two published Google Sheets CSV tabs on load (Facebook events + Gentse Feesten), then merges and fuzzy-dedupes them client-side (prefers the Feesten row on a tie). Falls back to a tiny built-in `SAMPLE` set if both fetches fail.
-- **Map markers** are labelled with the event's **start hour** (`HH:MM`); a date **slider** at the bottom scrubs the map one day at a time.
-- **Popups** show title, a clickable **venue** (links out to the event's coordinates on Google Maps), date/time, description, and a **► DETAILS** button with the event's **#hashtag** types rendered beside it (same markup/classes as the list cards).
-- **Category chips** are **multi-select** (OR logic): any number of types can be active at once, an event matches if it has any selected type, and the **ALL** chip clears the selection. Composes with the free-text search; both views respect it.
-- **Festival mode** — while the selected slider date falls inside the Gentse Feesten window (**17–27 Jul 2026**): the date under the slider and the header logo turn gold, the logo text becomes `GHENT//EVENT\\SE FEESTEN`, and the top-right badge counts the festival day (`DAY 1` … starting from 17 Jul) instead of showing the calendar date.
-- Hidden **secret gesture** (slam the slider to the far left 3× within 1.5 s) navigates to UNDERGHENT (`underghent.html`).
+### UNDERGHENT — `underghent.html` (~64 KB)
 
-### UNDERGHENT — `underghent.html` (~62 KB)
+The **main underground music map** — deliberately untouched in character (v5 = restrained polish only). Leaflet map (3 tile styles), venue circles with live event-count badges, right-side venue feed, SCENE/VENUE PORTALS sidebar, GHENT ONLY / time-range / search filters, URGENT.FM player + weekly show marquee, CRT scanlines.
 
-The **main underground music map** — the bigger site. Shows events scraped from aggregator sites and individual venue pages. Accessed via the secret backdoor in GHENTEVENT. Data comes from the main `pipeline/`.
+v5 changes:
+- The in-file `VENUES` array is now only an **offline fallback** — the live registry is fetched from the Sheets **Venues** tab at load (gviz CSV by sheet name; `initials` and `hide` are sheet columns). No more hand-synced drift.
+- Row visibility: `hide` kills a row; `approved` column (or legacy `status=approved`) gates display; `status=gone/duplicate` rows are dropped; `*_override` columns beat scraped values.
+- Popups additionally show SUPPORT (`support_acts`), PRICE, and end time (`hour_end`).
 
 ```
 Main pipeline:
   Scrapers (venues + aggregators + agendas)
-    → normalize → dedupe → enrich → export
+    → normalize → dedupe → enrich → pull-overrides → export (UPSERT)
     → Google Sheets → UNDERGHENT (underghent.html)
 
 Feesten pipeline:
-  fiestenpipeline (gentsefeesten.stad.gent + Facebook)
-    → export → Google Sheets → GHENTEVENT (index.html)
+  fiestenpipeline (gentsefeesten.stad.gent)
+    → export → Google Sheets `feesten` tab → GHENTEVENT (index.html)
 ```
 
-### `frontline/index.html`
+---
 
-Aider's **sandbox copy of `underghent.html`**. Aider edits `frontline/index.html`; promote = manually copy to root `underghent.html`.
+## Per-column ownership (v5 core)
+
+Any field where both a scraper and a human can have an opinion lives in TWO columns:
+
+- **Auto columns** — written by the pipeline on every run, addressed **by header name** (never position): all the long-standing columns (`event_id` … `status`) plus v5 additions `source`, `hour_end`, `support_acts`, `image_url`, `genre_raw`, `last_seen`.
+- **Override columns** — written only by humans, **never touched by any pipeline write**: `venue_override`, `address_override`, `latitude_override`, `longitude_override`, `genre_override`, `hide`, `approved`, `notes`.
+
+The export builds each row write from the auto-column list only, with `null` for every other cell (the Sheets API skips nulls), so clobbering a human edit is structurally impossible. Missing headers are appended on the right; human-added columns are ignored. Everyone (pipeline + both frontends) follows one rule: **`_override` if present, else `_auto`**.
+
+`status` is pipeline-owned (`pending`/`approved`(legacy)/`duplicate`/`gone`); human gating uses `hide`/`approved`.
 
 ---
 
 ## Root
 
 ```
-underghent_v2/
-├── credentials.json              # Google API credentials (Sheets) — root copy, gitignored
-├── index.html                    # GHENTEVENT — landing page (~28 KB); Feesten + FB data
-├── underghent.html               # UNDERGHENT — main map (~62 KB); aggregator + venue data
-├── project_snapshot.md           # Repo snapshot doc
-├── sync.ps1                      # One-shot: git add -A + commit + push the whole repo
-├── fiestenpipeline/              # Standalone Gentse Feesten 2026 scraper (feeds GHENTEVENT)
-├── frontline/                    # Aider's sandbox copy of underghent.html
-├── pipeline/                     # Main data pipeline (TypeScript/Node, feeds UNDERGHENT)
-├── sheetsdata.example/           # Manual Sheets CSV export snapshot (sample data)
+underghent_v5/
+├── credentials.json              # Google API credentials (root copy, gitignored)
+├── index.html                    # GHENTEVENT — landing page (v5 overhaul)
+├── underghent.html               # UNDERGHENT — main map (v5 polish)
+├── PLAN.md                       # The approved v5 rework plan
+├── STRUCTURE.md                  # This file
+├── sync.ps1                      # git add -A + commit + push
+├── fiestenpipeline/              # Standalone Gentse Feesten 2026 scraper
+├── pipeline/                     # Main data pipeline (TypeScript/Node)
+├── sheetsdata.example/           # Manual Sheets CSV export snapshot
 └── tooling/                      # Audit + timing utilities (not runtime)
 ```
 
-`sync.ps1` stages, commits and pushes the whole folder; `.gitignore` keeps
-`credentials.json`, `.env`, `node_modules/`, caches, etc. out of git. Run it
-from the repo root with an optional commit message (defaults to a timestamp).
+(`frontline/` still holds the old Aider sandbox as `underghent_WIP.html` + notes — not used by the v5 workflow; safe to delete whenever.)
 
 ---
 
 ## How the pipeline runs
 
-The full pipeline is a single npm script that chains all steps in order:
-
 ```
 npm run pipeline
 ```
 
-which expands to:
+expands to:
 
 ```
-pull-venues             (pull manual venue edits from Sheets → config/venues.json)
-        ↓
-scrape:aggregators  →  scrape:venues  →  scrape:agendas
-        ↓
-    normalize           (merge raw JSON per source into canonical.json)
-        ↓
-     dedupe             (exact hash + fuzzy title match, priority-merge)
-        ↓
-  enrich:artists        (extract artist lists from descriptions)
-  enrich:genre          (classify genre from title/artists via genres.json)
-  enrich:geo            (geocode venues via venues.json registry)
-        ↓
-    pull-geo            (pull any hand-corrected coords back from Google Sheets)
-        ↓
-     export             (write events.json + push events to Google Sheets)
-        ↓
-   export:venues        (push the venue registry to the Sheets "Venues" tab)
+pull-venues → scrape:aggregators → scrape:venues → scrape:agendas
+  → normalize → dedupe
+  → enrich:artists → enrich:genre → enrich:geo
+  → pull-overrides            (was pull-geo — see below)
+  → export                    (UPSERT by event_id — no more append duplicates)
+  → export:venues
 ```
 
 ### Step-by-step
 
-**0. Pull-venues** (`pull-venues`) — runs *first*. Pulls manual edits in the
-Sheets **Venues** tab back into `config/venues.json`. Merges by `id`: matching
-venues are updated in place (file order preserved), new-id rows are appended,
-and local venues missing from the sheet are kept (never deleted), so a stray
-blank row can't wipe data. Blank/unparseable cells fall back to the existing
-local value, and the file is only rewritten when something actually changed.
+**0. Pull-venues** — full mirror of the Sheets **Venues** tab into `config/venues.json` (the sheet decides; blank cells overwrite; empty sheet refused as safety guard). v5: carries `initials` + `hide` columns; registry has 24 venues (incl. `shoonya`, which the old frontend had but the registry lacked).
 
-**1. Scrape** — three scrape commands run in sequence:
-- `scrape:aggregators` — hits multi-venue aggregator sites (beldub, goabase, reggaebe). Each scraper writes its raw output to `pipeline/data/raw/<source>.json`.
-- `scrape:venues` — hits individual venue pages (asgaard, broei, charlatan, chinastraat, clubsauvage, crossover, funke, kinkystar). Uses Playwright for JS-heavy pages; `_peppered.ts` is a shared base for venues on the Peppered ticketing platform. **Accepts optional SOURCE_ID args** to run a subset, e.g. `npm run scrape:venues -- asgaard charlatan`; with no args every venue runs. Unknown names are warned about and a no-match exits non-zero.
-- `scrape:agendas` — fetches iCal feeds (minusOne, vierdeZaal) via a shared `_ical.ts` helper.
-- `scrape:facebook` — **not part of the main pipeline run**; run separately via `npm run scrape:facebook` (or `scrape:facebook:to-sheet` to stage straight into a sheet tab). Uses Apify to pull Facebook event data. Config in `pipeline/config/facebook.json`.
+**1. Scrape** — `scrape:aggregators` (beldub, goabase, reggaebe), `scrape:venues` (asgaard, bijloke, broei, charlatan, chinastraat, clubsauvage, clubwintercircus, crossover, decentrale, funke, haconcerts, kinkystar, trefpunt, viernulvier, wintercircus — accepts SOURCE_ID args for subsets), `scrape:agendas` (minusOne, vierdeZaal via iCal). Each writes `data/raw/<source>.json`. `scrape:facebook` (Apify) stays outside the chain. **Molotov and Kompass have no scrapers** (Molotov goes through the FB/Apify path; Kompass is closed until further notice).
 
-**2. Normalize** — reads all `raw/*.json` files, applies field mapping, date parsing, and venue lookups against `config/venues.json` and `config/organizers.json`. Writes a single `pipeline/data/canonical.json` with all events in the canonical schema.
+v5 scraper notes:
+- **trefpunt** — fixed (was 0 events): the 2026 theme moved date cards out of `<p>`; parser now walks leaf blocks. Also extracts price, room, time, tickets, poster image; last event no longer dropped.
+- **kinkystar** — rewritten for the new kinkystar.com (Stager platform, server-rendered, paginated; date lives in the URL slug). Plain fetch + cheerio, no Playwright. Extracts time, price, genre tags, poster, detail URL, line-up.
+- **clubsauvage** — rewritten: parses Wix embedded JSON payloads instead of guessing client-side DOM. If the venue publishes nothing on Wix, 0 is correct (their events live on Facebook → Apify path).
+- **goabase** — rewritten to use the official Goabase JSON API (list + per-party detail): venue, organizer, flyer image, line-up artists, entry fee, coordinates, end time.
+- All scrapers now surface what their source exposes into the new fields: `image_url` (≈12 sources), `hour_end`, `genre_raw` (source-published genre tags — the genre enricher matches these FIRST), `support_raw`; reggae.be also yields per-event coordinates + flyer; viernulvier/bijloke/haconcerts/decentrale/clubwintercircus/broei/crossover/charlatan/chinastraat gained detail-page or card extraction for previously-empty fields.
 
-**3. Dedupe** — two-pass deduplication on `canonical.json`:
-- *Exact pass*: SHA-1 hash of `normalised(title) + date_start`. Same hash → merge, keeping the higher-priority source (venue scrapers > aggregators > facebook).
-- *Fuzzy pass*: same date + Dice coefficient > 0.85 on title → merge.
-  When merging, the loser's fields fill gaps in the winner (ticket URL, description, artists, Facebook going/interested counts). Losers are marked `status: "duplicate"` and kept in the file for traceability.
+**2. Normalize** — raw → canonical (`makeEventId(source|title|date)`), venue/organizer registry lookups. v5: re-scrapes REFRESH scraper-owned fields (fresh value wins; old value only survives when the new scrape came back empty). New canonical fields: `source`, `hour_end`, `support_acts[]`, `image_url`, `genre_raw`, `overrides`.
 
-**4. Enrich** — three enrichers run over non-duplicate events in `canonical.json`:
-- `artists` — extracts headliner names from event descriptions using pattern matching.
-- `genre` — classifies each event against the curated genre taxonomy in `config/genres.json`.
-- `geo` — resolves lat/lng for each venue from `config/venues.json`; falls back to geocoding if not found.
+**3. Dedupe** — exact SHA-1(title+date) pass + fuzzy same-date Dice>0.85 pass; venue scrapers > aggregators > facebook (all 15 venue scrapers now carry top priority). Losers gap-fill the winner (now incl. image, hour_end, support, genre_raw, facebook_id, overrides).
 
-**5. Pull-geo** — pulls hand-corrected coordinates from the Google Sheets `Events` tab back into `canonical.json`. This lets you fix bad geocoding in the sheet without re-running the pipeline.
+**4. Enrich** — artists / genre / geo. Genre enrichment now treats scraper-published `genre_raw` as the strongest signal (matched first and alone), then falls back to the full-text keyword pass and venue genres.
 
-**6. Export** — writes two outputs:
-- `pipeline/data/events.json` — always written; this is the local copy.
-- Google Sheets (optional) — pushes future non-duplicate events. Events *with* coords go to the `Events` tab; events *missing* coords go to a `GeoFail` tab. Requires `GOOGLE_SHEETS_CREDENTIALS` and `GOOGLE_SPREADSHEET_ID` env vars; skips cleanly if they're unset.
+**5. Pull-overrides** (`npm run pull-overrides`; replaces pull-geo) — reads every `*_override` + `hide`/`approved` cell from the Events AND GeoFail tabs into `event.overrides`. Overrides always win downstream — fixing a WRONG value sticks (the old pull-geo only filled blanks, and **it also read the wrong env var (`SPREADSHEET_ID`), so it had been silently skipping on every run** — the root cause of vanishing edits, alongside the append-only export).
 
-**7. Export-venues** (`export:venues`) — full refresh of the Sheets **Venues**
-tab: clears it, then writes headers + the current `config/venues.json` snapshot
-(one row per venue, every field a column) so re-runs stay in sync without
-duplicate rows. Worksheet name overridable via `GOOGLE_VENUES_WORKSHEET_NAME`
-(default `Venues`).
+**6. Export** — `events.json` always; Sheets when creds are set. v5: **named-column UPSERT keyed on `event_id`** for both Events and GeoFail (the old code appended everything every run, duplicating rows and orphaning edits). Future events that vanished from the scrape get `status=gone` (rows are never deleted — overrides survive). Events with effective coords (override OR auto) go to Events; the rest to GeoFail; a row that gains coords via override is promoted and its GeoFail row marked `moved`. `last_seen` updated per run.
 
-### Standalone commands (not in the main chain)
+**7. Export-venues** — full refresh of the Venues tab (clear + rewrite) from `config/venues.json`; headers now include `initials` and `hide`.
 
-- `pull-facebook` — pulls *approved* Facebook events from the Sheets
-  `fb_events_raw` tab into the pipeline, resolving venues against the registry.
-- `scrape:facebook` / `scrape:facebook:to-sheet` — Apify Facebook scraper.
+### Standalone commands
 
-### Config files used by the pipeline
+- `pull-facebook` — approved FB events from `fb_events_raw` into the pipeline.
+- `scrape:facebook` / `scrape:facebook:to-sheet` — Apify FB scraper (now maps `imageUrl` through to `image_url`). fb tabs use the same named-column upsert (keyed on `facebook_id`).
 
-```
-pipeline/config/
-├── credentials.json   # Google service-account key for Sheets API (gitignored)
-├── facebook.json      # Apify actor config for Facebook scraper
-├── facebook.README.md # Notes on Facebook scraper setup
-├── genres.json        # Genre taxonomy: keywords → genre label (generated, see scripts/)
-├── organizers.json    # Known organizer name mappings
-└── venues.json        # Venue registry: id, name, aliases, address, lat/lng,
-                       #   underground_weight, genres, area, website, scrape_url, scrape_type
-```
+### Config / data layout
 
-### Intermediate data files
-
-```
-pipeline/data/
-├── canonical.json          # All events after normalize — mutated in-place by each step
-├── events.json             # Final export (subset of canonical: future + non-duplicate)
-├── review-queue.json       # Items flagged for manual review during normalization
-├── musicmap-raw.json       # Source taxonomy input for the genre generator
-├── genres.generated.json   # STAGING output of gen-genres (does NOT overwrite config)
-├── genres-report.md        # Human-readable genre generation report
-└── raw/                    # Per-scraper raw output (one file per source)
-    ├── asgaard.json
-    ├── beldub.json
-    ├── broei.json
-    ├── charlatan.json
-    ├── chinastraat.json
-    ├── clubsauvage.json
-    ├── funke.json
-    ├── goabase.json
-    ├── kinkystar.json
-    ├── minusOne.json
-    ├── molotov.json
-    ├── reggaebe.json
-    ├── thecrossover.json
-    └── vierdeZaal.json
-```
-
----
-
-## `pipeline/` — full tree
-
-TypeScript, ESM, run with `tsx` (no compile step needed).
-
-```
-pipeline/
-├── .env                          # Secrets (GOOGLE_*, APIFY, etc.) — gitignored
-├── .gitignore
-├── package.json                  # npm scripts (see above)
-├── package-lock.json
-├── tsconfig.json
-│
-├── config/                       # Static config (see above)
-├── data/                         # Runtime data (see above)
-│
-├── scripts/                      # Standalone generators (not in the pipeline chain)
-│   ├── gen-genres.mjs            # Builds genres taxonomy from musicmap → data/genres.generated.json
-│   └── verify-genre.mts          # Sanity-checks the genre matcher
-│
-└── src/
-    ├── commands/                 # CLI entry points — one file per npm run step
-    │   ├── dedupe.ts
-    │   ├── enrich-artists.ts
-    │   ├── enrich-genre.ts
-    │   ├── enrich-geo.ts
-    │   ├── export.ts
-    │   ├── export-venues.ts          # Push venue registry → Sheets "Venues" tab
-    │   ├── normalize.ts
-    │   ├── pull-facebook-from-sheet.ts   # Approved FB events from fb_events_raw tab
-    │   ├── pull-geo-from-sheet.ts
-    │   ├── pull-venues-from-sheet.ts     # Manual venue edits → config/venues.json
-    │   ├── scrape-agendas.ts
-    │   ├── scrape-aggregators.ts
-    │   ├── scrape-facebook.ts
-    │   └── scrape-venues.ts              # Accepts SOURCE_ID args for a subset
-    │
-    ├── export/
-    │   ├── json.ts               # Writes events.json
-    │   └── sheets.ts             # Google Sheets push: events (Events/GeoFail),
-    │                             #   venues (full refresh), FB upsert/append helpers
-    │
-    ├── lib/                      # Shared utilities
-    │   ├── date.ts               # Date parsing helpers
-    │   ├── http.ts               # Fetch wrapper with retry
-    │   ├── logger.ts             # Structured console logger
-    │   ├── pull-facebook-from-sheet.ts
-    │   ├── pull-geo-from-sheet.ts
-    │   ├── pull-venues-from-sheet.ts
-    │   ├── registry.ts           # Loads config/ JSON files into typed registries
-    │   ├── text.ts               # Text normalisation + Dice coefficient
-    │   └── storage/
-    │       ├── json.ts           # File-based StorageAdapter (reads/writes data/*.json)
-    │       └── supabase.ts       # Supabase StorageAdapter (alternate backend)
-    │
-    ├── pipeline/                 # Stage logic (called by commands/)
-    │   ├── dedupe.ts             # Two-pass dedup + merge logic
-    │   ├── normalize.ts          # Raw → canonical transformation
-    │   └── enrichers/
-    │       ├── artists.ts        # Artist name extraction
-    │       ├── genre.ts          # Genre classification
-    │       └── geo.ts            # Venue geocoding
-    │
-    ├── scrapers/
-    │   ├── base.ts               # Shared scraper interface + safeRun wrapper
-    │   ├── how to scrape specific venues.txt   # Notes on per-venue / pull-venues usage
-    │   ├── agendas/              # iCal-feed scrapers
-    │   │   ├── _ical.ts          # Shared iCal fetch + parse helper
-    │   │   ├── minusOne.ts
-    │   │   └── vierdeZaal.ts
-    │   ├── aggregators/          # Multi-venue aggregator scrapers
-    │   │   ├── beldub.ts
-    │   │   ├── facebook.ts       # Apify-based Facebook scraper
-    │   │   ├── goabase.ts
-    │   │   └── reggaebe.ts
-    │   └── venues/               # Individual venue page scrapers
-    │       ├── _peppered.ts      # Shared base for Peppered-platform venues
-    │       ├── asgaard.ts
-    │       ├── broei.ts
-    │       ├── charlatan.ts
-    │       ├── chinastraat.ts
-    │       ├── clubsauvage.ts
-    │       ├── crossover.ts
-    │       ├── funke.ts
-    │       └── kinkystar.ts
-    │
-    └── types/                    # Shared TypeScript types
-        ├── canonical.ts          # CanonicalEvent — the central schema
-        ├── enricher.ts           # Enricher interface + PipelineContext + ScraperResult
-        ├── raw.ts                # RawEvent / RawEventBase (scraper output)
-        ├── registry.ts           # Typed config registries (VenueRecord, GenreRecord, …)
-        └── storage.ts            # StorageAdapter interface
-```
-
----
-
-## `frontline/` — Aider sandbox for UNDERGHENT
-
-No build step. Aider edits `frontline/index.html` here; when done, you manually copy it to root `underghent.html` to go live. Has its own `.gitignore` for Aider's cache files.
-
-```
-frontline/
-├── .gitignore
-├── index.html                    # Sandbox copy of underghent.html (~62 KB)
-└── qwenwithindexaccess.txt       # Dev notes
-```
-
-### What UNDERGHENT does (`underghent.html` / `frontline/index.html`)
-
-- Fetches two publicly-published Google Sheets CSVs on load: the main `Events`
-  publication and a separate `fb_events` tab (joined by gid). Hardcoded URLs in
-  the JS (`SHEET_CSV`, `FB_CSV`). This data comes from the main `pipeline/`.
-- Parses the CSV rows into event objects client-side.
-- Renders events on a **Leaflet** map (3 map styles: dark/sunset/light via Stadia tiles).
-- **Venue layer:** an in-file `VENUES` array (a hand-maintained mirror of
-  `config/venues.json` plus short map initials) drives three things — labelled
-  **venue circles** on the map (with live event-count badges), a right-side
-  **venue feed** panel listing that venue's events, and the **VENUE PORTALS**
-  sidebar list. Events are matched to venues by name/alias first, then by
-  nearest coordinates (~90 m).
-- **Scene/venue portals (sidebar):** a **SCENE PORTALS** block of external
-  scene links (Goabase, Reggae.be, FOMO Station, VNDG) and a **VENUE PORTALS**
-  block listing every venue (hover to fly the map there, click to open its feed).
-- Filters: **GHENT ONLY** toggle, **week/month/all** time range, free-text search.
-- Status bar at the bottom shows event count + a live radio player
-  (**URGENT.FM** — Ghent community radio) with volume and mute.
-- CRT scanline overlay for aesthetics. JetBrains Mono throughout. Mobile-responsive.
-
-UNDERGHENT has **no dependency on the local pipeline**. It reads whatever is currently published in the Google Sheet. To update what users see: run the pipeline → push to Sheets.
-
----
-
-## `sheetsdata.example/`
-
-```
-sheetsdata.example/
-└── UnderGhent_Events - Events (11).csv     # Manual Sheets export snapshot (~17 KB)
-```
-
-A one-off CSV export from the Google Sheet — a sample of the published data. It
-is not written by the pipeline.
+As before: `pipeline/config/` (credentials, facebook.json, genres.json, organizers.json, venues.json) and `pipeline/data/` (canonical.json, events.json, raw/ per-source). `raw/molotov.json` and `src/scrapers/venues/_peppered.ts` (orphaned helper) were removed in v5; `src/lib/pull-geo-from-sheet.ts` + its command were replaced by `pull-overrides-from-sheet.ts`.
 
 ---
 
 ## `fiestenpipeline/` — Gentse Feesten 2026
 
-Standalone scraper for [gentsefeesten.stad.gent](https://gentsefeesten.stad.gent). Completely independent of the main `pipeline/` — never wired into `npm run pipeline`.
-
-```
-fiestenpipeline/
-├── .env                          # GOOGLE_SHEETS_CREDENTIALS, GOOGLE_SPREADSHEET_ID, etc.
-├── .env.example
-├── .gitignore
-├── package.json                  # scripts: scrape | export | run | dev
-├── package-lock.json
-├── tsconfig.json
-├── data/
-│   └── feesten.json              # Scraped output (written by scrape, read by export)
-└── src/
-    ├── run.ts                    # Entry point — dispatches subcommands
-    ├── scrape.ts                 # Crawls day listing pages (days 17–26, July 2026)
-    ├── detail.ts                 # Fetches individual event detail pages
-    ├── sheets.ts                 # fullRefreshToTab — clears + rewrites the feesten tab
-    ├── http.ts                   # fetchHtml + politeDelay + concurrentMap
-    └── types.ts                  # FeestenEvent interface
-```
-
-### Commands
-
-```
-npm run scrape   # crawl listings + detail pages → data/feesten.json
-npm run export   # push feesten.json → Google Sheets "feesten" tab
-npm run run      # scrape, then export (full refresh)
-npm run dev      # alias for scrape (inspect JSON before exporting)
-```
-
-### What it does
-
-Crawls the official Gentse Feesten site for all events on days 17–26 (July 2026). For each day listing page it follows pagination until empty, deduplicates events by node ID (the same event appears on every day it runs), then fetches each detail page concurrently (4 at a time) to extract the full event record. The `FeestenEvent` type shares field names with the main pipeline's `fb_events` tab so the frontend can parse both identically. Output goes to the `feesten` tab in the same Google Sheet via a full-refresh (clear + rewrite). Env vars match the main pipeline's `.env` naming scheme.
-
----
-
-## `tooling/`
-
-Developer utilities. Not part of the runtime pipeline — nothing here is called during a normal pipeline run.
-
-```
-tooling/
-├── README.md
-├── audit-prompt.md               # Prompt to paste into an LLM for codebase review
-├── build-audit-bundle.ps1        # Concatenates all source into audit-bundle.txt
-├── frontend-timing.html          # Browser harness: loads frontline in iframe, dumps Performance API JSON
-└── pipeline-timing.mjs           # Runs every npm step, captures wall time + RSS + record counts
-```
-
-**Workflow:**
-1. `pwsh tooling/build-audit-bundle.ps1` → produces `audit-bundle.txt`
-2. Paste `audit-prompt.md` + bundle into an LLM (e.g. qwen3-coder on OpenRouter)
-3. `node tooling/pipeline-timing.mjs` → `tooling/timing-baseline.json` (per-step perf)
-4. Open `tooling/frontend-timing.html` in browser → `tooling/frontend-baseline.json` (page load metrics)
+Unchanged in v5. Crawls gentsefeesten.stad.gent days 17–26 July, dedupes by node ID, full-refreshes the `feesten` tab. Shared field names with `fb_events` so GHENTEVENT parses both identically (incl. `gf_image_url`).
 
 ---
 
 ## Notes
 
-- **One git repo:** everything lives under a single `underghent_v2/.git`. One history, one remote, one `main` branch.
-- **Two sites served from the same root via GitHub Pages:**
-  - `index.html` = **GHENTEVENT** — the entry/landing page; shows Gentse Feesten + Facebook events; contains the secret button that opens UNDERGHENT.
-  - `underghent.html` = **UNDERGHENT** — the main underground music map; shows aggregator + venue scraped events; only reachable via the secret button.
-- **Frontend editing workflow:** Aider edits `frontline/index.html` (sandbox). When ready, manually copy `frontline/index.html` → `underghent.html`. Root `index.html` (GHENTEVENT) is edited separately and independently.
-- **Venues are now first-class.** `config/venues.json` is the registry
-  (round-trips to/from the Sheets `Venues` tab via `export:venues` /
-  `pull-venues`), and the frontend mirrors it as the in-file `VENUES` array that
-  powers map circles, the venue feed, and the venue-portals sidebar. The
-  `VenueRecord` type carries `underground_weight`, `genres`, `scrape_type`, etc.
-- **Genre taxonomy is generated, not hand-written.** `scripts/gen-genres.mjs`
-  builds it from `data/musicmap-raw.json` into the *staging* file
-  `data/genres.generated.json` (+ `genres-report.md`); it does not overwrite
-  `config/genres.json`. Genre enrichment is keyword-only — no AI.
-- **Secrets excluded from the repo:** the root `.gitignore` keeps
-  `credentials.json` and `.env` out of git. The old `underghent_agent.py`
-  (which held a hardcoded key) has been removed.
-- **`pipeline/`** is the heart of the project — TypeScript, organized as:
-  `commands/` (CLI) → `pipeline/` (stage logic) → `scrapers/` (per-source) →
-  `lib/` (utilities) → `export/` (sinks), with `scripts/` for standalone generators.
-- **Scraper sources** fall into three categories: `agendas/` (iCal feeds),
-  `aggregators/` (multi-venue sites, including Facebook via Apify), `venues/`
-  (individual venue pages using Playwright or Cheerio). `molotov` is still a
-  known venue (data in `raw/molotov.json`, listed in the frontend) but no longer
-  has an active scraper.
-- **Facebook scraper** is intentionally excluded from the main `npm run pipeline`
-  chain — run `npm run scrape:facebook` separately since it depends on Apify and
-  has different rate-limit characteristics. Approved FB events flow in via the
-  `fb_events_raw` Sheets tab (`pull-facebook`) and the frontend reads the
-  published `fb_events` tab directly.
+- **One git repo**, one `main`, GitHub Pages serves `index.html` (GHENTEVENT) + `underghent.html` (UNDERGHENT, reachable via the secret gesture).
+- **Sheets tabs**: `Events` (+ override columns), `GeoFail` (same schema; quarantine until coords exist), `Venues` (two-way mirror, incl. `initials`/`hide`), `fb_events_raw` (staging/approval gate), `fb_events` (published, read by both frontends), `feesten` (Gentse Feesten, full refresh).
+- **Frontend venue registry**: UNDERGHENT fetches the Venues tab at load (embedded array = offline fallback only). Editing a venue in the sheet reaches the map on next page load — no code edit, no pipeline run.
+- **Secrets**: `.gitignore` keeps `credentials.json` / `.env` out of git; env vars are `GOOGLE_SHEETS_CREDENTIALS`, `GOOGLE_SPREADSHEET_ID`, `GOOGLE_WORKSHEET_NAME`, `APIFY_TOKEN`, `NOMINATIM_USER_AGENT`.
+- **Gentse Feesten window**: 17–26 July 2026 everywhere (rail highlight, festival mode, fiestenpipeline day pages).

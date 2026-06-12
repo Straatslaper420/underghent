@@ -34,6 +34,11 @@ async function scrapeList(): Promise<ScraperResult<RawBeldubEvent>> {
     const date_start = parseNlDate(dateRaw)
     if (!date_start) return
 
+    // Card image (Elementor lazy-loads: src or data-src)
+    const $img   = el.find('img').first()
+    const imgSrc = $img.attr('src') ?? $img.attr('data-src') ?? null
+    const image_url = imgSrc && /^https?:/.test(imgSrc) && !/placeholder|svg\+xml/.test(imgSrc) ? imgSrc : null
+
     events.push({
       _source:     'beldub',
       _scraped_at: now,
@@ -44,9 +49,11 @@ async function scrapeList(): Promise<ScraperResult<RawBeldubEvent>> {
       hour_start:  parseTime(dateRaw),
       venue_name:  venueName || null,
       city:        null,
-      genre_raw:   null,
+      // beldub aggregates the Belgian dub/soundsystem scene — a reliable hint
+      genre_raw:   'dub, soundsystem',
       description: null,
       ticket_url:  null,
+      image_url,
     })
   })
 

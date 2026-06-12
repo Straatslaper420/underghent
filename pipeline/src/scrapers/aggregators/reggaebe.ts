@@ -81,6 +81,19 @@ async function scrapeList(): Promise<ScraperResult<RawReggaebeEvent>> {
     const idMatch  = href.match(/id=(\d+)/)
     const event_id = idMatch ? idMatch[1] : source_url ?? `reggaebe-${title}-${date_start}`
 
+    // Flyer image (upgrade the 60px thumb to the original where possible)
+    const imgSrc = $el.find('img[src]').first().attr('src') ?? null
+    const image_url = imgSrc ? imgSrc.replace('/thumb/', '/original/') : null
+
+    // The list payload carries per-event coordinates as data attributes
+    const lat = parseFloat($el.attr('data-latitude') ?? '')
+    const lng = parseFloat($el.attr('data-longitude') ?? '')
+
+    // Artists hide in "A + B + C" titles
+    const artists_raw = title.includes(' + ')
+      ? title.split(' + ').map(s => s.trim()).filter(Boolean).join(', ')
+      : null
+
     events.push({
       _source:     'reggaebe',
       _scraped_at: now,
@@ -91,9 +104,13 @@ async function scrapeList(): Promise<ScraperResult<RawReggaebeEvent>> {
       hour_start:  parseTime($el.text()),
       venue_name,
       city:        city ?? 'Belgium',
-      artists_raw: null,
+      artists_raw,
       description: null,
       price:       $el.find('.homeagendaPrijs').first().text().trim() || null,
+      genre_raw,
+      image_url,
+      latitude:    Number.isFinite(lat) ? lat : null,
+      longitude:   Number.isFinite(lng) ? lng : null,
     })
   })
 

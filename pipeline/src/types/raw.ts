@@ -4,6 +4,9 @@ export interface RawEventBase {
   title:       string
   date_start:  string
   source_url:  string | null
+  // Optional extras any scraper may surface (added v5 — older raw files
+  // simply lack them, which is fine):
+  image_url?:  string | null
 }
 
 export interface RawGoabaseEvent extends RawEventBase {
@@ -19,6 +22,10 @@ export interface RawGoabaseEvent extends RawEventBase {
   ticket_url:  string | null
   price:       string | null
   organizer:   string | null
+  hour_end?:   string | null
+  date_end?:   string | null
+  latitude?:   number | null
+  longitude?:  number | null
 }
 
 export interface RawBeldubEvent extends RawEventBase {
@@ -41,10 +48,13 @@ export interface RawReggaebeEvent extends RawEventBase {
   artists_raw: string | null
   description: string | null
   price:       string | null
+  genre_raw?:  string | null
+  latitude?:   number | null
+  longitude?:  number | null
 }
 
 export interface RawVenueEvent extends RawEventBase {
-  _source:     'funke' | 'chinastraat' | 'asgaard' | 'kinkystar' | 'broei' | 'thecrossover' | 'molotov' | 'charlatan' | 'clubsauvage' | 'kompass' | 'wintercircus'
+  _source:     'funke' | 'chinastraat' | 'asgaard' | 'kinkystar' | 'broei' | 'thecrossover' | 'molotov' | 'charlatan' | 'clubsauvage' | 'kompass' | 'wintercircus' | 'trefpunt' | 'decentrale' | 'haconcerts' | 'viernulvier' | 'bijloke' | 'clubwintercircus'
   venue_id:    string
   venue_name:  string
   hour_start:  string | null
@@ -53,6 +63,9 @@ export interface RawVenueEvent extends RawEventBase {
   price:       string | null
   ticket_url:  string | null
   artists_raw: string | null
+  hour_end?:   string | null
+  genre_raw?:  string | null
+  support_raw?: string | null
 }
 
 export interface RawAgendaEvent extends RawEventBase {

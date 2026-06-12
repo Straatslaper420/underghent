@@ -14,7 +14,7 @@ const outputPath = resolve(dataDir, 'events.json')
 const count      = await exportJson(storage, outputPath)
 log('EXPORT', `${count} events exported to events.json`)
 
-// Google Sheets export (optional â€” only if env vars are set)
+// Google Sheets export (optional ââ‚¬” only if env vars are set)
 const credPath  = process.env.GOOGLE_SHEETS_CREDENTIALS
 const sheetId   = process.env.GOOGLE_SPREADSHEET_ID
 const sheetName = process.env.GOOGLE_WORKSHEET_NAME ?? 'Events'

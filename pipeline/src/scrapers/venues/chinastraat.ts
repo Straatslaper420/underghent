@@ -55,7 +55,7 @@ async function scrapeList(): Promise<ScraperResult<RawVenueEvent>> {
       const lis    = $col.find('li').map((_k, li) => $(li).text().trim()).toArray().filter(Boolean)
       const allText = [...paras, ...lis].join(' ')
 
-      // Time — grab from any column
+      // Time �€� grab from any column
       if (!hour_start) hour_start = parseTime(allText)
 
       // Price from li items
@@ -72,7 +72,7 @@ async function scrapeList(): Promise<ScraperResult<RawVenueEvent>> {
 
       // Artists from lineup column
       if (header.includes('line up') || header.includes('lineup')) {
-        const lineupText = paras.filter(p => p.length > 1 && p !== '‍').join(', ')
+        const lineupText = paras.filter(p => p.length > 1 && p !== '�€�').join(', ')
         if (lineupText) artists_raw = lineupText
       }
     })
@@ -89,7 +89,7 @@ async function scrapeList(): Promise<ScraperResult<RawVenueEvent>> {
     if (!title) return
     if (/^closed/i.test(title)) return
 
-    // Date: three .agenda_date_start spans — day, ".", month
+    // Date: three .agenda_date_start spans �€� day, ".", month
     const parts  = $el.find('.agenda_date_start.u-text-style-h1').map((_j, d) => $(d).text().trim()).toArray()
     const day    = parseInt(parts[0] ?? '', 10)
     const month  = parseInt(parts[2] ?? '', 10)
@@ -102,7 +102,14 @@ async function scrapeList(): Promise<ScraperResult<RawVenueEvent>> {
     const slug       = $el.find('a[data-modal-slug]').first().attr('data-modal-slug') ?? ''
     const modal      = modalMap.get(slug)
 
+    // Card poster (Webflow lazy images may use data-src / srcset)
+    const $img   = $el.find('img').first()
+    const imgSrc = $img.attr('src') ?? $img.attr('data-src')
+      ?? ($img.attr('srcset') ?? '').split(/\s+/)[0] ?? null
+    const image_url = imgSrc && /^https?:/.test(imgSrc) ? imgSrc : null
+
     events.push({
+      image_url,
       _source:     'chinastraat',
       _scraped_at: now,
       venue_id:    VENUE_ID,

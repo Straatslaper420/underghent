@@ -49,10 +49,15 @@ function defaults(): Omit<CanonicalEvent,
     facebook_id:       null,
     aggregator_id:     null,
     hour_start:        null,
+    hour_end:          null,
     room:              null,
     genre:             null,
     subgenre:          null,
+    genre_raw:         null,
     artists:           [],
+    support_acts:      [],
+    image_url:         null,
+    source:            null,
     ticket_url:        null,
     price:             null,
     details:           null,
@@ -68,21 +73,37 @@ function defaults(): Omit<CanonicalEvent,
   }
 }
 
+function splitNames(raw: string | null | undefined): string[] {
+  if (!raw) return []
+  return raw.split(/,|\n|\s\+\s/).map(s => s.trim()).filter(Boolean)
+}
+
 function normalizeGoabase(raw: RawGoabaseEvent[], registries: Registries): CanonicalEvent[] {
   return raw.flatMap(r => {
     const date_start = r.date_start
     if (!date_start) return []
     const venueFields = resolveVenue(r.venue_name, registries)
+    // Goabase publishes per-party coordinates — use them when the venue isn't
+    // in our registry, so these parties don't all land in GeoFail.
+    if (venueFields.latitude === null && r.latitude != null && r.longitude != null) {
+      venueFields.latitude  = r.latitude
+      venueFields.longitude = r.longitude
+    }
     const event: CanonicalEvent = {
       ...defaults(),
       ...venueFields,
       event_id:      makeEventId('goabase', r.title, date_start),
       aggregator_id: r.event_id ? `gb_${r.event_id}` : null,
+      source:        'goabase',
       title:         r.title,
       date_start,
       source_url:    r.source_url,
       hour_start:    r.hour_start ?? null,
+      hour_end:      r.hour_end ?? null,
+      artists:       splitNames(r.artists_raw),
       description:   r.description ?? null,
+      genre_raw:     r.genre_raw ?? null,
+      image_url:     r.image_url ?? null,
       ticket_url:    r.ticket_url ?? null,
       price:         r.price ?? null,
       city:          r.city ?? null,
@@ -104,11 +125,14 @@ function normalizeBeldub(raw: RawBeldubEvent[], registries: Registries): Canonic
       ...venueFields,
       event_id:      makeEventId('beldub', r.title, r.date_start),
       aggregator_id: aggId ? `bd_${aggId}` : null,
+      source:        'beldub',
       title:         r.title,
       date_start:    r.date_start,
       source_url:    r.source_url,
       hour_start:    r.hour_start ?? null,
       description:   r.description ?? null,
+      genre_raw:     r.genre_raw ?? null,
+      image_url:     r.image_url ?? null,
       ticket_url:    r.ticket_url ?? null,
       city:          r.city ?? null,
       country:       'Belgium',
@@ -121,16 +145,27 @@ function normalizeReggaebe(raw: RawReggaebeEvent[], registries: Registries): Can
   return raw.flatMap(r => {
     if (!r.date_start) return []
     const venueFields = resolveVenue(r.venue_name, registries)
+    // The reggae.be payload carries per-event coordinates — use them when the
+    // venue isn't in our registry (most non-Ghent venues), so fewer events
+    // land in GeoFail.
+    if (venueFields.latitude === null && r.latitude != null && r.longitude != null) {
+      venueFields.latitude  = r.latitude
+      venueFields.longitude = r.longitude
+    }
     const event: CanonicalEvent = {
       ...defaults(),
       ...venueFields,
       event_id:      makeEventId('reggaebe', r.title, r.date_start),
       aggregator_id: r.event_id ? `rg_${r.event_id}` : null,
+      source:        'reggaebe',
       title:         r.title,
       date_start:    r.date_start,
       source_url:    r.source_url,
       hour_start:    r.hour_start ?? null,
       description:   r.description ?? null,
+      genre_raw:     r.genre_raw ?? null,
+      image_url:     r.image_url ?? null,
+      artists:       splitNames(r.artists_raw),
       price:         r.price ?? null,
       city:          r.city ?? null,
       country:       'Belgium',
@@ -148,6 +183,7 @@ function normalizeVenue(raw: RawVenueEvent[], registries: Registries): Canonical
       event_id:      makeEventId(r.venue_id, r.title, r.date_start),
       venue_id:      r.venue_id,
       venue:         r.venue_name,
+      source:        r._source,
       address:       reg?.address ?? null,
       latitude:      reg?.lat ?? null,
       longitude:     reg?.lng ?? null,
@@ -156,8 +192,12 @@ function normalizeVenue(raw: RawVenueEvent[], registries: Registries): Canonical
       date_start:    r.date_start,
       source_url:    r.source_url,
       hour_start:    r.hour_start ?? null,
+      hour_end:      r.hour_end ?? null,
       room:          r.room ?? null,
       description:   r.description ?? null,
+      genre_raw:     r.genre_raw ?? null,
+      image_url:     r.image_url ?? null,
+      support_acts:  splitNames(r.support_raw),
       price:         r.price ?? null,
       ticket_url:    r.ticket_url ?? null,
       city:          'Gent',
@@ -176,6 +216,7 @@ function normalizeAgenda(raw: RawAgendaEvent[], registries: Registries): Canonic
       event_id:    makeEventId(r.venue_id, r.title, r.date_start),
       venue_id:    r.venue_id,
       venue:       r.venue_name,
+      source:      r._source,
       address:     reg?.address ?? null,
       latitude:    reg?.lat ?? null,
       longitude:   reg?.lng ?? null,
@@ -184,6 +225,8 @@ function normalizeAgenda(raw: RawAgendaEvent[], registries: Registries): Canonic
       date_start:  r.date_start,
       source_url:  r.source_url,
       hour_start:  r.hour_start ?? null,
+      hour_end:    r.hour_end ?? null,
+      image_url:   r.image_url ?? null,
       description: r.description ?? null,
       city:        'Gent',
       country:     'Belgium',
@@ -218,6 +261,8 @@ export function normalizeFacebook(raw: RawFacebookEvent[], registries: Registrie
       facebook_id:   r.id,
       aggregator_id: `fb_${r.id}`,
       event_id:      makeEventId('facebook', r.name, local.date),
+      source:        'facebook',
+      image_url:     r.imageUrl ?? null,
       title:         r.name,
       date_start:    local.date,
       hour_start:    local.time,
@@ -245,7 +290,7 @@ export function normalizeFacebook(raw: RawFacebookEvent[], registries: Registrie
 function validateEvent(event: CanonicalEvent, source: string): CanonicalEvent | null {
   const result = CanonicalEventSchema.safeParse(event)
   if (!result.success) {
-    log('NORMALIZE', `WARN skipped invalid event from ${source}: "${event.title}" — ${result.error.errors[0]?.message}`)
+    log('NORMALIZE', `WARN skipped invalid event from ${source}: "${event.title}" �€� ${result.error.errors[0]?.message}`)
     return null
   }
   return result.data as CanonicalEvent
@@ -263,7 +308,7 @@ export async function normalizeAll(
   try {
     files = readdirSync(rawDir).filter(f => f.endsWith('.json'))
   } catch {
-    log('NORMALIZE', 'No raw data directory found — nothing to normalize')
+    log('NORMALIZE', 'No raw data directory found �€� nothing to normalize')
     return 0
   }
 
@@ -300,8 +345,28 @@ export async function normalizeAll(
   for (const event of allEvents) {
     if (!existingMap.has(event.event_id)) {
       existingMap.set(event.event_id, event)
+    } else {
+      // Preserve enriched fields (genre, subgenre, artists, status) and any
+      // pulled overrides, but let the FRESH SCRAPE win on scraper-owned fields.
+      // Old value only survives when the new scrape came back empty (partial
+      // scrape) — the machine side refreshes freely; human truth lives in
+      // `overrides` and is never touched here.
+      const prev = existingMap.get(event.event_id)!
+      existingMap.set(event.event_id, {
+        ...prev,
+        description:  event.description  ?? prev.description,
+        price:        event.price        ?? prev.price,
+        ticket_url:   event.ticket_url   ?? prev.ticket_url,
+        room:         event.room         ?? prev.room,
+        hour_start:   event.hour_start   ?? prev.hour_start,
+        hour_end:     event.hour_end     ?? prev.hour_end,
+        source_url:   event.source_url   ?? prev.source_url,
+        image_url:    event.image_url    ?? prev.image_url,
+        genre_raw:    event.genre_raw    ?? prev.genre_raw,
+        source:       event.source       ?? prev.source,
+        support_acts: event.support_acts?.length ? event.support_acts : (prev.support_acts ?? []),
+      })
     }
-    // If already exists, preserve it (enrichment already applied)
   }
 
   const merged = Array.from(existingMap.values())

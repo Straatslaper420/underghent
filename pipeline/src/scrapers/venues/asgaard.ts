@@ -1,5 +1,5 @@
 /**
- * Asgaard scraper — anykrowd SPA (https://asgaard.anykrowd.app/#/events)
+ * Asgaard scraper �€� anykrowd SPA (https://asgaard.anykrowd.app/#/events)
  *
  * Strategy:
  *  1. Intercept ALL JSON responses; try to find event arrays.
@@ -19,7 +19,7 @@ const VENUE_NAME = 'Asgaard'
 const LIST_URL   = 'https://asgaard.anykrowd.app/#/events'
 const BASE_URL   = 'https://asgaard.anykrowd.app'
 
-// ── helpers ───────────────────────────────────────────────────────────────────
+// �€�€ helpers �€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€
 
 const MONTHS: Record<string, string> = {
   january: '01', february: '02', march: '03', april: '04', may: '05', june: '06',
@@ -74,7 +74,7 @@ function parseHour(raw: string): string | null {
   return null
 }
 
-// ── JSON capture ──────────────────────────────────────────────────────────────
+// �€�€ JSON capture �€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function looksLikeEventArray(arr: any[]): boolean {
@@ -107,6 +107,37 @@ function extractEventArray(data: any): any[] {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// Anykrowd API uses various field names for the ticket/shop URL.
+// Also scans all string-valued fields for anything that looks like a ticket link.
+function findTicketUrl(ev: Record<string, unknown>): string | null {
+  // Known field names (Anykrowd v1/v2)
+  const direct = (
+    ev.ticket_url ?? ev.ticketUrl ?? ev.buy_url ?? ev.shop_url ?? ev.shopUrl ??
+    ev.registration_url ?? ev.registrationUrl ?? ev.external_url ?? ev.externalUrl ??
+    ev.tickets_url ?? ev.ticketsUrl ?? ev.buy_tickets_url ?? ev.ticket_link ??
+    ev.payment_url ?? ev.booking_url ?? ev.website_url ?? ev.website ??
+    ev.url ?? ev.link
+  )
+  if (typeof direct === 'string' && direct.startsWith('http')) return direct
+
+  // Scan all string values for a URL that looks like a ticket/shop link
+  const TICKET_URL_RE = /ticket|shop|koop|kassa|register|booking|bestel|pay|checkout/i
+  for (const val of Object.values(ev)) {
+    if (typeof val === 'string' && val.startsWith('http') && TICKET_URL_RE.test(val)) {
+      return val
+    }
+    // One level deep (e.g. ev.links.tickets)
+    if (val && typeof val === 'object' && !Array.isArray(val)) {
+      for (const inner of Object.values(val as Record<string, unknown>)) {
+        if (typeof inner === 'string' && inner.startsWith('http') && TICKET_URL_RE.test(inner)) {
+          return inner
+        }
+      }
+    }
+  }
+  return null
+}
+
 function eventsFromJson(raw: any[], now: string): RawVenueEvent[] {
   const today = now.slice(0, 10)
   const events: RawVenueEvent[] = []
@@ -127,22 +158,29 @@ function eventsFromJson(raw: any[], now: string): RawVenueEvent[] {
     const price: string | null = ev.price != null
       ? (typeof ev.price === 'number' ? `EUR${ev.price.toFixed(2)}` : String(ev.price))
       : null
+    // Cover image from the anykrowd API payload
+    const imgRaw = ev.image ?? ev.image_url ?? ev.imageUrl ?? ev.cover ?? ev.banner ??
+                   ev.thumbnail ?? ev.media_url ?? ev.picture ?? null
+    const image_url = typeof imgRaw === 'string' && /^https?:/.test(imgRaw) ? imgRaw : null
+
     events.push({
       _source: 'asgaard', _scraped_at: now,
       venue_id: VENUE_ID, venue_name: VENUE_NAME,
       title, date_start, source_url,
       hour_start:  parseHour(hourRaw),
+      hour_end:    parseHour(String(ev.end_time ?? ev.endTime ?? ev.end_date ?? ev.ends_at ?? '')),
       room:        null,
       description: desc.slice(0, 500) || null,
       price,
-      ticket_url:  ev.ticket_url ?? ev.ticketUrl ?? ev.buy_url ?? null,
+      ticket_url:  findTicketUrl(ev),
+      image_url,
       artists_raw: null,
     })
   }
   return events
 }
 
-// ── DOM fallback ──────────────────────────────────────────────────────────────
+// �€�€ DOM fallback �€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€
 
 interface CardData { text: string; href: string | null }
 
@@ -183,7 +221,7 @@ async function scrapeViaDOM(
     return results
   })
 
-  const DATE_LINE = /(\d{2}\/\d{2}\/\d{4})\s+at\s+(\d{2}:\d{2})(?:\s+to\s+[\d\/]+\s+at\s+[\d:]+)?(?:\s*[-–]\s*(.+))?/
+  const DATE_LINE = /(\d{2}\/\d{2}\/\d{4})\s+at\s+(\d{2}:\d{2})(?:\s+to\s+[\d\/]+\s+at\s+[\d:]+)?(?:\s*[-�€�]\s*(.+))?/
   const events: RawVenueEvent[] = []
 
   if (cards.length > 1 || (cards.length === 1 && cards[0].href !== null)) {
@@ -256,7 +294,7 @@ function parseFullPageText(text: string, now: string): RawVenueEvent[] {
   })
 }
 
-// ── Detail-page fallback ──────────────────────────────────────────────────────
+// �€�€ Detail-page fallback �€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€
 
 async function scrapeViaDetailPages(
   page: import('playwright').Page,
@@ -320,7 +358,7 @@ async function scrapeViaDetailPages(
   return events
 }
 
-// ── Main ──────────────────────────────────────────────────────────────────────
+// �€�€ Main �€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€
 
 async function scrapeList(): Promise<ScraperResult<RawVenueEvent>> {
   const { chromium } = await import('playwright')

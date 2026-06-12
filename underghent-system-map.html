@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNDERGHENT // SYSTEM MAP v5</title>
+<style>
+  :root{
+    --bg:#0b0d11;
+    --panel:#11141a;
+    --line:#232833;
+    --txt:#c9d1de;
+    --dim:#5d6675;
+    --src:#e8a13c;     /* sources: amber */
+    --pipe:#5fd3c4;    /* pipeline: teal */
+    --data:#8fa0c0;    /* local files: steel */
+    --sheet:#7ec96a;   /* sheets: green */
+    --fe:#e060a8;      /* frontend: magenta */
+    --pull:#e8a13c;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--txt);font-family:"JetBrains Mono","SFMono-Regular",Consolas,monospace}
+  body::after{ /* CRT scanlines, like the real site */
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:99;
+    background:repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 3px);
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .node{transition:opacity .18s ease, border-color .18s ease}
+    path.cable{transition:opacity .18s ease}
+  }
+
+  header{padding:22px 24px 10px;border-bottom:1px solid var(--line)}
+  header h1{font-size:15px;letter-spacing:.35em;font-weight:700}
+  header h1 span{color:var(--fe)}
+  header p{font-size:11px;color:var(--dim);margin-top:6px;max-width:70ch;line-height:1.6}
+
+  .legend{display:flex;flex-wrap:wrap;gap:14px;padding:10px 24px;border-bottom:1px solid var(--line);font-size:10px;color:var(--dim)}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+  .legend .dash{width:22px;height:0;border-top:2px dashed var(--pull);border-radius:0;vertical-align:2px}
+
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  #board{position:relative;min-width:1280px;padding:26px 24px 40px;display:grid;
+         grid-template-columns:repeat(5,1fr);gap:0 54px}
+  #wires{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+
+  .col{display:flex;flex-direction:column;gap:14px;position:relative;z-index:2}
+  .col>h2{font-size:10px;letter-spacing:.3em;color:var(--dim);border-bottom:1px solid var(--line);
+          padding-bottom:7px;margin-bottom:4px}
+
+  .node{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--dim);
+        padding:9px 11px;cursor:pointer;position:relative}
+  .node b{display:block;font-size:11.5px;font-weight:700;letter-spacing:.04em}
+  .node small{display:block;font-size:9.5px;color:var(--dim);margin-top:3px;line-height:1.5}
+  .node.src{border-left-color:var(--src)}    .node.src b{color:var(--src)}
+  .node.pipe{border-left-color:var(--pipe)}  .node.pipe b{color:var(--pipe)}
+  .node.data{border-left-color:var(--data)}  .node.data b{color:var(--data)}
+  .node.sheet{border-left-color:var(--sheet)}.node.sheet b{color:var(--sheet)}
+  .node.fe{border-left-color:var(--fe)}      .node.fe b{color:var(--fe)}
+  .node.dimmed{opacity:.16}
+  .node.focus{border-color:currentColor;box-shadow:0 0 0 1px var(--line),0 0 18px -6px currentColor}
+  .gap{height:10px}
+
+  path.cable{fill:none;stroke-width:1.4;opacity:.45}
+  path.cable.pull{stroke-dasharray:5 4;opacity:.55}
+  path.cable.manual{stroke-dasharray:2 4}
+  path.cable.dimmed{opacity:.04}
+  path.cable.lit{opacity:1;stroke-width:2.2}
+
+  #info{position:sticky;bottom:0;background:#0e1016;border-top:1px solid var(--line);
+        padding:12px 24px;font-size:11px;line-height:1.65;min-height:58px;z-index:50}
+  #info b{color:var(--txt)}
+  #info .hint{color:var(--dim)}
+
+  section.rows{padding:28px 24px 60px;border-top:1px solid var(--line)}
+  section.rows h2{font-size:12px;letter-spacing:.3em;margin-bottom:6px}
+  section.rows p.sub{font-size:10.5px;color:var(--dim);margin-bottom:18px}
+  .rowmap{display:grid;gap:12px;max-width:980px}
+  .rowmap article{border:1px solid var(--line);background:var(--panel);padding:12px 14px;font-size:11px;line-height:1.7}
+  .rowmap article h3{font-size:11px;margin-bottom:5px}
+  .rowmap .tab{color:var(--sheet)} .rowmap .ui{color:var(--fe)} .rowmap .via{color:var(--pipe)}
+  .rowmap code{background:#0b0d11;border:1px solid var(--line);padding:0 4px;font-size:10px;color:var(--data)}
+  .arrow{color:var(--dim)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>UNDERGHENT <span>//</span> SYSTEM MAP <span style="color:var(--sheet)">v5</span></h1>
+  <p>Signal chain of the whole project (v5 rework, June 2026): where events come from, what each pipeline step does to them, which Google Sheets tab each row lands in, and which pixel on the frontend that row becomes. v5 core: per-column ownership — the pipeline upserts AUTO columns by header name and can never touch the human <code style="color:var(--sheet)">*_override</code> / <code style="color:var(--sheet)">hide</code> / <code style="color:var(--sheet)">approved</code> columns. Hover or tap a node to light up its lineage.</p>
+</header>
+
+<div class="legend">
+  <span><i style="background:var(--src)"></i>SOURCE</span>
+  <span><i style="background:var(--pipe)"></i>PIPELINE STEP</span>
+  <span><i style="background:var(--data)"></i>LOCAL FILE / CONFIG</span>
+  <span><i style="background:var(--sheet)"></i>SHEETS TAB</span>
+  <span><i style="background:var(--fe)"></i>FRONTEND</span>
+  <span><i class="dash"></i>PULL-BACK / MANUAL FLOW (reverse direction)</span>
+</div>
+
+<div class="scroll">
+<div id="board">
+  <svg id="wires"></svg>
+
+  <div class="col">
+    <h2>SOURCES</h2>
+    <div class="node src" id="src-agg"><b>aggregator sites</b><small>beldub · goabase (official JSON API) · reggae.be (incl. per-event coords + flyers)</small></div>
+    <div class="node src" id="src-ven"><b>venue pages</b><small>asgaard · bijloke · broei · charlatan · chinastraat · club sauvage (Wix JSON) · club wintercircus · crossover · de centrale · funke · ha concerts · kinky star (new Stager site) · trefpunt · viernulvier · wintercircus — most plain fetch+cheerio, Playwright only where unavoidable. molotov + kompass: no scraper (FB/Apify later · closed)</small></div>
+    <div class="node src" id="src-ical"><b>iCal agendas</b><small>minus one · vierde zaal (_ical helper)</small></div>
+    <div class="node src" id="src-fb"><b>Facebook via Apify</b><small>standalone — not in npm run pipeline</small></div>
+    <div class="gap"></div>
+    <div class="node src" id="src-feest"><b>gentsefeesten.stad.gent</b><small>days 17–26 · July 2026 · pagination + detail pages</small></div>
+  </div>
+
+  <div class="col">
+    <h2>PIPELINE</h2>
+    <div class="node pipe" id="p-pullven"><b>pull-venues</b><small>runs first · Sheets Venues → config · FULL MIRROR: the sheet decides, blank cells overwrite, missing rows delete · empty sheet refused</small></div>
+    <div class="node pipe" id="p-scrape"><b>scrape:aggregators / venues / agendas</b><small>each writes raw/&lt;source&gt;.json · venues accepts SOURCE_ID args</small></div>
+    <div class="node pipe" id="p-norm"><b>normalize</b><small>field mapping · date parsing · venue/organizer lookup → canonical schema</small></div>
+    <div class="node pipe" id="p-dedupe"><b>dedupe</b><small>SHA-1 exact pass + Dice &gt; 0.85 fuzzy pass · venue &gt; aggregator &gt; fb priority · losers kept as status:duplicate</small></div>
+    <div class="node pipe" id="p-enrich"><b>enrich: artists · genre · geo</b><small>headliners from descriptions · keyword taxonomy · venue lat/lng lookup</small></div>
+    <div class="node pipe" id="p-pullgeo"><b>pull-overrides</b><small>v5 (was pull-geo) · ALL *_override + hide/approved cells from Events AND GeoFail → canonical · overrides always win</small></div>
+    <div class="node pipe" id="p-export"><b>export</b><small>v5: UPSERT by event_id, columns addressed by header NAME · writes auto columns only, override cells physically skipped · vanished future events → status:gone · effective coords decide Events vs GeoFail</small></div>
+    <div class="node pipe" id="p-expven"><b>export:venues</b><small>full refresh: clear + rewrite Venues tab</small></div>
+    <div class="gap"></div>
+    <div class="node pipe" id="p-scrfb"><b>scrape:facebook</b><small>Apify · separate run · :to-sheet stages rows directly</small></div>
+    <div class="node pipe" id="p-pullfb"><b>pull-facebook</b><small>approved rows only → pipeline, venues resolved vs registry</small></div>
+    <div class="gap"></div>
+    <div class="node pipe" id="p-fp"><b>fiestenpipeline run</b><small>scrape → feesten.json → export (full refresh)</small></div>
+  </div>
+
+  <div class="col">
+    <h2>LOCAL DATA / CONFIG</h2>
+    <div class="node data" id="d-raw"><b>data/raw/*.json</b><small>one file per source, untouched scraper output</small></div>
+    <div class="node data" id="d-canon"><b>canonical.json</b><small>single working file — mutated in place by every step after normalize</small></div>
+    <div class="node data" id="d-events"><b>events.json</b><small>final local export · always written even without Sheets creds</small></div>
+    <div class="gap"></div>
+    <div class="node data" id="cfg-ven"><b>config/venues.json</b><small>the venue registry: id · aliases · lat/lng · underground_weight · genres</small></div>
+    <div class="node data" id="cfg-gen"><b>config/genres.json</b><small>keyword taxonomy · generated by gen-genres, staged, not auto-overwritten</small></div>
+    <div class="gap"></div>
+    <div class="node data" id="d-feest"><b>fiestenpipeline/data/feesten.json</b><small>FeestenEvent — field names match fb_events so frontend parses both</small></div>
+  </div>
+
+  <div class="col">
+    <h2>GOOGLE SHEETS</h2>
+    <div class="node sheet" id="sh-events"><b>Events</b><small>1 row = 1 future event with coords · published as CSV · coords hand-fixable here</small></div>
+    <div class="node sheet" id="sh-geofail"><b>GeoFail</b><small>events missing coords · never reaches the frontend until fixed</small></div>
+    <div class="node sheet" id="sh-ven"><b>Venues</b><small>1 row = 1 venue · round-trips with config/venues.json both ways</small></div>
+    <div class="gap"></div>
+    <div class="node sheet" id="sh-fbraw"><b>fb_events_raw</b><small>staging + manual approval gate for Facebook scrapes</small></div>
+    <div class="node sheet" id="sh-fb"><b>fb_events</b><small>published FB tab · read directly by both frontends (joined by gid)</small></div>
+    <div class="gap"></div>
+    <div class="node sheet" id="sh-feest"><b>feesten</b><small>Gentse Feesten rows · full refresh on each export</small></div>
+  </div>
+
+  <div class="col">
+    <h2>FRONTEND</h2>
+    <div class="node fe" id="fe-ge"><b>GHENTEVENT — index.html</b><small>v5 overhaul · day rail: one day at a time, gold Feesten segment 17–26 Jul · image-forward cards · honors hide + *_override</small></div>
+    <div class="node fe" id="fe-ug"><b>UNDERGHENT — underghent.html</b><small>Leaflet map · marker popups (+support/price/end time) · filters · search · URGENT.FM player · honors hide/approved + *_override</small></div>
+    <div class="node fe" id="fe-venlayer"><b>venue layer (live from Venues tab)</b><small>v5: fetched at page load (initials + hide are sheet columns) · in-file array = offline fallback only · circles + count badges · feed panel · VENUE PORTALS</small></div>
+    <div class="gap"></div>
+    <div class="node fe" id="fe-front"><b>frontline/underghent_WIP.html</b><small>old Aider sandbox · unused in the v5 workflow</small></div>
+  </div>
+</div>
+</div>
+
+<div id="info"><span class="hint">▸ tap a node to read what it does and where its data goes.</span></div>
+
+<section class="rows">
+  <h2>ROW → PIXEL</h2>
+  <p class="sub">What one row in each tab becomes on screen.</p>
+  <div class="rowmap">
+    <article>
+      <h3><span class="tab">Events row</span> <span class="arrow">→</span> <span class="ui">UNDERGHENT marker popup + feed item</span></h3>
+      <code>title</code> <code>date_start</code> <code>venue</code> <code>lat/lng</code> <code>genre</code> <code>artists</code> <code>support_acts</code> <code>price</code> <code>hour_end</code> <code>image_url</code> <code>ticket_url</code><br>
+      Effective values are <span class="via">override ?? auto</span>: <code>latitude_override</code> moves the marker, <code>venue_override</code> re-labels it, <code>hide=TRUE</code> removes the row from both sites, <code>approved</code> gates visibility. The row is matched to a venue circle <span class="via">by name/alias first, then nearest coordinates (~90 m)</span> — matched events feed that circle's count badge and right-side feed.
+    </article>
+    <article>
+      <h3><span class="tab">fb_events row</span> <span class="arrow">→</span> <span class="ui">cards on both sites</span></h3>
+      Read directly by UNDERGHENT (fetched as a second CSV, joined by gid) and by GHENTEVENT's event cards. Facebook <code>going</code>/<code>interested</code> counts also survive into Events rows when dedupe merges an FB duplicate into a higher-priority scrape.
+    </article>
+    <article>
+      <h3><span class="tab">Venues row</span> <span class="arrow">→</span> <span class="ui">venue circle · feed panel · VENUE PORTALS entry</span></h3>
+      Edits here flow back via <span class="via">pull-venues</span> into <code>config/venues.json</code> (full mirror), feeding normalize + geo enrichment — AND the frontend now <b>fetches this tab directly at page load</b> (v5): edit <code>initials</code>, coords or <code>hide</code> in the sheet and the map follows on the next reload, no code edit. Hover a portal entry = fly the map there; click = open its feed.
+    </article>
+    <article>
+      <h3><span class="tab">feesten row</span> <span class="arrow">→</span> <span class="ui">GHENTEVENT listing card</span></h3>
+      Written by the standalone fiestenpipeline (full refresh, deduped by node ID since one event repeats across days). Same field names as fb_events, so the landing page parses both with the same code path.
+    </article>
+    <article>
+      <h3><span class="tab">GeoFail row</span> <span class="arrow">→</span> <span class="ui">nothing (quarantine)</span></h3>
+      An event without coordinates can't be placed on the map, so it parks here. Type <code>latitude_override</code> + <code>longitude_override</code> on its row (or fix the venue in the registry) — the next run's <span class="via">pull-overrides</span> picks them up and export promotes the row to Events (the GeoFail row is marked <code>moved</code>).
+    </article>
+  </div>
+</section>
+
+<script>
+(function(){
+  const EDGES = [
+    // [from, to, kind] kind: flow | pull | manual
+    ["src-agg","p-scrape","flow"],
+    ["src-ven","p-scrape","flow"],
+    ["src-ical","p-scrape","flow"],
+    ["src-fb","p-scrfb","flow"],
+    ["src-feest","p-fp","flow"],
+
+    ["p-scrape","d-raw","flow"],
+    ["d-raw","p-norm","flow"],
+    ["cfg-ven","p-norm","flow"],
+    ["p-norm","d-canon","flow"],
+    ["d-canon","p-dedupe","flow"],
+    ["p-dedupe","p-enrich","flow"],
+    ["cfg-gen","p-enrich","flow"],
+    ["cfg-ven","p-enrich","flow"],
+    ["p-enrich","p-pullgeo","flow"],
+    ["sh-events","p-pullgeo","pull"],
+    ["sh-geofail","p-pullgeo","pull"],
+    ["p-pullgeo","p-export","flow"],
+    ["p-export","d-events","flow"],
+    ["p-export","sh-events","flow"],
+    ["p-export","sh-geofail","flow"],
+
+    ["sh-ven","p-pullven","pull"],
+    ["p-pullven","cfg-ven","flow"],
+    ["cfg-ven","p-expven","flow"],
+    ["p-expven","sh-ven","flow"],
+
+    ["p-scrfb","sh-fbraw","flow"],
+    ["sh-fbraw","p-pullfb","pull"],
+    ["p-pullfb","d-canon","flow"],
+
+    ["p-fp","d-feest","flow"],
+    ["d-feest","sh-feest","flow"],
+
+    ["sh-events","fe-ug","flow"],
+    ["sh-fb","fe-ug","flow"],
+    ["sh-fb","fe-ge","flow"],
+    ["sh-feest","fe-ge","flow"],
+    ["sh-ven","fe-venlayer","flow"],
+    ["fe-venlayer","fe-ug","flow"],
+    ["fe-ge","fe-ug","manual"],
+    ["fe-front","fe-ug","manual"]
+  ];
+
+  const DESC = {
+    "src-agg":"Multi-venue aggregator sites. Lowest merge priority after venue scrapers.",
+    "src-ven":"Individual venue pages (15 scrapers). Highest dedupe priority — their fields win merges. v5: every scraper surfaces what its source exposes — image_url, hour_end, genre_raw (source-published tags), support acts. Subset runs: npm run scrape:venues -- asgaard charlatan.",
+    "src-ical":"iCal feeds fetched through the shared _ical.ts helper.",
+    "src-fb":"Facebook event data pulled through an Apify actor. Deliberately outside the main chain (rate limits).",
+    "src-feest":"Official Gentse Feesten site, days 17–26 July 2026. Same event repeats per day — deduped by node ID.",
+    "p-pullven":"Step 0. Full mirror of the Venues tab into config/venues.json — the sheet decides which venues exist and every field value (blank cells overwrite, missing rows delete; empty sheet refused as safety guard). v5: carries initials + hide.",
+    "p-scrape":"Three scrape commands in sequence; each source writes its own raw JSON so a bad scrape never corrupts another's output.",
+    "p-norm":"Merges all raw files into canonical.json using the venue + organizer registries for lookups.",
+    "p-dedupe":"Exact SHA-1(title+date) pass, then fuzzy same-date Dice>0.85 pass. Winner keeps priority source; loser's ticket URL / description / artists / FB counts fill the winner's gaps.",
+    "p-enrich":"Three enrichers over non-duplicates: artist extraction, keyword genre classification (no AI), and venue geocoding from the registry.",
+    "p-pullgeo":"v5 pull-overrides (replaces pull-geo, which read the wrong env var and silently never ran). Reverse flow: every *_override + hide/approved cell from Events AND GeoFail is pulled into canonical. Overrides ALWAYS win — correcting a wrong value sticks, not just filling blanks.",
+    "p-export":"v5: named-column UPSERT keyed on event_id (the old export appended duplicates every run). Writes only AUTO columns — override cells are null in every write request and the Sheets API skips nulls, so human edits are untouchable. Future events missing from the scrape → status:gone (never deleted). Effective coords (override ?? auto) decide Events vs GeoFail; a GeoFail row rescued by an override is promoted and marked moved.",
+    "p-expven":"Full refresh of the Venues tab from config/venues.json — clear then rewrite, so re-runs never duplicate rows.",
+    "p-scrfb":"Standalone Apify run. :to-sheet variant stages results straight into fb_events_raw.",
+    "p-pullfb":"Only approved rows from fb_events_raw enter the pipeline, with venues resolved against the registry.",
+    "p-fp":"Completely independent pipeline: crawl day listings + detail pages (4 concurrent) → feesten.json → full-refresh export.",
+    "d-raw":"Per-scraper raw output. The boundary between 'what the site said' and 'what we made of it'.",
+    "d-canon":"The single working dataset. Every step after normalize mutates it in place — including duplicates kept for traceability.",
+    "d-events":"Final local export: future, non-duplicate events. Exists even when Sheets push is skipped.",
+    "cfg-ven":"The venue registry — the project's most connected file. Feeds normalize, geo enrichment, FB venue resolution, the Venues tab, and (manually) the frontend VENUES array.",
+    "cfg-gen":"Keyword → genre taxonomy. Generated by scripts/gen-genres.mjs into a staging file; promoting it to config is a manual decision.",
+    "d-feest":"FeestenEvent records sharing field names with fb_events, so GHENTEVENT parses both tabs identically.",
+    "sh-events":"The published tab UNDERGHENT reads (as CSV). v5 ownership: scrapers own the auto columns (incl. new source, hour_end, support_acts, image_url, genre_raw, last_seen); YOU own venue_override, address_override, latitude/longitude_override, genre_override, hide, approved, notes — the pipeline can never write those.",
+    "sh-geofail":"Quarantine for events without coordinates (same schema incl. override columns). Fill latitude_override/longitude_override here and the next run promotes the row to Events.",
+    "sh-ven":"Editable venue registry view (now incl. initials + hide). Round-trips both directions with config/venues.json AND is fetched directly by the frontend at page load — venue edits reach the map without touching code.",
+    "sh-fbraw":"Staging + human approval gate. Nothing from Facebook reaches canonical.json without passing through here.",
+    "sh-fb":"Published FB tab, fetched directly by both frontends as a second CSV joined by gid.",
+    "sh-feest":"Gentse Feesten rows, fully rewritten on each fiestenpipeline export.",
+    "fe-ge":"The landing page, fully rebuilt in v5: horizontal day rail shows ONE day at a time with the Gentse Feesten window (17–26 Jul) as a gold segment on the track; festival mode + confetti on entry; image-forward cards; list view follows the selected day. Honors hide + *_override. Secret gesture: slam the rail far-left 3× fast → UNDERGHENT.",
+    "fe-ug":"The main map (v5 = polish only, soul intact). Fetches Events CSV + fb_events CSV on load. Rows show only when approved (column or legacy status) and not hidden/gone; overrides beat scraped values. Popups gained support acts, price and end time.",
+    "fe-venlayer":"v5: the venue layer is fetched LIVE from the Venues tab at page load (gviz CSV by sheet name) — the in-file array is only an offline fallback, ending the hand-sync drift. Drives venue circles with count badges, the venue feed, and VENUE PORTALS. Events attach by name/alias, else nearest coords (~90 m).",
+    "fe-front":"The old Aider sandbox (underghent_WIP.html). Not part of the v5 workflow — kept only as history; safe to delete."
+  };
+
+  const board = document.getElementById("board");
+  const svg = document.getElementById("wires");
+  const info = document.getElementById("info");
+  const nodes = {};
+  document.querySelectorAll(".node").forEach(n => nodes[n.id] = n);
+
+  const colorOf = id => {
+    const n = nodes[id];
+    if(n.classList.contains("src")) return getCss("--src");
+    if(n.classList.contains("pipe")) return getCss("--pipe");
+    if(n.classList.contains("data")) return getCss("--data");
+    if(n.classList.contains("sheet")) return getCss("--sheet");
+    return getCss("--fe");
+  };
+  function getCss(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+  const colIndex = id => {
+    let el = nodes[id].parentElement;
+    return [...board.querySelectorAll(".col")].indexOf(el);
+  };
+
+  let paths = [];
+  function draw(){
+    const br = board.getBoundingClientRect();
+    svg.setAttribute("viewBox", `0 0 ${board.scrollWidth} ${board.scrollHeight}`);
+    svg.style.width = board.scrollWidth + "px";
+    svg.style.height = board.scrollHeight + "px";
+    svg.innerHTML = "";
+    paths = [];
+    EDGES.forEach(([a,b,kind]) => {
+      const ra = nodes[a].getBoundingClientRect(), rb = nodes[b].getBoundingClientRect();
+      const ca = colIndex(a), cb = colIndex(b);
+      let x1,y1,x2,y2,d;
+      if(ca === cb){ // same column: vertical hop down the left edge
+        x1 = ra.left - br.left; y1 = ra.top - br.top + ra.height/2;
+        x2 = rb.left - br.left; y2 = rb.top - br.top + rb.height/2;
+        const bow = 26;
+        d = `M ${x1} ${y1} C ${x1-bow} ${y1}, ${x2-bow} ${y2}, ${x2} ${y2}`;
+      } else if(ca < cb){ // forward
+        x1 = ra.right - br.left; y1 = ra.top - br.top + ra.height/2;
+        x2 = rb.left - br.left;  y2 = rb.top - br.top + rb.height/2;
+        const mx = (x1+x2)/2;
+        d = `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
+      } else { // pull-back: right column → left column
+        x1 = ra.left - br.left;  y1 = ra.top - br.top + ra.height/2;
+        x2 = rb.right - br.left; y2 = rb.top - br.top + rb.height/2;
+        const mx = (x1+x2)/2;
+        d = `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
+      }
+      const p = document.createElementNS("http://www.w3.org/2000/svg","path");
+      p.setAttribute("d", d);
+      p.setAttribute("class", "cable" + (kind!=="flow" ? " " + (kind==="pull"?"pull":"manual") : ""));
+      p.setAttribute("stroke", kind==="pull" ? getCss("--pull") : colorOf(a));
+      p.dataset.a = a; p.dataset.b = b;
+      svg.appendChild(p);
+      paths.push(p);
+    });
+  }
+
+  // adjacency for lineage tracing
+  const fwd = {}, bwd = {};
+  EDGES.forEach(([a,b]) => {
+    (fwd[a] = fwd[a]||[]).push(b);
+    (bwd[b] = bwd[b]||[]).push(a);
+  });
+  function reach(start, adj){
+    const seen = new Set([start]), q = [start];
+    while(q.length){
+      const cur = q.shift();
+      (adj[cur]||[]).forEach(n => { if(!seen.has(n)){ seen.add(n); q.push(n); } });
+    }
+    return seen;
+  }
+
+  function focus(id){
+    const lit = new Set([...reach(id, fwd), ...reach(id, bwd)]);
+    Object.values(nodes).forEach(n => {
+      n.classList.toggle("dimmed", !lit.has(n.id));
+      n.classList.toggle("focus", n.id === id);
+    });
+    paths.forEach(p => {
+      const on = lit.has(p.dataset.a) && lit.has(p.dataset.b);
+      p.classList.toggle("dimmed", !on);
+      p.classList.toggle("lit", on);
+    });
+    info.innerHTML = `<b>${nodes[id].querySelector("b").textContent}</b> — ${DESC[id]||""}`;
+  }
+  function clear(){
+    Object.values(nodes).forEach(n => n.classList.remove("dimmed","focus"));
+    paths.forEach(p => p.classList.remove("dimmed","lit"));
+    info.innerHTML = `<span class="hint">▸ tap a node to read what it does and where its data goes.</span>`;
+  }
+
+  Object.values(nodes).forEach(n => {
+    n.addEventListener("mouseenter", () => focus(n.id));
+    n.addEventListener("click", e => { e.stopPropagation(); focus(n.id); });
+  });
+  board.addEventListener("mouseleave", () => { /* keep last click on touch; only clear on click-away */ });
+  document.body.addEventListener("click", e => { if(!e.target.closest(".node")) clear(); });
+
+  window.addEventListener("resize", draw);
+  if(document.fonts && document.fonts.ready){ document.fonts.ready.then(draw); }
+  window.addEventListener("load", draw);
+  draw();
+})();
+</script>
+</body>
+</html>

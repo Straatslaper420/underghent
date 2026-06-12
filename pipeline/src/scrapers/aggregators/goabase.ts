@@ -1,78 +1,103 @@
-import { fetchHtml } from '../../lib/http.js'
-import { parseNlDate, parseTime } from '../../lib/date.js'
-import { parseCheerio, makeScraperResult, safeRun } from '../base.js'
+/**
+ * Goabase scraper — REWRITTEN 2026-06 to use Goabase's official JSON API
+ * instead of scraping the HTML list (whose detail-page selectors had rotted:
+ * artists/description/ticket/price filled 0/4 in the last runs).
+ *
+ * List:   https://www.goabase.net/api/party/json?country=be&limit=100
+ *         → { partylist: [{ id, nameParty, dateStart/dateEnd (ISO+TZ),
+ *              nameTown, geoLat/geoLon, nameOrganizer, urlImage*, … }] }
+ * Detail: https://www.goabase.net/api/party/json/<id>
+ *         → { party: { textLineUp, textMore (entry fee!), textLocation,
+ *              textOrganizer, urlImageFull, … } }
+ */
+import { fetchJson } from '../../lib/http.js'
+import { makeScraperResult, safeRun } from '../base.js'
 import type { RawGoabaseEvent } from '../../types/raw.js'
 import type { ScraperResult } from '../../types/enricher.js'
 
 export const SOURCE_ID = 'goabase'
 
-const BASE_URL = 'https://www.goabase.net'
-const LIST_URL = `${BASE_URL}/party/list/?country=be&n=100`
+const LIST_URL   = 'https://www.goabase.net/api/party/json?country=be&limit=100'
+const DETAIL_URL = (id: string | number) => `https://www.goabase.net/api/party/json/${id}`
 
-async function scrapeDetailPage(url: string): Promise<Partial<RawGoabaseEvent>> {
-  try {
-    const html = await fetchHtml(url)
-    const $ = parseCheerio(html)
-    const description = $('.partyDesc, .party-description, [itemprop="description"]').text().trim() || null
-    const artists_raw = $('.lineup, .partyLineup, .artist-list').text().trim() || null
-    const ticket_url  = $('a[href*="ticket"], a[href*="tickets"]').first().attr('href') ?? null
-    const price       = $('.price, .partyPrice').first().text().trim() || null
-    return { description, artists_raw, ticket_url, price }
-  } catch {
-    return {}
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+function isoDate(raw: unknown): string | null {
+  const m = String(raw ?? '').match(/^(\d{4}-\d{2}-\d{2})/)
+  return m ? m[1] : null
+}
+function isoTime(raw: unknown): string | null {
+  const m = String(raw ?? '').match(/T(\d{2}:\d{2})/)
+  return m ? m[1] : null
+}
+
+// Pull artist names out of Goabase's free-text line-up. Lines like
+// "🐸~🎶 GLOBOX ....._..... Goa Trance" → "GLOBOX".
+function artistsFromLineup(text: string | null | undefined): string | null {
+  if (!text) return null
+  const names: string[] = []
+  for (const line of text.split(/\r?\n/)) {
+    const m = line.match(/^[^\w]*[~\s]*🎶?\s*([A-Z][A-Za-z0-9' .&-]{1,30}?)\s*(?:\.{2,}|_{2,}|—|–| - )/u)
+    if (m) {
+      const name = m[1].trim()
+      if (name && !names.includes(name)) names.push(name)
+    }
   }
+  return names.length ? names.join(', ') : null
+}
+
+function priceFromText(text: string | null | undefined): string | null {
+  if (!text) return null
+  const m = String(text).match(/(?:vvk|presale|entr[ée]e?|deur|door|entry)\s*:?\s*€?\s*[\d,.]+|€\s*[\d,.]+/i)
+  return m ? m[0].trim() : null
 }
 
 async function scrapeList(): Promise<ScraperResult<RawGoabaseEvent>> {
-  const html = await fetchHtml(LIST_URL)
-  const $    = parseCheerio(html)
+  const data = await fetchJson<any>(LIST_URL)
+  const list: any[] = data?.partylist ?? []
+  const now = new Date().toISOString()
   const events: RawGoabaseEvent[] = []
-  const now  = new Date().toISOString()
 
-  for (const el of $('article.partyElem').toArray()) {
-    const $el      = $(el)
-    const linkEl   = $el.find('a.lh14').first()
-    const href     = linkEl.attr('href') ?? ''
-    if (!href) continue
+  for (const p of list) {
+    const date_start = isoDate(p.dateStart)
+    const title = String(p.nameParty ?? '').trim()
+    if (!date_start || !title) continue
+    if (String(p.nameStatus ?? '').toLowerCase() === 'cancelled') continue
 
-    const detailUrl = href.startsWith('http') ? href : `${BASE_URL}${href}`
-    const title     = $el.find('h3').first().text().trim()
-    if (!title) continue
+    // Detail fetch (polite 1.2s spacing) for line-up / entry fee / description
+    let detail: any = {}
+    try {
+      await new Promise(r => setTimeout(r, 1200))
+      const d = await fetchJson<any>(DETAIL_URL(p.id))
+      detail = d?.party ?? {}
+    } catch { /* list data alone is still useful */ }
 
-    const idMatch  = href.match(/\/(\d+)$/)
-    const event_id = idMatch ? idMatch[1] : href
-
-    // Date/time from body text: "Sat, 23 May 2026, 22:00"
-    const bodyText  = $el.text()
-    const dateMatch = bodyText.match(/(\d{1,2}\s+\w+\s+\d{4}),?\s+(\d{2}:\d{2})/)
-    const date_start = dateMatch ? parseNlDate(dateMatch[1]) : null
-    if (!date_start) continue
-
-    const hour_start = dateMatch ? parseTime(dateMatch[2]) : null
-    const cityEl     = $el.find('a[href*="geoloc="]').first()
-    const cityRaw    = cityEl.text().trim()
-
-    // Throttle detail page fetches
-    await new Promise(r => setTimeout(r, 1500))
-    const detail = await scrapeDetailPage(detailUrl)
+    const lineup  = detail.textLineUp ?? null
+    const more    = detail.textMore ?? null
+    const descPieces = [lineup, more].filter(Boolean).map(String)
 
     events.push({
       _source:     'goabase',
       _scraped_at: now,
-      event_id,
+      event_id:    String(p.id),
       title,
       date_start,
-      hour_start,
-      source_url:  detailUrl,
-      venue_name:  null,
-      city:        cityRaw || null,
-      country:     'Belgium',
-      genre_raw:   null,
-      artists_raw: detail.artists_raw ?? null,
-      description: detail.description ?? null,
-      ticket_url:  detail.ticket_url ?? null,
-      price:       detail.price ?? null,
-      organizer:   null,
+      hour_start:  isoTime(p.dateStart),
+      source_url:  p.urlPartyHtml ?? null,
+      venue_name:  detail.textLocation?.trim() || null,
+      city:        p.nameTown ?? null,
+      country:     p.nameCountry ?? 'Belgium',
+      genre_raw:   p.nameType ? `psytrance, ${String(p.nameType).toLowerCase()}` : 'psytrance',
+      artists_raw: artistsFromLineup(lineup),
+      description: descPieces.length ? descPieces.join('\n\n').slice(0, 800) : null,
+      ticket_url:  null,
+      price:       priceFromText(more) ?? priceFromText(lineup),
+      organizer:   p.nameOrganizer ?? detail.textOrganizer ?? null,
+      image_url:   p.urlImageLarge || p.urlImageFull || p.urlImageMedium || null,
+      latitude:    Number.isFinite(p.geoLat) && p.geoLat !== 0 ? p.geoLat : null,
+      longitude:   Number.isFinite(p.geoLon) && p.geoLon !== 0 ? p.geoLon : null,
+      hour_end:    isoTime(p.dateEnd),
+      date_end:    isoDate(p.dateEnd),
     })
   }
 

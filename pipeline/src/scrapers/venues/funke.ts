@@ -14,7 +14,7 @@ const PAYLOGIC_API      = 'https://shopping-api.paylogic.com'
 const HEADER_RE   = /^(?:mon|tue|wed|thu|fri|sat|sun)\s+(\d{1,2})\.(\d{1,2})\s*(?:(\d{1,2}):(\d{2}))?\s*(.*)$/i
 const DAY_ABBR_RE = /^(?:mon|tue|wed|thu|fri|sat|sun)\b/i
 const YEAR_RE     = /\b(20\d{2})\b/g
-const FUNKETIV_RE = /(\d{1,2})\.(\d{1,2})(?:\.(\d{2,4}))?(?:\s*[-—]\s*\d{1,2}\.\d{1,2}(?:\.\d{2,4})?)?\s*\|?\s*(.+)/
+const FUNKETIV_RE = /(\d{1,2})\.(\d{1,2})(?:\.(\d{2,4}))?(?:\s*[-�€�]\s*\d{1,2}\.\d{1,2}(?:\.\d{2,4})?)?\s*\|?\s*(.+)/
 
 const pad   = (n: number) => String(n).padStart(2, '0')
 const clean = (s: string) => s.replace(/ /g, ' ').replace(/\s+/g, ' ').trim()
@@ -140,6 +140,7 @@ function parseEventH2(
     description,
     price:       null,
     ticket_url:  fallback_ticket,
+    genre_raw:   genre,
     artists_raw: tdText || null,
   }
 }

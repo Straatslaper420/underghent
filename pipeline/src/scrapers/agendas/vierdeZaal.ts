@@ -11,6 +11,8 @@ const CALENDAR_ID = 'd5153e129d0328ff0cf68610104aed59dd526bfafcab6bb276425a37cd7
 async function scrapeList(): Promise<ScraperResult<RawAgendaEvent>> {
   const today  = new Date().toISOString().slice(0, 10)
   const events = await scrapeIcalDirect(CALENDAR_ID, 'vierdeZaal', 'Vierde Zaal', 'vierdeZaal', { minDate: today })
+  // The calendar's VEVENTs carry no URL property — link to the venue agenda
+  for (const e of events) e.source_url = e.source_url ?? 'https://vierdezaal.gent/agenda'
   return makeScraperResult(SOURCE_ID, events)
 }
 

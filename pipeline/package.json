@@ -13,22 +13,25 @@
     "enrich:artists": "tsx src/commands/enrich-artists.ts",
     "enrich:genre": "tsx src/commands/enrich-genre.ts",
     "enrich:geo": "tsx src/commands/enrich-geo.ts",
-    "pull-geo": "tsx src/commands/pull-geo-from-sheet.ts",
+    "pull-overrides": "tsx src/commands/pull-overrides-from-sheet.ts",
+    "pull-geo": "tsx src/commands/pull-overrides-from-sheet.ts",
     "pull-facebook": "tsx src/commands/pull-facebook-from-sheet.ts",
     "export": "tsx src/commands/export.ts",
     "export:venues": "tsx src/commands/export-venues.ts",
     "pull-venues": "tsx src/commands/pull-venues-from-sheet.ts",
-    "pipeline": "npm run pull-venues && npm run scrape:aggregators && npm run scrape:venues && npm run scrape:agendas && npm run normalize && npm run dedupe && npm run enrich:artists && npm run enrich:genre && npm run enrich:geo && npm run pull-geo && npm run export && npm run export:venues"
+    "pipeline": "npm run pull-venues && npm run scrape:aggregators && npm run scrape:venues && npm run scrape:agendas && npm run normalize && npm run dedupe && npm run enrich:artists && npm run enrich:genre && npm run enrich:geo && npm run pull-overrides && npm run export && npm run export:venues"
   },
   "dependencies": {
     "apify-client": "^2.23.4",
     "cheerio": "^1.0.0",
     "dotenv": "^16.4.0",
+    "esbuild": "^0.28.0",
     "googleapis": "^140.0.0",
     "playwright": "^1.44.0",
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@esbuild/linux-x64": "^0.28.0",
     "@types/node": "^20.0.0",
     "tsx": "^4.11.0",
     "typescript": "^5.4.0"

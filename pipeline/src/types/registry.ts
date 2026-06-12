@@ -1,6 +1,7 @@
 export interface VenueRecord {
   id:                 string
   canonical_name:     string
+  initials:           string | null   // short map label (e.g. 'CH') — frontend reads this from the Venues tab
   aliases:            string[]
   address:            string | null
   lat:                number | null
@@ -11,6 +12,7 @@ export interface VenueRecord {
   website:            string | null
   scrape_url:         string | null
   scrape_type:        'html' | 'ical' | 'json' | 'playwright' | null
+  hide:               boolean         // TRUE = frontend skips this venue
 }
 
 export interface GenreRecord {

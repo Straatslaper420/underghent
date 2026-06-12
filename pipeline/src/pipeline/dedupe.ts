@@ -18,6 +18,17 @@ const SOURCE_PRIORITY: Record<string, number> = {
   molotov:     2,
   vierdeZaal:  2,
   minusOne:    2,
+  // newer venue scrapers — same top priority as the other venue sites
+  charlatan:        2,
+  clubsauvage:      2,
+  trefpunt:         2,
+  decentrale:       2,
+  haconcerts:       2,
+  viernulvier:      2,
+  bijloke:          2,
+  wintercircus:     2,
+  clubwintercircus: 2,
+  kompass:          2,
 }
 
 function sourceOf(event: CanonicalEvent): string {
@@ -59,8 +70,14 @@ function merge(winner: CanonicalEvent, loser: CanonicalEvent): CanonicalEvent {
     description: winner.description ?? loser.description,
     price:       winner.price ?? loser.price,
     hour_start:  winner.hour_start ?? loser.hour_start,
+    hour_end:    winner.hour_end ?? loser.hour_end,
+    image_url:   winner.image_url ?? loser.image_url,
+    genre_raw:   winner.genre_raw ?? loser.genre_raw,
+    facebook_id: winner.facebook_id ?? loser.facebook_id,
     artists:     winner.artists.length ? winner.artists : loser.artists,
+    support_acts: (winner.support_acts?.length ? winner.support_acts : loser.support_acts) ?? [],
     organizers:  winner.organizers.length ? winner.organizers : loser.organizers,
+    overrides:   winner.overrides ?? loser.overrides,
   }
 }
 
@@ -74,7 +91,7 @@ export async function deduplicateAll(storage: StorageAdapter): Promise<number> {
   const canonical = new Map<string, CanonicalEvent>()
   let mergeCount  = 0
 
-  // ─── Exact pass ─────────────────────────────────────────────────────────────
+  // �€�€�€ Exact pass �€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€
   const byKey = new Map<string, CanonicalEvent[]>()
   for (const e of active) {
     const key = dedupeKey(e)
@@ -102,7 +119,7 @@ export async function deduplicateAll(storage: StorageAdapter): Promise<number> {
     canonical.set(key, winner)
   }
 
-  // ─── Fuzzy pass (same date, title similarity > 0.85) ────────────────────────
+  // �€�€�€ Fuzzy pass (same date, title similarity > 0.85) �€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€�€
   const byDate = new Map<string, CanonicalEvent[]>()
   for (const e of canonical.values()) {
     const bucket = byDate.get(e.date_start) ?? []

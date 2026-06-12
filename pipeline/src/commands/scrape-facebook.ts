@@ -37,11 +37,11 @@ const storage = new JsonStorageAdapter(dataDir)
 const raw     = await scrapeFacebook(config)
 
 if (!toSheet) {
-  // (A) pipeline mode â€” write raw items for normalizeâ†’â€¦â†’export to pick up
+  // (A) pipeline mode ââ‚¬” write raw items for normalizeâ†’ââ‚¬¦â†’export to pick up
   await storage.writeRaw('facebook', raw)
   log('FACEBOOK', `${raw.length} raw events written to data/raw/facebook.json`)
 } else {
-  // (B) standalone â€” normalize, enrich genres, append ALL rows to the staging tab
+  // (B) standalone ââ‚¬” normalize, enrich genres, append ALL rows to the staging tab
   const registries = loadRegistries(configDir)
   const normalized = normalizeFacebook(raw, registries)
 

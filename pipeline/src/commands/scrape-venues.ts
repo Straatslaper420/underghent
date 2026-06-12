@@ -4,14 +4,21 @@ import { fileURLToPath } from 'url'
 import { JsonStorageAdapter } from '../lib/storage/json.js'
 import { log } from '../lib/logger.js'
 import { safeRun } from '../scrapers/base.js'
-import * as funke       from '../scrapers/venues/funke.js'
-import * as chinastraat from '../scrapers/venues/chinastraat.js'
-import * as asgaard     from '../scrapers/venues/asgaard.js'
-import * as kinkystar   from '../scrapers/venues/kinkystar.js'
-import * as broei       from '../scrapers/venues/broei.js'
-import * as crossover   from '../scrapers/venues/crossover.js'
-import * as charlatan   from '../scrapers/venues/charlatan.js'
-import * as clubsauvage from '../scrapers/venues/clubsauvage.js'
+import * as funke           from '../scrapers/venues/funke.js'
+import * as chinastraat     from '../scrapers/venues/chinastraat.js'
+import * as asgaard         from '../scrapers/venues/asgaard.js'
+import * as kinkystar       from '../scrapers/venues/kinkystar.js'
+import * as broei           from '../scrapers/venues/broei.js'
+import * as crossover       from '../scrapers/venues/crossover.js'
+import * as charlatan       from '../scrapers/venues/charlatan.js'
+import * as clubsauvage     from '../scrapers/venues/clubsauvage.js'
+import * as trefpunt        from '../scrapers/venues/trefpunt.js'
+import * as decentrale      from '../scrapers/venues/decentrale.js'
+import * as haconcerts      from '../scrapers/venues/haconcerts.js'
+import * as viernulvier     from '../scrapers/venues/viernulvier.js'
+import * as bijloke         from '../scrapers/venues/bijloke.js'
+import * as wintercircus    from '../scrapers/venues/wintercircus.js'
+import * as clubwintercircus from '../scrapers/venues/clubwintercircus.js'
 import type { RawEventBase } from '../types/raw.js'
 import type { ScraperResult } from '../types/enricher.js'
 
@@ -21,6 +28,7 @@ const storage   = new JsonStorageAdapter(dataDir)
 
 const allScrapers: Array<{ SOURCE_ID: string; scrape: () => Promise<ScraperResult<RawEventBase>> }> = [
   funke, chinastraat, asgaard, kinkystar, broei, crossover, charlatan, clubsauvage,
+  trefpunt, decentrale, haconcerts, viernulvier, bijloke, wintercircus, clubwintercircus,
 ]
 
 // Optional CLI args select a subset by SOURCE_ID, e.g. `npm run scrape:venues -- asgaard`.

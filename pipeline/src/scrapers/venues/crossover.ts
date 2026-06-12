@@ -135,6 +135,10 @@ async function scrapeDetailPage(url: string, now: string): Promise<RawVenueEvent
     ? (ticketHref.startsWith('http') ? ticketHref : `${BASE_URL}${ticketHref}`)
     : null
 
+  const image_url = $('meta[property="og:image"]').attr('content')
+    ?? $('main img[src], article img[src]').first().attr('src')
+    ?? null
+
   return {
     _source:     SOURCE_ID,
     _scraped_at: now,
@@ -148,6 +152,7 @@ async function scrapeDetailPage(url: string, now: string): Promise<RawVenueEvent
     description,
     price,
     ticket_url,
+    image_url,
     artists_raw: null,
   }
 }
@@ -172,8 +177,9 @@ async function scrapeList(): Promise<ScraperResult<RawVenueEvent>> {
   // Deduplicate by source_url
   const seen    = new Set<string>()
   const deduped = events.filter(ev => {
-    if (seen.has(ev.source_url)) return false
-    seen.add(ev.source_url)
+    const key = ev.source_url ?? `${ev.title}|${ev.date_start}`
+    if (seen.has(key)) return false
+    seen.add(key)
     return true
   })
 

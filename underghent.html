@@ -1087,7 +1087,8 @@ function initMarquee() {
   const containerW = marqueeWrap.offsetWidth;
 
   // How many copies needed to fill container + 1 extra for seamless wrap
-  const copies = Math.ceil((containerW + unitW) / unitW) + 2;
+  // (guard: zero-width layout — hidden tab, mid-rotation — must not throw)
+  const copies = unitW > 0 ? Math.min(60, Math.ceil((containerW + unitW) / unitW) + 2) : 3;
   marqueeInner.innerHTML = Array(copies).fill(unit).join('');
   marqueeTextW = unitW;
   marqueePos = 0;
@@ -1156,9 +1157,12 @@ const markerCluster = L.markerClusterGroup({
 map.addLayer(markerCluster);
 
 /* ── VENUES ────────────────────────────────────────────────── */
-// Mirror of pipeline/config/venues.json (+ short map initials). Drives the
-// venue circles, the right-side feed, and the VENUE PORTALS sidebar list.
-const VENUES = [
+// Source of truth: the Google Sheets "Venues" tab (round-trips with
+// pipeline/config/venues.json via pull-venues/export:venues, and carries the
+// `initials` + `hide` columns). Fetched at load; the array below is only the
+// OFFLINE FALLBACK so the map never renders without venues.
+const VENUES_CSV = 'https://docs.google.com/spreadsheets/d/18ucjcKbxhJ88M-qboMeZRnMf4VX2EnWLlHhtyDkobms/gviz/tq?tqx=out:csv&sheet=Venues';
+let VENUES = [
   {id:'charlatan',   initials:'CH', name:'Charlatan',          area:'City Centre',  lat:51.05603186841703, lng:3.7285059220882286, website:'https://www.charlatan.be',     scrape_url:'https://www.charlatan.be/agenda',        aliases:['charlatan','de charlatan','cafe charlatan']},
   {id:'kompass',     initials:'KP', name:'Kompass',            area:'Muide',        lat:51.06836775216201, lng:3.723787570557093,  website:'https://kompassklub.com',      scrape_url:'https://kompassklub.com/event-list/',    aliases:['kompass','kompass klub','kompass club','kompass klup']},
   {id:'viernulvier', initials:'VN', name:'VIERNULVIER',        area:'City Centre',  lat:51.04785719025603, lng:3.727390868709035,  website:'https://www.viernulvier.gent', scrape_url:'https://www.viernulvier.gent/nl/agenda', aliases:['viernulvier','vooruit','de vooruit','vooruit concertzaal','4nulvier','4 nul vier','kunstencentrum viernulvier','viernulvier concertzaal','viernulvier café']},
@@ -1184,9 +1188,47 @@ const VENUES = [
   {id:'molotov',     initials:'MO', name:'Molotov',            area:'City Centre',  lat:51.04070189091864, lng:3.726496810630025,  website:null,                           scrape_url:null,                                     aliases:['molotov','molotov gent','cafe molotov']},
 ];
 // Precompute a lowercase alias lookup set per venue (aliases + canonical name).
-VENUES.forEach(v => {
-  v._aliasSet = new Set([...v.aliases, v.name.toLowerCase()]);
-});
+function _initVenueAliases(list) {
+  list.forEach(v => {
+    v._aliasSet = new Set([...(v.aliases || []), v.name.toLowerCase()]);
+  });
+}
+_initVenueAliases(VENUES);
+
+// Pull the live venue registry from the Venues tab. Any failure (offline,
+// renamed tab, …) keeps the embedded fallback — the page never breaks.
+async function loadVenuesFromSheet() {
+  try {
+    const r = await fetch(VENUES_CSV, {cache: 'no-store'});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const rows = Papa.parse(await r.text(), {header: true, skipEmptyLines: true}).data;
+    const truthy = v => /^(true|1|yes|x|ja)$/i.test(String(v || '').trim());
+    const next = rows.map(row => {
+      const lat = parseFloat(String(row.lat || '').replace(',', '.'));
+      const lng = parseFloat(String(row.lng || '').replace(',', '.'));
+      if (!row.id || !row.canonical_name || isNaN(lat) || isNaN(lng)) return null;
+      if (truthy(row.hide)) return null;
+      return {
+        id:         String(row.id).trim(),
+        initials:   String(row.initials || '').trim() || String(row.canonical_name).slice(0, 2).toUpperCase(),
+        name:       String(row.canonical_name).trim(),
+        area:       String(row.area || '').trim() || null,
+        lat, lng,
+        website:    String(row.website || '').trim() || null,
+        scrape_url: String(row.scrape_url || '').trim() || null,
+        aliases:    String(row.aliases || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean),
+      };
+    }).filter(Boolean);
+    if (next.length < 3) throw new Error('suspiciously few venues — keeping fallback');
+    _initVenueAliases(next);
+    VENUES = next;
+    buildVenuePortals();
+    renderEvents(_filtered());   // re-match events against the live registry
+    console.log(`[underghent] venue registry: ${next.length} venues from sheet`);
+  } catch (err) {
+    console.warn('[underghent] Venues tab unavailable — using embedded fallback:', err);
+  }
+}
 
 // Quick-zoom helper; skips while the map has no size (e.g. before first layout).
 function flyToVenue(v) {
@@ -1437,7 +1479,9 @@ function _parseDate(s) {
 /* ── FILTER ────────────────────────────────────────────────── */
 function _filtered() {
   return allEvents.filter(ev => {
-    if ((ev.status || '').toLowerCase().trim() !== 'approved') return false;
+    if (ev._hide) return false;                                   // human kill-switch
+    if (ev.status === 'gone' || ev.status === 'duplicate') return false;
+    if (!ev._approved) return false;                              // `approved` column or legacy status
     if (!activeSrcs.has(ev.source_type || 'facebook')) return false;
     if (dateStart || dateEnd) {
       const d = _parseDate(ev.date_start);
@@ -1480,9 +1524,11 @@ function _popup(ev) {
   const title   = (ev.title || 'UNTITLED').toUpperCase();
   const venue   = ev.venue   || '';
   const date    = ev.date_start || '';
-  const time    = ev.hour_start || '';
+  const time    = (ev.hour_start || '') + (ev.hour_end ? '–' + ev.hour_end : '');
   const genre   = [ev.genre, ev.subgenre].filter(Boolean).join(' / ');
   const artists = ev.artists  || '';
+  const support = ev.support_acts || '';
+  const price   = ev.price    || '';
   const going   = ev.going    || '';
   const intrstd = ev.interested || '';
   const srcUrl  = (ev.source_url || '').trim();
@@ -1505,6 +1551,8 @@ function _popup(ev) {
   h += row('TIME',       time);
   h += row('GENRE',      genre);
   h += row('ARTISTS',    artists);
+  h += row('SUPPORT',    support);
+  h += row('PRICE',      price);
   h += row('GOING',      going);
   h += row('INTERESTED', intrstd);
 
@@ -1556,7 +1604,7 @@ function renderEvents(events) {
   document.getElementById('sig-top').textContent = `[ ${n} EVENTS`;
   document.getElementById('sig-bot').textContent = `DETECTED ]`;
   // Bottom bar: total approved (unfiltered)
-  const total = allEvents.filter(ev => (ev.status || '').toLowerCase().trim() === 'approved').length;
+  const total = allEvents.filter(ev => ev._approved && !ev._hide).length;
   document.getElementById('signal-count').textContent = `[ ${total} EVENTS INC. ]`;
 }
 
@@ -1567,13 +1615,26 @@ async function _fetchSheet(url) {
   return Papa.parse(csv, {header:true, skipEmptyLines:true}).data;
 }
 
+function _truthyCell(v) { return /^(true|1|yes|x|ja)$/i.test(String(v || '').trim()); }
+
+// Normalize one sheet row. Per-column ownership: any *_override value a human
+// typed in the sheet ALWAYS beats the scraped value; `hide` kills the row.
 function _normRow(e, source_type) {
-  return {
+  const o = {
     ...e,
     source_type,
     layer:  'review',
     status: (e.status || '').toLowerCase().trim(),
   };
+  if ((e.venue_override   || '').trim()) o.venue   = e.venue_override.trim();
+  if ((e.address_override || '').trim()) o.address = e.address_override.trim();
+  if ((e.genre_override   || '').trim()) { o.genre = e.genre_override.trim(); o.subgenre = ''; }
+  const latO = (e.latitude_override  || '').trim();
+  const lngO = (e.longitude_override || '').trim();
+  if (latO && lngO) { o.latitude = latO; o.longitude = lngO; }
+  o._hide     = _truthyCell(e.hide);
+  o._approved = _truthyCell(e.approved) || o.status === 'approved';
+  return o;
 }
 
 async function loadData() {
@@ -1664,7 +1725,10 @@ function setVolume(val) {
 }
 
 document.getElementById('btn-dark').classList.add('active');
+document.getElementById('sig-top').textContent = '[ TUNING';
+document.getElementById('sig-bot').textContent = 'IN… ]';
 loadData();
+loadVenuesFromSheet();
 </script>
 </body>
 </html>

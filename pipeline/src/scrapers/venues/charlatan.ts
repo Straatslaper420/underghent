@@ -15,7 +15,7 @@ const CATEGORY_SLUGS = new Set([
   'concert', 'nightlife', 'comedy', 'hitjes',
 ])
 
-// NL weekday + day + month — matches e.g. "do 11 jun" or "za 13 jun"
+// NL weekday + day + month �€� matches e.g. "do 11 jun" or "za 13 jun"
 const NL_DATE_RE = /(ma|di|wo|do|vr|za|zo)\s+(\d{1,2}\s+(?:jan|feb|mrt|apr|mei|jun|jul|aug|sep|okt|nov|dec))/i
 
 // Room names used by Charlatan
@@ -71,7 +71,7 @@ function extractEvents(html: string, now: string): RawVenueEvent[] {
     // --- Date: find NL weekday+day+month in the full text ---
     const dateMatch = fullText.match(NL_DATE_RE)
     if (!dateMatch) return
-    // dateMatch[2] is e.g. "11 jun" — parseNlDate handles "D MMM" format
+    // dateMatch[2] is e.g. "11 jun" �€� parseNlDate handles "D MMM" format
     const date_start = parseNlDate(dateMatch[2].trim())
     if (!date_start) return
 
@@ -98,8 +98,32 @@ function extractEvents(html: string, now: string): RawVenueEvent[] {
     })
 
     // --- Price ---
-    const priceMatch = fullText.match(/€\s*[\d,.]+(?:\s*[–\-]\s*€?\s*[\d,.]+)?/)
+    const priceMatch = fullText.match(/€\s*[\d,.]+(?:\s*[�€�\-]\s*€?\s*[\d,.]+)?/)
     const price = priceMatch ? priceMatch[0].trim() : null
+
+    // --- Description: card text between title and date ---
+    let description: string | null = null
+    const titleIdx = fullText.indexOf(title)
+    const dateIdx  = fullText.search(NL_DATE_RE)
+    if (titleIdx >= 0 && dateIdx > titleIdx + title.length) {
+      const mid = fullText.slice(titleIdx + title.length, dateIdx).trim()
+      if (mid.length > 10) description = mid.slice(0, 500)
+    }
+
+    // --- Poster image (lazy-loaded cards may use data-src) ---
+    const $img = $li.find('img').first()
+    const imgSrc = $img.attr('src') ?? $img.attr('data-src') ?? null
+    const image_url = imgSrc && !/^data:/.test(imgSrc)
+      ? (imgSrc.startsWith('http') ? imgSrc : `${BASE_URL}${imgSrc}`)
+      : null
+
+    // --- Category tag (concert / nightlife / comedy / hitjes) → genre hint ---
+    const cats: string[] = []
+    $li.find('a[href]').each((_j, a) => {
+      const h = $(a).attr('href') ?? ''
+      const m2 = h.match(/\/agenda\/([a-z0-9_-]+)$/)
+      if (m2 && CATEGORY_SLUGS.has(m2[1]) && !cats.includes(m2[1])) cats.push(m2[1])
+    })
 
     events.push({
       _source:     'charlatan',
@@ -111,9 +135,11 @@ function extractEvents(html: string, now: string): RawVenueEvent[] {
       source_url,
       hour_start,
       room,
-      description: null,
+      description,
       price,
       ticket_url,
+      image_url,
+      genre_raw:   cats.length ? cats.join(', ') : null,
       artists_raw: null,
     })
   })

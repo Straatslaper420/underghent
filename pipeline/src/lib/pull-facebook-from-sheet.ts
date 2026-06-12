@@ -26,7 +26,7 @@ export interface PullFacebookResult {
 // The command catches this to print an actionable message and pull nothing.
 export class MissingApprovedColumnError extends Error {
   constructor(worksheetName: string) {
-    super(`no 'approved' column found in ${worksheetName} — add it and mark rows`)
+    super(`no 'approved' column found in ${worksheetName} �€� add it and mark rows`)
     this.name = 'MissingApprovedColumnError'
   }
 }
@@ -111,7 +111,7 @@ export async function pullFacebookFromSheet(
     const title      = cell(row, 'title')
     const dateStart  = cell(row, 'date_start')
     if (!title || !dateStart) {
-      log('PULL-FB', `WARN approved row missing title/date — skipped (title="${title}", date="${dateStart}")`)
+      log('PULL-FB', `WARN approved row missing title/date �€� skipped (title="${title}", date="${dateStart}")`)
       continue
     }
 
@@ -148,6 +148,7 @@ export async function pullFacebookFromSheet(
       title,
       date_start:    dateStart,
       hour_start:    cell(row, 'hour_start') || null,
+      hour_end:      cell(row, 'hour_end') || null,
       venue,
       room:          cell(row, 'room') || null,
       address,
@@ -156,7 +157,11 @@ export async function pullFacebookFromSheet(
       longitude,
       genre:         cell(row, 'genre') || null,
       subgenre:      cell(row, 'subgenre') || null,
+      genre_raw:     cell(row, 'genre_raw') || null,
       artists:       parseList(cell(row, 'artists'), ','),
+      support_acts:  parseList(cell(row, 'support_acts'), ','),
+      image_url:     cell(row, 'image_url') || null,
+      source:        'facebook',
       source_url:    cell(row, 'source_url') || null,
       ticket_url:    cell(row, 'ticket_url') || null,
       price:         cell(row, 'price') || null,
@@ -174,12 +179,12 @@ export async function pullFacebookFromSheet(
 
     const parsed = CanonicalEventSchema.safeParse(event)
     if (!parsed.success) {
-      log('PULL-FB', `WARN skipped invalid approved row: "${title}" — ${parsed.error.errors[0]?.message}`)
+      log('PULL-FB', `WARN skipped invalid approved row: "${title}" �€� ${parsed.error.errors[0]?.message}`)
       continue
     }
     const valid = parsed.data as CanonicalEvent
 
-    // Intra-FB: same FB event pulled before / direct-scraped — overwrite, don't duplicate.
+    // Intra-FB: same FB event pulled before / direct-scraped �€� overwrite, don't duplicate.
     // (event_id includes source='facebook', so this can never collide with a venue row.)
     if (byId.has(valid.event_id)) intraFbUpdated++
     byId.set(valid.event_id, valid)

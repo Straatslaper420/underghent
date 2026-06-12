@@ -29,7 +29,7 @@ try {
     spreadsheetId:   sheetId,
     worksheetName:   sheetName,
   })
-  log('PULL-VENUES', `updated=${r.updated} added=${r.added} kept-local=${r.missing}`)
+  log('PULL-VENUES', `updated=${r.updated} added=${r.added} removed=${r.removed}`)
 } catch (err) {
   logError('PULL-VENUES', err)
   process.exit(1)

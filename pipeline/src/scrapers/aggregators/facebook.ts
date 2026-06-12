@@ -88,7 +88,7 @@ function loadMusicKeywords(): string[] {
 export async function scrapeFacebook(config: FacebookConfig): Promise<RawFacebookEvent[]> {
   const token = process.env.APIFY_TOKEN
   if (!token) {
-    throw new Error('APIFY_TOKEN is not set â€” add it to your environment (see .env.example)')
+    throw new Error('APIFY_TOKEN is not set ââ‚¬” add it to your environment (see .env.example)')
   }
 
   // 1. Assemble urls/queries by discoveryMode
@@ -111,7 +111,7 @@ export async function scrapeFacebook(config: FacebookConfig): Promise<RawFaceboo
 
   if (urls.length === 0 && queries.length === 0) {
     throw new Error(
-      `No start URLs or search queries for discoveryMode "${config.discoveryMode}" â€” ` +
+      `No start URLs or search queries for discoveryMode "${config.discoveryMode}" ââ‚¬” ` +
       'paste a real Ghent explore URL into config/facebook.json (see config/facebook.README.md)',
     )
   }
@@ -157,27 +157,27 @@ export async function scrapeFacebook(config: FacebookConfig): Promise<RawFaceboo
     log(SOURCE_ID, `dropped ${before - kept.length} events beyond ${config.lookaheadDays}-day lookahead`)
   }
 
-  // c2. country reject â€” drop anything not in Belgium.
+  // c2. country reject ââ‚¬” drop anything not in Belgium.
   //     Foreign events often arrive with null coords and would otherwise
   //     survive the bounding-box step (which only drops when coords exist).
   {
     const before = kept.length
     kept = kept.filter(e => {
       const cc = e.location?.countryCode
-      if (cc == null) return true // unknown country â€” let bounds/geo enrichment decide
+      if (cc == null) return true // unknown country ââ‚¬” let bounds/geo enrichment decide
       return cc.toUpperCase() === 'BE'
     })
     log(SOURCE_ID, `dropped ${before - kept.length} non-BE events`)
   }
 
-  // d. bounding box â€” drop only when coords present AND outside the box
+  // d. bounding box ââ‚¬” drop only when coords present AND outside the box
   {
     const before = kept.length
     const b = config.ghentBounds
     kept = kept.filter(e => {
       const lat = e.location?.latitude
       const lng = e.location?.longitude
-      if (lat == null || lng == null) return true // missing coords â€” keep, geo enrichment resolves later
+      if (lat == null || lng == null) return true // missing coords ââ‚¬” keep, geo enrichment resolves later
       return lat >= b.latMin && lat <= b.latMax && lng >= b.lngMin && lng <= b.lngMax
     })
     log(SOURCE_ID, `dropped ${before - kept.length} events outside Ghent bounds`)

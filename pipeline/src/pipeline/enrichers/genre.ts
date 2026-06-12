@@ -9,6 +9,7 @@ function buildCombinedText(event: CanonicalEvent, venueGenres: string[]): string
     event.description ?? '',
     event.details ?? '',
     event.artists.join(' '),
+    event.support_acts?.join(' ') ?? '',
     event.collective ?? '',
     venueGenres.join(' '),
   ].join(' '))
@@ -45,22 +46,41 @@ export const genreEnricher: Enricher = {
     const venueGenres  = venueRecord?.genres ?? []
     const combinedText = buildCombinedText(event, venueGenres)
 
-    // 1) Keyword / alias match — longest match wins, then highest weight on ties.
     let bestGenre: GenreRecord | null = null
     let bestLen   = 0
     let bestWeight = -Infinity
 
-    for (const genre of registries.genres.values()) {
-      const len = longestMatch(genre, combinedText, stopwords)
-      if (len === 0) continue
-      if (len > bestLen || (len === bestLen && genre.weight > bestWeight)) {
-        bestGenre  = genre
-        bestLen    = len
-        bestWeight = genre.weight
+    // 0) genre_raw — explicit genre tags the SOURCE itself published (v5).
+    //    Strongest signal: matched first and alone, so an incidental word in a
+    //    description can't outrank the venue's own tag.
+    if (event.genre_raw) {
+      const rawText = normalizeText(event.genre_raw)
+      for (const genre of registries.genres.values()) {
+        const len = longestMatch(genre, rawText, stopwords)
+        if (len === 0) continue
+        if (len > bestLen || (len === bestLen && genre.weight > bestWeight)) {
+          bestGenre  = genre
+          bestLen    = len
+          bestWeight = genre.weight
+        }
       }
     }
 
-    // 2) No keyword match — fall back to venue genres (from venues.json `genres[]`).
+    // 1) Keyword / alias match over the full text — longest match wins, then
+    //    highest weight on ties.
+    if (!bestGenre) {
+      for (const genre of registries.genres.values()) {
+        const len = longestMatch(genre, combinedText, stopwords)
+        if (len === 0) continue
+        if (len > bestLen || (len === bestLen && genre.weight > bestWeight)) {
+          bestGenre  = genre
+          bestLen    = len
+          bestWeight = genre.weight
+        }
+      }
+    }
+
+    // 2) No keyword match �€� fall back to venue genres (from venues.json `genres[]`).
     if (!bestGenre && venueGenres.length > 0) {
       const fallbackKey = normalizeText(venueGenres[0])
       for (const genre of registries.genres.values()) {
@@ -71,7 +91,7 @@ export const genreEnricher: Enricher = {
       }
     }
 
-    // 3) Nothing matched — leave both null. (No AI/LLM fallback.)
+    // 3) Nothing matched �€� leave both null. (No AI/LLM fallback.)
     if (!bestGenre) return { genre: null, subgenre: null }
 
     // Subgenre (has a parent) → genre = parent label, subgenre = this label.

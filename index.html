@@ -3,254 +3,279 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-<title>GHENT // EVENTS</title>
+<title>GHENT // EVENT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
+/* ════════════════════════════════════════════════════════════════════════
+   GHENT//EVENT v5 — "festival signal on an underground carrier"
+   Chassis: UNDERGHENT's mono/CRT discipline (near-black, hairlines,
+   JetBrains Mono). Signal: neon green/pink/gold reserved for data and
+   interaction. Gold belongs to the Gentse Feesten.
+   ════════════════════════════════════════════════════════════════════════ */
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#06060f; --green:#00ff88; --pink:#ff2d78; --gold:#ffd700; --mint:#99ffcc;
-  --line:#1a1a3a; --panel:#0a0a1a;
+  --bg:#0b0d11; --panel:#11141a; --panel2:#0e1016; --line:#232833;
+  --txt:#c9d1de; --dim:#5d6675;
+  --green:#00ff88; --pink:#ff2d78; --gold:#ffd700; --mint:#7fe8c1;
+  --rail-h:74px;
 }
 html,body{height:100%;overflow:hidden;background:var(--bg);
-  font-family:'Courier New',monospace;color:var(--green)}
+  font-family:'JetBrains Mono','Courier New',monospace;color:var(--txt)}
 
-/* CRT scanline overlay shared by both views */
+/* CRT scanlines — kept, but quiet */
 body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
-  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.06) 3px,rgba(0,0,0,.06) 4px)}
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0 1px,transparent 1px 3px)}
 
 #app{display:flex;flex-direction:column;height:100vh;height:100dvh}
 
-/* ── Header ───────────────────────────────────────────── */
-#header{flex-shrink:0;background:var(--bg);border-bottom:3px solid var(--green);
-  padding:9px 14px;display:flex;align-items:center;justify-content:space-between;
-  box-shadow:0 2px 20px rgba(0,255,136,.15)}
-#header h1{font-size:10px;letter-spacing:2px;color:var(--green);
-  text-shadow:0 0 12px var(--green);user-select:none}
-.badge{font-size:9px;color:var(--pink);letter-spacing:2px;
-  text-shadow:0 0 8px var(--pink);white-space:nowrap}
-/* festival mode: the live count badge goes gold while showing a Feesten day */
-.badge.feesten{color:var(--gold);text-shadow:0 0 8px var(--gold)}
+/* ── Header ─────────────────────────────────────────────────────────────── */
+#header{flex-shrink:0;background:var(--bg);border-bottom:1px solid var(--line);
+  padding:12px 16px;display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+#logo{font-size:13px;font-weight:800;letter-spacing:.32em;color:var(--txt);
+  white-space:nowrap;user-select:none;cursor:default}
+#logo .lx{color:var(--pink)}
+#logo.feesten{color:var(--gold);text-shadow:0 0 14px rgba(255,215,0,.45)}
+.badge{font-size:9.5px;color:var(--dim);letter-spacing:.18em;white-space:nowrap}
+.badge b{color:var(--green);font-weight:700}
+.badge.feesten b{color:var(--gold)}
 
-/* ── Control bar (filters both views) ─────────────────── */
+/* ── Control bar ────────────────────────────────────────────────────────── */
 #bar{flex-shrink:0;background:var(--bg);border-bottom:1px solid var(--line);
   padding:9px 12px;display:flex;flex-direction:column;gap:8px}
-.barrow{display:flex;gap:8px;align-items:center}
-#search{flex:1;min-width:0;background:var(--panel);border:2px solid var(--green);
-  color:var(--green);font-family:inherit;font-size:11px;letter-spacing:1px;
-  padding:7px 10px;outline:none;text-align:center}
-#search::placeholder{color:#2f6f55}
-#search:focus{box-shadow:0 0 12px rgba(0,255,136,.35)}
+.barrow{display:flex;gap:8px;align-items:stretch}
+#search{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);
+  color:var(--txt);font-family:inherit;font-size:11px;letter-spacing:.08em;
+  padding:8px 11px;outline:none;transition:border-color .15s, box-shadow .15s}
+#search::placeholder{color:var(--dim)}
+#search:focus{border-color:var(--green);box-shadow:0 0 14px rgba(0,255,136,.18)}
+#toggle{display:flex;flex-shrink:0;border:1px solid var(--line)}
+.tg{font-size:9.5px;letter-spacing:.14em;padding:8px 12px;background:var(--panel);
+  color:var(--dim);cursor:pointer;border:0;font-family:inherit;user-select:none;
+  transition:color .12s, background .12s}
+.tg.on{background:var(--green);color:#06231a;font-weight:700}
+#starfilter{border:1px solid var(--line);background:var(--panel);flex-shrink:0;
+  font-size:13px;line-height:1;padding:0 12px;color:var(--dim);cursor:pointer;font-family:inherit}
+#starfilter.on{color:#1f1a02;background:var(--gold);border-color:var(--gold);
+  box-shadow:0 0 12px rgba(255,215,0,.35)}
 
-#toggle{display:flex;flex-shrink:0;border:2px solid var(--line)}
-.tg{font-size:9px;letter-spacing:1px;padding:7px 11px;background:var(--panel);
-  color:#7aa;cursor:pointer;border:0;font-family:inherit;user-select:none}
-.tg.on{background:var(--pink);color:var(--bg);text-shadow:none;font-weight:bold}
-
-/* chips scroll horizontally on small screens to save vertical room */
 #chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
 #chips::-webkit-scrollbar{display:none}
-.chip{font-size:9px;letter-spacing:1px;padding:6px 9px;border:2px solid var(--line);
-  background:var(--panel);color:#7aa;cursor:pointer;white-space:nowrap;flex-shrink:0}
-.chip:hover{border-color:var(--gold);color:var(--gold)}
-.chip.on{border-color:var(--pink);color:var(--pink);box-shadow:0 0 10px rgba(255,45,120,.4)}
+.chip{font-size:9px;letter-spacing:.1em;padding:6px 9px;border:1px solid var(--line);
+  background:var(--panel);color:var(--dim);cursor:pointer;white-space:nowrap;flex-shrink:0;
+  transition:color .12s,border-color .12s}
+.chip:hover{border-color:var(--txt);color:var(--txt)}
+.chip.on{border-color:var(--pink);color:var(--pink);box-shadow:0 0 10px rgba(255,45,120,.25)}
 
-/* ── View containers ──────────────────────────────────── */
+/* ── Views ──────────────────────────────────────────────────────────────── */
 #mapview{flex:1;min-height:0;display:flex;flex-direction:column;position:relative}
-#map{flex:1;min-height:0}
+#map{flex:1;min-height:0;background:#0b0d11}
 #listview{flex:1;min-height:0;overflow-y:auto;display:none}
 
-/* ── Map: date slider — vertical, floated on the LEFT over the tiles ──────── */
-#slider{position:absolute;left:12px;top:50%;transform:translateY(-50%);z-index:1000;
-  -webkit-appearance:none;appearance:none;writing-mode:vertical-lr;direction:rtl;
-  width:10px;height:min(58%,300px);margin:0;
-  background:repeating-linear-gradient(0deg,#1a1a3a 0,#1a1a3a 4px,#0a0a1a 4px,#0a0a1a 8px);
-  border:2px solid var(--green);outline:none;cursor:pointer;
-  box-shadow:3px 3px 0 #000,0 0 12px rgba(0,255,136,.25)}
-#slider::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:14px;
-  background:var(--green);border:0;cursor:pointer;image-rendering:pixelated;
-  clip-path:polygon(20% 0%,80% 0%,100% 20%,100% 80%,80% 100%,20% 100%,0% 80%,0% 20%)}
-#slider::-moz-range-thumb{width:22px;height:14px;background:var(--green);border:0;cursor:pointer}
-/* ── Map: current date, solo + centered along the bottom strip ───────────── */
-#controls{flex-shrink:0;background:var(--bg);border-top:3px solid var(--green);
-  padding:11px 18px;box-shadow:0 -2px 20px rgba(0,255,136,.1)}
-.cdate{font-size:12px;color:var(--green);text-align:center;
-  letter-spacing:3px;text-shadow:0 0 8px var(--green)}
-/* festival mode (Gentse Feesten window): date + logo go gold like the label above the slider */
-.cdate.feesten{color:var(--gold);text-shadow:0 0 8px var(--gold)}
-#logo.feesten{color:var(--gold);text-shadow:0 0 12px var(--gold)}
+/* ── Day rail ───────────────────────────────────────────────────────────── */
+#dayrail{flex-shrink:0;height:var(--rail-h);background:var(--panel2);
+  border-top:1px solid var(--line);display:flex;align-items:center;gap:6px;
+  padding:0 10px;user-select:none;touch-action:none;position:relative}
+.railbtn{flex-shrink:0;width:34px;height:38px;background:var(--panel);border:1px solid var(--line);
+  color:var(--green);font-family:inherit;font-size:13px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:background .12s,color .12s}
+.railbtn:hover{background:var(--green);color:#06231a}
+.railbtn:disabled{opacity:.25;cursor:default;color:var(--dim);background:var(--panel)}
+#railmid{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:7px;
+  padding:0 4px;cursor:pointer}
+#railtrack{position:relative;height:18px}
+#railtrack .trackline{position:absolute;left:0;right:0;top:50%;height:2px;
+  margin-top:-1px;background:var(--line)}
+#feestseg{position:absolute;top:50%;height:4px;margin-top:-2px;background:var(--gold);
+  box-shadow:0 0 10px rgba(255,215,0,.5);display:none}
+#feestlbl{position:absolute;bottom:100%;margin-bottom:2px;font-size:7.5px;letter-spacing:.22em;
+  color:var(--gold);white-space:nowrap;transform:translateX(-50%);display:none;
+  text-shadow:0 0 8px rgba(255,215,0,.4)}
+.tick{position:absolute;top:50%;width:1px;height:6px;margin-top:-3px;background:var(--dim);opacity:.55}
+.tick.feest{background:var(--gold);opacity:.9}
+.tick.today{width:3px;height:10px;margin-top:-5px;margin-left:-1px;background:var(--green);opacity:1;
+  box-shadow:0 0 8px rgba(0,255,136,.6)}
+#railthumb{position:absolute;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;
+  background:var(--green);transform:rotate(45deg);cursor:grab;
+  box-shadow:0 0 12px rgba(0,255,136,.55);transition:background .15s, box-shadow .15s}
+#railthumb.feesten{background:var(--gold);box-shadow:0 0 14px rgba(255,215,0,.7)}
+#raildate{font-size:10.5px;letter-spacing:.26em;color:var(--txt);text-align:center;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+#raildate .arrowsym{color:var(--green)}
+#raildate.feesten{color:var(--gold);text-shadow:0 0 10px rgba(255,215,0,.4)}
 
-/* ── Map markers ──────────────────────────────────────── */
-.edot{background:var(--pink);border:2px solid var(--gold);color:#fff;
-  font-family:'Courier New',monospace;font-size:8px;font-weight:bold;
-  padding:3px 5px;white-space:nowrap;cursor:pointer;letter-spacing:1px;
-  box-shadow:2px 2px 0 #000,0 0 10px rgba(255,45,120,.5);width:54px;text-align:center}
-.edot:hover{background:var(--gold);color:var(--bg);box-shadow:2px 2px 0 #000,0 0 16px rgba(255,215,0,.7)}
-/* source accent: fb = mint border, feesten = gold border (default) */
-.edot.src-fb{border-color:var(--mint);box-shadow:2px 2px 0 #000,0 0 10px rgba(153,255,204,.55)}
-.edot.src-fb:hover{background:var(--mint);color:var(--bg)}
+/* ── Map markers ────────────────────────────────────────────────────────── */
+.edot{border:1px solid;color:#fff;background:var(--panel);
+  font-family:'JetBrains Mono',monospace;font-size:8.5px;font-weight:700;
+  padding:3px 0;white-space:nowrap;cursor:pointer;letter-spacing:.08em;
+  width:52px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.6);
+  animation:dotin .22s ease-out}
+@keyframes dotin{from{opacity:0;transform:translateY(5px) scale(.85)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.edot{animation:none}}
 
-/* ── Map popups ───────────────────────────────────────── */
-.leaflet-popup-content-wrapper{background:#06060f!important;border:3px solid var(--green)!important;
-  border-radius:0!important;box-shadow:4px 4px 0 #000,0 0 16px rgba(0,255,136,.25)!important;padding:0!important;
-  position:relative}
-.leaflet-popup-content{margin:12px 14px!important;color:var(--green)}
+/* ── Popups ─────────────────────────────────────────────────────────────── */
+.leaflet-popup-content-wrapper{background:var(--panel2)!important;border:1px solid var(--line)!important;
+  border-radius:0!important;box-shadow:0 8px 30px rgba(0,0,0,.7)!important;padding:0!important;position:relative}
+.leaflet-popup-content{margin:0!important;color:var(--txt);width:auto!important}
 .leaflet-popup-tip-container{display:none}
-.leaflet-popup-close-button{color:var(--pink)!important;font-size:18px!important;
-  right:6px!important;top:2px!important;text-shadow:0 0 6px var(--pink)!important}
-.ptitle{font-size:10px;color:var(--gold);text-shadow:0 0 8px var(--gold);margin-bottom:8px;
-  letter-spacing:1px;line-height:1.4;padding-right:14px}
-.prow{font-size:8px;margin-bottom:4px;letter-spacing:.5px;line-height:1.5}
-.pvenue{color:var(--pink);text-shadow:0 0 4px var(--pink)}
-.pvenue-link,.pvenue-link:link,.pvenue-link:visited,.pvenue-link:hover,.pvenue-link:active{
-  color:var(--pink);text-decoration:underline;text-underline-offset:2px}
+.leaflet-popup-close-button{color:var(--pink)!important;font-size:17px!important;
+  right:5px!important;top:3px!important;z-index:6}
+.pimg{width:100%;height:92px;object-fit:cover;display:block;border-bottom:1px solid var(--line);
+  filter:saturate(.9)}
+.pbody{padding:11px 13px 12px}
+.ptitle{font-size:11px;font-weight:700;color:var(--txt);letter-spacing:.04em;line-height:1.45;
+  margin-bottom:7px;padding-right:14px}
+.prow{font-size:8.5px;margin-bottom:3px;letter-spacing:.06em;line-height:1.55;color:var(--dim)}
+.pvenue a{color:var(--pink);text-decoration:underline;text-underline-offset:2px}
 .ptime{color:var(--gold)}
-.pdesc{color:var(--mint);margin-top:6px;line-height:1.6;
-  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
-.plink{display:inline-block;margin-top:8px;font-size:8px;color:var(--green);
-  border:1px solid var(--green);padding:3px 7px;text-decoration:none;letter-spacing:1px}
-/* popup actions row: Details button + event-type hashtags beside it */
-.pactions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
-.pactions .plink{margin-top:0}
+.pdesc{color:var(--txt);opacity:.75;margin-top:6px;line-height:1.6;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.pactions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:9px}
+.plink{display:inline-block;font-size:8px;color:var(--green);border:1px solid var(--green);
+  padding:4px 8px;text-decoration:none;letter-spacing:.14em;transition:background .12s,color .12s}
+.plink:hover{background:var(--green);color:#06231a}
 .ptags{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.tag{font-size:7.5px;letter-spacing:.06em;color:var(--dim);border:1px solid var(--line);padding:2px 5px}
+.tag.stat{color:var(--mint);border-color:#1d3a30}
 
-/* source tag (popups + cards) */
-.src{font-size:7px;letter-spacing:1px;padding:2px 5px;border:1px solid;display:inline-block}
-.src-tag-fb{color:var(--mint);border-color:var(--mint)}
-.src-tag-feesten{color:var(--gold);border-color:var(--gold)}
-
-/* ── Zoom controls ────────────────────────────────────── */
+/* ── Zoom / attribution ─────────────────────────────────────────────────── */
 .leaflet-control-zoom{border:none!important}
-.leaflet-control-zoom a{background:#06060f!important;color:var(--green)!important;
-  border:2px solid var(--green)!important;border-radius:0!important;
-  font-family:'Courier New',monospace!important;font-size:14px!important;
-  text-shadow:0 0 6px var(--green)!important;width:28px!important;height:28px!important;
-  line-height:26px!important;display:flex!important;align-items:center!important;justify-content:center!important}
-.leaflet-control-zoom a:hover{background:var(--green)!important;color:#06060f!important;text-shadow:none!important}
-.leaflet-bar{box-shadow:3px 3px 0 #000!important}
-.leaflet-control-attribution{background:rgba(6,6,15,.8)!important;color:#444!important;
-  font-size:8px!important;border-top:1px solid var(--line)!important}
+.leaflet-control-zoom a{background:var(--panel2)!important;color:var(--green)!important;
+  border:1px solid var(--line)!important;border-radius:0!important;
+  font-family:'JetBrains Mono',monospace!important;font-size:14px!important;
+  width:28px!important;height:28px!important;line-height:26px!important;
+  display:flex!important;align-items:center!important;justify-content:center!important}
+.leaflet-control-zoom a:hover{background:var(--green)!important;color:#06231a!important}
+.leaflet-bar{box-shadow:0 4px 14px rgba(0,0,0,.5)!important}
+.leaflet-control-attribution{background:rgba(11,13,17,.85)!important;color:#3a4150!important;
+  font-size:8px!important;font-family:'JetBrains Mono',monospace!important}
+.leaflet-control-attribution a{color:#4a5264!important}
 
-/* ── List: card feed ──────────────────────────────────── */
-#feed{max-width:620px;margin:0 auto;padding:16px 14px 40px}
-.daygroup{margin-bottom:22px}
-/* date header sticks to the top of the scroll area so it's always visible */
+/* ── List view ──────────────────────────────────────────────────────────── */
+#feed{max-width:660px;margin:0 auto;padding:14px 14px 50px}
+#listmode{display:flex;gap:6px;margin-bottom:14px}
+.lm{font-size:9px;letter-spacing:.14em;padding:7px 11px;border:1px solid var(--line);
+  background:var(--panel);color:var(--dim);cursor:pointer;font-family:inherit}
+.lm.on{border-color:var(--green);color:var(--green)}
+.lmnav{margin-left:auto;display:flex;gap:6px}
+.daygroup{margin-bottom:24px}
 .dayhdr{position:sticky;top:0;z-index:5;background:var(--bg);
   display:flex;align-items:center;gap:9px;
-  font-size:9.5px;font-weight:bold;letter-spacing:3px;color:var(--gold);text-shadow:0 0 8px var(--gold);
-  padding:9px 0 10px;border-bottom:1px dashed var(--line);margin-bottom:12px}
-/* fat yellow Feesten-day pill, carried up onto the sticky header */
-.daypill{background:var(--gold);color:var(--bg);font-weight:bold;font-size:8px;letter-spacing:1px;
-  padding:3px 7px;text-shadow:none;box-shadow:0 0 10px rgba(255,215,0,.5)}
-.card{display:flex;gap:12px;border:3px solid var(--green);background:#06060f;
-  margin-bottom:12px;box-shadow:4px 4px 0 #000,0 0 14px rgba(0,255,136,.12);
-  text-decoration:none;color:inherit;transition:transform .08s,box-shadow .12s}
-/* keep the type-colour edge on hover; just lift + intensify the shadow */
-.card:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 #000,0 0 20px rgba(0,255,136,.28)}
-.thumb{width:84px;flex-shrink:0;background:var(--panel);align-self:stretch;
-  border-right:2px solid var(--line);position:relative;overflow:hidden;
+  font-size:10px;font-weight:700;letter-spacing:.26em;color:var(--txt);
+  padding:10px 0;border-bottom:1px solid var(--line);margin-bottom:12px}
+.dayhdr .arrowsym{color:var(--green)}
+.daypill{background:var(--gold);color:#1f1a02;font-weight:700;font-size:8px;letter-spacing:.1em;
+  padding:3px 7px;box-shadow:0 0 10px rgba(255,215,0,.4)}
+.card{display:flex;gap:0;border:1px solid var(--line);border-left:3px solid var(--line);
+  background:var(--panel2);margin-bottom:10px;text-decoration:none;color:inherit;
+  transition:transform .1s ease,border-color .12s,box-shadow .15s;overflow:hidden}
+.card:hover{transform:translateX(2px);box-shadow:0 6px 22px rgba(0,0,0,.55)}
+.thumb{width:96px;flex-shrink:0;background:var(--panel);align-self:stretch;min-height:88px;
+  border-right:1px solid var(--line);position:relative;overflow:hidden;
   display:flex;align-items:center;justify-content:center}
-.thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.thumb .ph{font-size:22px;color:#234}
-.cbody{padding:11px 12px;min-width:0;flex:1}
-.ctop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-.ttl{font-size:11px;color:var(--gold);text-shadow:0 0 7px var(--gold);
-  letter-spacing:.5px;line-height:1.35;margin-bottom:7px}
-.meta{font-size:8.5px;letter-spacing:.5px;line-height:1.6}
-.venue{color:var(--pink);text-shadow:0 0 4px var(--pink)}
-.time{color:var(--gold)}
-.desc{color:var(--mint);font-size:8.5px;line-height:1.55;margin-top:7px;
+.thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.92)}
+.thumb .ph{font-size:20px;color:#222a38}
+.cbody{padding:10px 12px 11px;min-width:0;flex:1}
+.ttl{font-size:11.5px;font-weight:700;color:var(--txt);letter-spacing:.03em;line-height:1.4;margin-bottom:6px}
+.meta{font-size:8.5px;letter-spacing:.07em;line-height:1.7;color:var(--dim)}
+.meta .venue{color:var(--pink)}
+.meta .time{color:var(--gold)}
+.desc{color:var(--txt);opacity:.65;font-size:8.5px;line-height:1.6;margin-top:6px;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .tags{margin-top:8px;display:flex;gap:5px;flex-wrap:wrap;align-items:center}
-.tag{font-size:7.5px;letter-spacing:.5px;color:#7aa;border:1px solid var(--line);padding:2px 5px}
-.tag.stat{color:#5c8;border-color:#1a3a2a}
-.empty{text-align:center;color:#456;font-size:10px;letter-spacing:2px;padding:60px 20px}
-#status{font-size:8px;color:#345;letter-spacing:1px;text-align:center;padding:0 0 24px}
+.empty{text-align:center;color:var(--dim);font-size:10px;letter-spacing:.22em;padding:70px 20px}
+#status{font-size:8px;color:#39414f;letter-spacing:.12em;text-align:center;padding:0 0 26px}
 
-/* ── Starring (★) — shared button look, lit gold when starred ──────────────── */
+/* ── Stars ──────────────────────────────────────────────────────────────── */
 .starbtn{background:none;border:0;cursor:pointer;font-family:inherit;line-height:1;
-  color:#567;text-shadow:none;padding:2px;font-size:16px;transition:color .1s,text-shadow .1s}
-.starbtn:hover{color:var(--gold);text-shadow:0 0 8px var(--gold)}
-.starbtn.starred{color:var(--gold);text-shadow:0 0 6px var(--gold)}
-/* popup star: a neat 22px box sitting just BELOW Leaflet's close button */
-.popstar{position:absolute;top:24px;right:6px;z-index:5;width:22px;height:22px;font-size:13px;
-  display:flex;align-items:center;justify-content:center;background:#06060f;border:1px solid var(--line)}
+  color:#39414f;padding:2px;font-size:16px;transition:color .1s,text-shadow .1s}
+.starbtn:hover{color:var(--gold)}
+.starbtn.starred{color:var(--gold);text-shadow:0 0 7px rgba(255,215,0,.6)}
+.popstar{position:absolute;top:26px;right:5px;z-index:6;width:22px;height:22px;font-size:12px;
+  display:flex;align-items:center;justify-content:center;background:var(--panel2);border:1px solid var(--line)}
 .popstar.starred{border-color:var(--gold)}
-/* list star: dedicated rail on the RIGHT-HAND side of each card (bigger tap target) */
-.cstar{display:flex;align-items:center;flex-shrink:0;padding:0 12px}
-.liststar{font-size:26px;padding:4px}
+.cstar{display:flex;align-items:center;flex-shrink:0;padding:0 12px;border-left:1px dashed var(--line)}
+.liststar{font-size:22px;padding:4px}
 
-/* ── Confetti burst when the logo flips into Gentse Feesten mode ───────────── */
+/* ── Confetti ───────────────────────────────────────────────────────────── */
 .confetti-layer{position:fixed;inset:0 0 auto 0;height:0;z-index:10001;pointer-events:none}
-.confetti-bit{position:absolute;top:-14px;width:8px;height:13px;opacity:0;
-  animation:confetti-fall linear forwards}
-@keyframes confetti-fall{
-  0%{opacity:1;transform:translate(0,0) rotate(0)}
-  100%{opacity:0;transform:translate(var(--dx),78vh) rotate(var(--rot))}
-}
+.confetti-bit{position:absolute;top:-14px;width:7px;height:12px;opacity:0;animation:confetti-fall linear forwards}
+@keyframes confetti-fall{0%{opacity:1;transform:translate(0,0) rotate(0)}
+  100%{opacity:0;transform:translate(var(--dx),80vh) rotate(var(--rot))}}
 
-/* ── Header ★ filter toggle (gold = distinct from the pink view toggle) ────── */
-#starfilter{border:2px solid var(--line);flex-shrink:0;font-size:11px}
-#starfilter.on{background:var(--gold);color:var(--bg);border-color:var(--gold);
-  box-shadow:0 0 10px rgba(255,215,0,.5);text-shadow:none;font-weight:bold}
-
-/* ── Route overlay button: floats over the tiles, bottom-right corner ──────── */
-.routebtn{position:absolute;right:10px;bottom:28px;z-index:1000;
-  background:var(--panel);border:2px solid var(--gold);color:var(--gold);
-  font-family:inherit;font-size:10px;letter-spacing:1px;padding:8px 12px;cursor:pointer;
-  box-shadow:3px 3px 0 #000,0 0 12px rgba(255,215,0,.4);text-shadow:0 0 6px var(--gold)}
-.routebtn:hover{background:var(--gold);color:var(--bg);text-shadow:none}
-.routebtn:disabled{opacity:.4;cursor:not-allowed;border-color:var(--line);color:#567;
-  box-shadow:3px 3px 0 #000;text-shadow:none;background:var(--panel)}
-
-/* ── Route modal ──────────────────────────────────────────────────────────── */
-.rm-overlay{position:fixed;inset:0;z-index:10000;background:rgba(6,6,15,.85);
+/* ── Route button + modal ───────────────────────────────────────────────── */
+.routebtn{position:absolute;right:10px;bottom:12px;z-index:1000;
+  background:var(--panel2);border:1px solid var(--gold);color:var(--gold);
+  font-family:inherit;font-size:9.5px;letter-spacing:.14em;padding:9px 13px;cursor:pointer;
+  box-shadow:0 4px 18px rgba(0,0,0,.5);transition:background .12s,color .12s}
+.routebtn:hover{background:var(--gold);color:#1f1a02}
+.routebtn:disabled{opacity:.35;cursor:not-allowed;border-color:var(--line);color:var(--dim);background:var(--panel2)}
+.rm-overlay{position:fixed;inset:0;z-index:10000;background:rgba(8,10,14,.88);
   display:flex;align-items:center;justify-content:center;padding:18px}
-.rm-box{width:100%;max-width:360px;background:var(--bg);border:3px solid var(--green);
-  box-shadow:4px 4px 0 #000,0 0 20px rgba(0,255,136,.25);padding:16px}
-.rm-title{font-size:11px;color:var(--gold);text-shadow:0 0 8px var(--gold);letter-spacing:2px;margin-bottom:6px}
-.rm-lbl{display:block;font-size:8px;color:var(--gold);letter-spacing:2px;margin:12px 0 5px}
+.rm-box{width:100%;max-width:380px;background:var(--bg);border:1px solid var(--line);
+  box-shadow:0 18px 60px rgba(0,0,0,.8);padding:18px}
+.rm-title{font-size:11px;color:var(--gold);letter-spacing:.22em;margin-bottom:6px;font-weight:700}
+.rm-lbl{display:block;font-size:8px;color:var(--dim);letter-spacing:.22em;margin:13px 0 5px}
 .rm-row{display:flex;gap:8px}
-.rm-input{width:100%;min-width:0;background:var(--panel);border:2px solid var(--green);color:var(--green);
-  font-family:inherit;font-size:11px;letter-spacing:1px;padding:7px 9px;outline:none}
-.rm-input:focus{box-shadow:0 0 12px rgba(0,255,136,.35)}
-.rm-btn{background:var(--panel);border:2px solid var(--line);color:#7aa;font-family:inherit;
-  font-size:9px;letter-spacing:1px;padding:7px 10px;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.rm-input{width:100%;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--txt);
+  font-family:inherit;font-size:11px;letter-spacing:.05em;padding:8px 10px;outline:none}
+.rm-input:focus{border-color:var(--green)}
+.rm-btn{background:var(--panel);border:1px solid var(--line);color:var(--dim);font-family:inherit;
+  font-size:9px;letter-spacing:.12em;padding:8px 11px;cursor:pointer;white-space:nowrap;flex-shrink:0}
 .rm-btn:hover{border-color:var(--gold);color:var(--gold)}
 .rm-btn:disabled{opacity:.5;cursor:not-allowed}
 .rm-primary{border-color:var(--green);color:var(--green)}
-.rm-primary:hover{background:var(--green);color:var(--bg)}
+.rm-primary:hover{background:var(--green);color:#06231a}
 .rm-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
 .rm-notice{font-size:8px;color:var(--gold);border:1px solid var(--gold);padding:6px 8px;
-  margin-top:12px;line-height:1.5;letter-spacing:.5px}
+  margin-top:12px;line-height:1.5;letter-spacing:.05em}
+
+@media (max-width:560px){
+  #logo{font-size:11px;letter-spacing:.22em}
+  .thumb{width:78px}
+  :root{--rail-h:68px}
+}
 </style>
 </head>
 <body>
 <div id="app">
   <div id="header">
-    <h1 id="logo">▶ GHENT // EVENTS ◼</h1>
-    <span class="badge" id="badge">■ 0</span>
+    <h1 id="logo">GHENT<span class="lx">//</span>EVENT</h1>
+    <span class="badge" id="badge"><b>0</b> SIGNALS</span>
   </div>
 
   <div id="bar">
     <div class="barrow">
-      <input id="search" placeholder="SEARCH EVENTS…" autocomplete="off"/>
+      <input id="search" placeholder="SEARCH THE CITY…" autocomplete="off"/>
       <div id="toggle">
         <button class="tg on" data-view="map">MAP</button>
         <button class="tg" data-view="list">LIST</button>
       </div>
-      <button id="starfilter" class="tg" type="button" aria-pressed="false"
+      <button id="starfilter" type="button" aria-pressed="false"
         title="Show starred events only" aria-label="Show starred events only">★</button>
     </div>
     <div id="chips"></div>
   </div>
 
-  <!-- MAP VIEW (default landing) -->
+  <!-- MAP VIEW -->
   <div id="mapview">
     <div id="map"></div>
-    <input type="range" id="slider" min="0" value="0" aria-label="Browse dates"/>
-    <div id="controls">
-      <div class="cdate" id="cdate">──</div>
+    <div id="dayrail" aria-label="Browse dates, one day at a time">
+      <button class="railbtn" id="rprev" aria-label="Previous day">◀</button>
+      <div id="railmid">
+        <div id="railtrack">
+          <div class="trackline"></div>
+          <div id="feestseg"></div>
+          <div id="feestlbl">GENTSE FEESTEN</div>
+          <div id="ticks"></div>
+          <div id="railthumb"></div>
+        </div>
+        <div id="raildate"><span class="arrowsym">►</span> ──</div>
+      </div>
+      <button class="railbtn" id="rnext" aria-label="Next day">▶</button>
     </div>
   </div>
 
@@ -261,7 +286,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   </div>
 </div>
 
-<!-- ROUTE MODAL (opened by the bottom-right map overlay button) -->
+<!-- ROUTE MODAL -->
 <div id="routemodal" class="rm-overlay" style="display:none">
   <div class="rm-box">
     <div class="rm-title">▶ BUILD WALKING ROUTE</div>
@@ -287,13 +312,14 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 <script>
 "use strict";
 /* ──────────────────────────────────────────────────────────────────────────
-   GHENT // EVENTS — merged single-file front page.
-   Two views (MAP + LIST) over one shared, live dataset pulled from two
-   published Google Sheet tabs (Facebook events + Gentse Feesten).
+   GHENT//EVENT v5 — single-file front page.
+   MAP shows ONE day at a time, driven by the bottom day rail (the Gentse
+   Feesten window glows gold on the track). LIST follows the selected day,
+   with an ALL-DAYS escape. Data: two published Google Sheet tabs
+   (fb_events + feesten); human `_override`/`hide` columns always win.
    ────────────────────────────────────────────────────────────────────────── */
 
-// Secret escape hatch: slider yanked to hard-left 3x quickly → the map.
-const UNDERGHENT_URL = "underghent.html";
+const UNDERGHENT_URL = "underghent.html";       // secret: slam rail to far-left 3× fast
 
 const SHEET_ID = "18ucjcKbxhJ88M-qboMeZRnMf4VX2EnWLlHhtyDkobms";
 const FB_CSV_URL      = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=1095868420`;
@@ -301,25 +327,28 @@ const FEESTEN_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/expo
 
 // Tiny built-in fallback so the page never renders empty if both fetches fail.
 const SAMPLE = [
-  {id:'s1',title:'Techno Night',venue:'Decadance Club',address:'Overpoortstraat',date:'2026-06-08',time:'23:00',lat:51.0501,lng:3.7145,desc:'Deep techno with resident DJs till dawn.',image:null,url:'#',categories:['MUSIC','NIGHTLIFE'],going:312,interested:840,paid:true,organizer:'Decadance',source:'fb'},
-  {id:'s2',title:'Street Food Fest',venue:'Korenmarkt',address:'Korenmarkt',date:'2026-06-08',time:'12:00',lat:51.0534,lng:3.7211,desc:'International street food and local craft beers.',image:null,url:'#',categories:['FOOD','FESTIVAL'],going:1450,interested:5200,paid:false,organizer:'Gent Smaakt',source:'feesten'},
-  {id:'s3',title:'Jazz Festival',venue:'Handelsbeurs',address:'Kouter 29',date:'2026-06-10',time:'16:00',lat:51.0558,lng:3.7198,desc:'Official start of the Ghent Jazz Festival.',image:null,url:'#',categories:['MUSIC','FESTIVAL'],going:3100,interested:9800,paid:true,organizer:'Jazz Gent',source:'feesten'},
+  {id:'s1',sid:'s1',title:'Techno Night',venue:'Decadance Club',address:'Overpoortstraat',date:'2026-06-12',time:'23:00',endTime:'',lat:51.0501,lng:3.7145,desc:'Deep techno with resident DJs till dawn.',image:null,url:'#',categories:['MUSIC','NIGHTLIFE'],going:312,interested:840,paid:true,organizer:'Decadance',source:'fb'},
+  {id:'s2',sid:'s2',title:'Street Food Fest',venue:'Korenmarkt',address:'Korenmarkt',date:'2026-06-12',time:'12:00',endTime:'',lat:51.0534,lng:3.7211,desc:'International street food and local craft beers.',image:null,url:'#',categories:['FOOD','FESTIVAL'],going:1450,interested:5200,paid:false,organizer:'Gent Smaakt',source:'feesten'},
+  {id:'s3',sid:'s3',title:'Jazz Festival',venue:'Handelsbeurs',address:'Kouter 29',date:'2026-06-14',time:'16:00',endTime:'',lat:51.0558,lng:3.7198,desc:'Official start of the Ghent Jazz Festival.',image:null,url:'#',categories:['MUSIC','FESTIVAL'],going:3100,interested:9800,paid:true,organizer:'Jazz Gent',source:'feesten'},
 ];
 
 // ── State ──────────────────────────────────────────────────────────────────
-let ALL = [];                // merged + deduped events
-let DATES = [];              // sorted unique dates across the merged set
-let activeCats = new Set();  // selected types (OR); empty = show all
-let activeGroups = new Set();// selected colored groups (OR'd with activeCats)
+let ALL = [];                 // merged + deduped events
+let DATES = [];               // sorted unique dates
+let dayIdx = 0;               // selected index into DATES
+let activeCats = new Set();
+let activeGroups = new Set();
 let q = '';
 let view = 'map';
-let starFilterOn = false;          // header ★ filter, persisted to localStorage
-const STARRED = new Set();         // starred event keys, persisted to localStorage
-let wasFeesten = false;            // tracks the Feesten threshold crossing for the confetti burst
-let map = null, markersBuilt = false;
-const MARKERS = {};          // id → leaflet marker (events with coords only)
+let listMode = 'day';         // 'day' (follows the rail) | 'all'
+let starFilterOn = false;
+const STARRED = new Set();
+let wasFeesten = false;
+let map = null;
+let dayLayer = null;          // current day's marker layer
+const DAY_MARKERS = new Map();// date → [{ev, marker}] cache
 
-// ── Date/label helpers ─────────────────────────────────────────────────────
+// ── Date helpers ───────────────────────────────────────────────────────────
 const MO = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 const DY = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
 function dotLbl(d){const dt=new Date(d+'T12:00:00');return MO[dt.getMonth()]+' '+String(dt.getDate()).padStart(2,'0');}
@@ -329,14 +358,14 @@ function dayLabel(d){
   if(isNaN(dt)) return 'DATE TBA';
   return DY[dt.getDay()]+' '+dt.getDate()+' '+MO[dt.getMonth()]+' '+dt.getFullYear();
 }
-// Gentse Feesten 2026 window (inclusive): drives the festival-mode flourishes
-const FEESTEN_START='2026-07-17', FEESTEN_END='2026-07-27';
-function inFeesten(d){ return !!d && d>=FEESTEN_START && d<=FEESTEN_END; }   // 'YYYY-MM-DD' string compare
+// Gentse Feesten 2026 window (inclusive) — days 17–26 July
+const FEESTEN_START='2026-07-17', FEESTEN_END='2026-07-26';
+function inFeesten(d){ return !!d && d>=FEESTEN_START && d<=FEESTEN_END; }
 function feestenDay(d){ return Math.round((new Date(d+'T12:00:00')-new Date(FEESTEN_START+'T12:00:00'))/864e5)+1; }
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function fmtStat(n){return n>=1000?(n/1000).toFixed(1).replace(/\.0$/,'')+'k':String(n);}
 
-// ── CSV parsing (RFC-4180-ish: quotes, escaped "", embedded commas/newlines) ─
+// ── CSV parsing (RFC-4180-ish) ─────────────────────────────────────────────
 function parseCSV(text){
   const rows=[]; let row=[], field='', i=0, inQ=false;
   while(i<text.length){
@@ -361,7 +390,7 @@ function csvToObjects(text){
   const out=[];
   for(let r=1;r<rows.length;r++){
     const cells=rows[r];
-    if(cells.length===1 && cells[0]==='') continue;           // skip blank lines
+    if(cells.length===1 && cells[0]==='') continue;
     const o={};
     headers.forEach((h,idx)=>{o[h]=cells[idx]!==undefined?cells[idx]:'';});
     out.push(o);
@@ -369,7 +398,7 @@ function csvToObjects(text){
   return out;
 }
 
-// ── Row → shared event shape (read by HEADER NAME, with fallbacks) ──────────
+// ── Row → event (override columns ALWAYS win; `hide` rows never render) ────
 function pick(row,keys){
   for(const k of keys){ const v=row[k]; if(v!=null && String(v).trim()!=='') return String(v).trim(); }
   return '';
@@ -382,11 +411,13 @@ function normDate(d){
   const dt=new Date(d); return isNaN(dt)?'':dt.toISOString().slice(0,10);
 }
 function normTime(t){ const m=String(t||'').match(/\d{1,2}:\d{2}/); return m?m[0]:''; }
+function isTruthyCell(v){ return /^(true|1|yes|x|ja)$/i.test(String(v||'').trim()); }
 function buildCategories(row){
   const cats=new Set();
   const add=s=>{ if(!s)return; String(s).split(/[,/>]/).forEach(p=>{
     const t=p.trim(); if(t && t.length<=24) cats.add(t.toUpperCase()); }); };
-  add(row.genre); add(row.subgenre); add(row.gf_categories||row.gf_raw_categories||row.gf_genre);
+  add(row.genre_override||row.genre); add(row.subgenre); add(row.genre_raw);
+  add(row.gf_categories||row.gf_raw_categories||row.gf_genre);
   return [...cats];
 }
 function isPaid(row){
@@ -397,19 +428,21 @@ function isPaid(row){
   return /[1-9]/.test(price) || /€|eur/.test(price);
 }
 function mapRow(row,source){
-  const sid = pick(row,['event_id','facebook_id','gf_node_id']);   // real stable id, or '' if none
+  if(isTruthyCell(row.hide)) return null;                            // human kill-switch
+  const sid = pick(row,['event_id','facebook_id','gf_node_id']);
   return {
     id: sid || (source+'_'+Math.random().toString(36).slice(2)),
-    sid,                                                           // empty → eventKey() falls back to a composite
+    sid,
     title: pick(row,['title','gf_title']) || 'UNTITLED',
-    venue: pick(row,['venue','gf_venue']),
-    address: pick(row,['address','gf_address']),
+    venue: pick(row,['venue_override','venue','gf_venue']),          // override > auto
+    address: pick(row,['address_override','address','gf_address']),
     date: normDate(pick(row,['date_start','gf_date_start'])),
     time: normTime(pick(row,['hour_start','gf_time_start'])),
-    lat: toNum(pick(row,['latitude','gf_lat'])),
-    lng: toNum(pick(row,['longitude','gf_lng'])),
+    endTime: normTime(pick(row,['hour_end','gf_time_end'])),
+    lat: toNum(pick(row,['latitude_override','latitude','gf_lat'])),
+    lng: toNum(pick(row,['longitude_override','longitude','gf_lng'])),
     desc: pick(row,['description','gf_description','details']),
-    image: pick(row,['gf_image_url']) || null,
+    image: pick(row,['image_url','gf_image_url']) || null,
     url: pick(row,['source_url','gf_detail_url','ticket_url','gf_ticket_url']) || '#',
     categories: buildCategories(row),
     going: toInt(pick(row,['going'])),
@@ -420,7 +453,7 @@ function mapRow(row,source){
   };
 }
 
-// ── Cross-tab dedupe: same date + fuzzy title, prefer feesten ───────────────
+// ── Cross-tab dedupe (same date + fuzzy title; prefer feesten) ─────────────
 function normTitle(t){
   return String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
     .replace(/[^a-z0-9]+/g,' ').trim();
@@ -437,7 +470,7 @@ function similar(a,b){
 function dedupe(events){
   const kept=[], byDate={};
   events.forEach(e=>{
-    if(!e.date){ kept.push(e); return; }                       // undated: never dedupe
+    if(!e.date){ kept.push(e); return; }
     (byDate[e.date]=byDate[e.date]||[]).push(e);
   });
   let removed=0;
@@ -448,7 +481,6 @@ function dedupe(events){
       const dupIdx=local.findIndex(k=>similar(normTitle(k.title),nt)>=0.85);
       if(dupIdx>=0){
         removed++;
-        // prefer the feesten row: replace an fb keeper with a feesten duplicate
         if(local[dupIdx].source!=='feesten' && e.source==='feesten') local[dupIdx]=e;
       } else local.push(e);
     });
@@ -457,9 +489,7 @@ function dedupe(events){
   return {kept,removed};
 }
 
-// ── Event-type groups: colored filters + map-dot coloring ───────────────────
-// Each group owns a set of category "stems", matched diacritic-insensitively
-// via startsWith so plurals/apostrophes (CONCERTEN, DJ'S, BALS, POËZIE) all hit.
+// ── Event-type groups ──────────────────────────────────────────────────────
 const GROUPS = [
   {key:'MUSIC',  label:'MUSIC',  color:'#b14bff', stems:['DJ','CONCERT']},
   {key:'DANCE',  label:'DANCE',  color:'#ff2df0', stems:['DANS','BAL']},
@@ -467,27 +497,25 @@ const GROUPS = [
   {key:'ACTIVE', label:'ACTIVE', color:'#00ff88', stems:['SPEL','SPORT','WANDELING']},
   {key:'BOATS',  label:'BOATS',  color:'#2b5bd8', stems:['BOOT']},
 ];
-const GROUP_OTHER = {key:'OTHER', color:'#ff2d78'};   // divers/varia/andere + anything unmatched → red
+const GROUP_OTHER = {key:'OTHER', color:'#ff2d78'};
 function cleanCat(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'')
   .toUpperCase().replace(/[^A-Z0-9 ]+/g,'').trim(); }
 function catGroup(cat){ const c=cleanCat(cat); return GROUPS.find(g=>g.stems.some(st=>c.startsWith(st)))||null; }
-// Dot color: Boats win outright; otherwise first group in list order; else OTHER (red).
 function eventGroup(e){
   const cats=e.categories||[];
   if(cats.some(c=>{const g=catGroup(c);return g&&g.key==='BOATS';})) return GROUPS.find(g=>g.key==='BOATS');
   for(const g of GROUPS){ if(g.key==='BOATS') continue; if(cats.some(c=>catGroup(c)===g)) return g; }
   return GROUP_OTHER;
 }
-// legible dot text: dark on bright fills, white on dark fills
 function textOn(hex){ const c=hex.replace('#',''); const r=parseInt(c.substr(0,2),16),
   g=parseInt(c.substr(2,2),16),b=parseInt(c.substr(4,2),16);
-  return (0.299*r+0.587*g+0.114*b)>140?'#06060f':'#fff'; }
+  return (0.299*r+0.587*g+0.114*b)>140?'#0b0d11':'#fff'; }
 
-// ── Filtering shared by both views ──────────────────────────────────────────
+// ── Filtering ──────────────────────────────────────────────────────────────
 function matches(e){
-  if(starFilterOn && !isStarred(eventKey(e))) return false;   // ★ filter ANDs with groups/types/search below
+  if(starFilterOn && !isStarred(eventKey(e))) return false;
   const cats=e.categories||[];
-  if(activeGroups.size || activeCats.size){       // OR across selected groups + types
+  if(activeGroups.size || activeCats.size){
     const inGroup=[...activeGroups].some(gk=>cats.some(c=>{const g=catGroup(c);return g&&g.key===gk;}));
     const inType =cats.some(c=>activeCats.has(c));
     if(!inGroup && !inType) return false;
@@ -500,31 +528,29 @@ function matches(e){
   return true;
 }
 
-// ── Category chips (most frequent first, capped so the bar stays usable) ─────
+// ── Chips ──────────────────────────────────────────────────────────────────
 function topCategories(limit){
   const freq={};
   ALL.forEach(e=>(e.categories||[]).forEach(c=>{freq[c]=(freq[c]||0)+1;}));
   const sorted=Object.keys(freq).sort((a,b)=>freq[b]-freq[a]||a.localeCompare(b));
-  return ['ALL',...sorted.slice(0,limit)];
+  return sorted.slice(0,limit);
 }
 function renderChips(){
   const wrap=document.getElementById('chips');
   wrap.innerHTML='';
-  // ALL = master reset, lit only when nothing at all is selected
   const allOn=activeCats.size===0 && activeGroups.size===0;
   const allEl=document.createElement('div');
   allEl.className='chip'+(allOn?' on':'');
   allEl.textContent='ALL';
   allEl.onclick=()=>{ activeCats.clear(); activeGroups.clear(); renderChips(); renderAll(); };
   wrap.appendChild(allEl);
-  // colored group chips first in the row, each tinted by its own group color
   GROUPS.forEach(g=>{
     const on=activeGroups.has(g.key);
     const el=document.createElement('div');
     el.className='chip grp'+(on?' on':'');
     el.textContent=g.label;
-    el.style.borderColor=g.color;                            // inline beats .chip/.chip:hover/.chip.on
-    el.style.color=on?'#06060f':g.color;
+    el.style.borderColor=g.color;
+    el.style.color=on?'#0b0d11':g.color;
     el.style.background=on?g.color:'var(--panel)';
     el.style.boxShadow=on?('0 0 10px '+g.color):'';
     el.onclick=()=>{
@@ -533,11 +559,9 @@ function renderChips(){
     };
     wrap.appendChild(el);
   });
-  // then the per-type chips: the ungrouped misc types pinned first (in this
-  // order, since no group filter covers them), then the frequency-sorted rest
   const PINNED=['ANDERE','DIVERS','VARIA'];
   const present=new Set(); ALL.forEach(e=>(e.categories||[]).forEach(c=>present.add(c)));
-  const rest=topCategories(16).filter(c=>c!=='ALL' && !PINNED.includes(c));
+  const rest=topCategories(16).filter(c=>!PINNED.includes(c));
   [...PINNED.filter(c=>present.has(c)), ...rest].forEach(c=>{
     const el=document.createElement('div');
     const on=activeCats.has(c);
@@ -551,128 +575,142 @@ function renderChips(){
   });
 }
 
-// ── LIST view render (day-grouped card feed) ────────────────────────────────
-function srcTag(s){
-  return s==='feesten'
-    ? '<span class="src src-tag-feesten">FEESTEN</span>'
-    : '<span class="src src-tag-fb">FB</span>';
+// ── LIST view ──────────────────────────────────────────────────────────────
+function cardHtml(e){
+  const key=eventKey(e), on=isStarred(key);
+  const href=e.url&&e.url!=='#'?` href="${esc(e.url)}" target="_blank" rel="noopener"`:'';
+  const thumb=e.image?`<img loading="lazy" decoding="async" src="${esc(e.image)}" alt="">`:'<span class="ph">◫</span>';
+  const tags=(e.categories||[]).slice(0,3).map(t=>`<span class="tag">#${esc(t)}</span>`).join('');
+  const stat=(e.going||e.interested)
+    ? `<span class="tag stat">▲ ${fmtStat(e.going||0)} GOING · ${fmtStat(e.interested||0)} INT</span>` : '';
+  const edge=eventGroup(e).color;
+  const when=e.time?(e.time+(e.endTime?'–'+e.endTime:'')):'TIME TBA';
+  return `<a class="card" style="border-left-color:${edge}"${href}>
+    <div class="thumb">${thumb}</div>
+    <div class="cbody">
+      <div class="ttl">${esc(e.title)}</div>
+      <div class="meta"><span class="venue">◈ ${esc(e.venue||'VENUE TBA')}</span>${e.address?' · '+esc(e.address):''}<br>
+      <span class="time">◷ ${esc(when)}</span> · ${e.paid?'TICKETED':'FREE'}</div>
+      ${e.desc?`<div class="desc">${esc(e.desc)}</div>`:''}
+      <div class="tags">${tags}${stat}</div>
+    </div>
+    <div class="cstar"><button type="button" class="starbtn liststar${on?' starred':''}"
+      data-key="${esc(key)}" aria-pressed="${on?'true':'false'}"
+      aria-label="${on?'Remove from starred':'Add to starred'}">${on?'★':'☆'}</button></div>
+  </a>`;
 }
 function renderFeed(){
   const feed=document.getElementById('feed');
-  const list=ALL.filter(matches);
-  if(!list.length){feed.innerHTML='<div class="empty">▓ NO EVENTS MATCH ▓</div>';return;}
+  const sel=DATES[dayIdx];
+  let list=ALL.filter(matches);
+  if(listMode==='day' && sel) list=list.filter(e=>e.date===sel);
 
+  // mode bar: DAY (rail-linked, with ◀ ▶) vs ALL DAYS
+  const modeBar=`<div id="listmode">
+    <button class="lm${listMode==='day'?' on':''}" data-lm="day">${sel?esc(dayLabel(sel)):'DAY'}</button>
+    <button class="lm${listMode==='all'?' on':''}" data-lm="all">ALL DAYS</button>
+    ${listMode==='day'?`<span class="lmnav">
+      <button class="lm" data-lnav="-1" aria-label="Previous day">◀</button>
+      <button class="lm" data-lnav="1" aria-label="Next day">▶</button></span>`:''}
+  </div>`;
+
+  if(!list.length){
+    feed.innerHTML=modeBar+'<div class="empty">▓ NO SIGNALS ON THIS FREQUENCY ▓</div>';
+    wireListMode(); return;
+  }
   const groups={};
   list.forEach(e=>{(groups[e.date||'TBA']=groups[e.date||'TBA']||[]).push(e);});
   const keys=Object.keys(groups).sort((a,b)=>a==='TBA'?1:b==='TBA'?-1:a.localeCompare(b));
-
-  feed.innerHTML=keys.map(k=>{
-    const cards=groups[k].map(e=>{
-      const key=eventKey(e), on=isStarred(key);
-      const href=e.url&&e.url!=='#'?` href="${esc(e.url)}" target="_blank" rel="noopener"`:'';
-      // native lazy-loading: thousands of remote thumbs, only fetch near-viewport
-      const thumb=e.image?`<img loading="lazy" decoding="async" src="${esc(e.image)}" alt="">`:'<span class="ph">◫</span>';
-      const tags=(e.categories||[]).slice(0,3).map(t=>`<span class="tag">#${esc(t)}</span>`).join('');
-      const stat=(e.going||e.interested)
-        ? `<span class="tag stat">▲ ${fmtStat(e.going||0)} GOING · ${fmtStat(e.interested||0)} INT</span>` : '';
-      // edge colour mirrors the map dot's type colour
-      const edge=eventGroup(e).color;
-      return `<a class="card" style="border-color:${edge}"${href}>
-        <div class="thumb">${thumb}</div>
-        <div class="cbody">
-          <div class="ttl">▶ ${esc(e.title)}</div>
-          <div class="meta venue">◈ ${esc(e.venue||'VENUE TBA')}${e.address?' · '+esc(e.address):''}</div>
-          <div class="meta time">◷ ${e.time?esc(e.time):'TIME TBA'}${e.paid?' · TICKETED':' · FREE'}</div>
-          ${e.desc?`<div class="desc">${esc(e.desc)}</div>`:''}
-          <div class="tags">${tags}${stat}</div>
-        </div>
-        <div class="cstar"><button type="button" class="starbtn liststar${on?' starred':''}"
-          data-key="${esc(key)}" aria-pressed="${on?'true':'false'}"
-          aria-label="${on?'Remove from starred':'Add to starred'}"
-          title="${on?'Starred — click to remove':'Click to star'}">${on?'★':'☆'}</button></div>
-      </a>`;
-    }).join('');
-    // during the Feesten window the header carries a fat yellow "DAY N" pill (replaces per-card source tags)
-    const pill=inFeesten(k)?`<span class="daypill">DAY ${feestenDay(k)}</span>`:'';
-    return `<div class="daygroup"><div class="dayhdr">► ${dayLabel(k)}${pill}</div>${cards}</div>`;
+  feed.innerHTML=modeBar+keys.map(k=>{
+    const cards=groups[k].map(cardHtml).join('');
+    const pill=inFeesten(k)?`<span class="daypill">FEESTEN DAY ${feestenDay(k)}</span>`:'';
+    return `<div class="daygroup"><div class="dayhdr"><span class="arrowsym">►</span> ${dayLabel(k)}${pill}</div>${cards}</div>`;
   }).join('');
+  wireListMode();
+}
+function wireListMode(){
+  document.querySelectorAll('#listmode .lm[data-lm]').forEach(b=>{
+    b.addEventListener('click',()=>{ listMode=b.dataset.lm; renderAll(); });
+  });
+  document.querySelectorAll('#listmode .lm[data-lnav]').forEach(b=>{
+    b.addEventListener('click',()=>stepDay(parseInt(b.dataset.lnav,10)));
+  });
 }
 
-// ── MAP view: build markers once, then show/hide per filter + slider date ────
-function buildMarkers(){
-  if(markersBuilt || !ALL.length) return;   // wait for data; don't latch on empty
+// ── MAP: per-day marker layers (built lazily, cached) ──────────────────────
+function buildDayMarkers(date){
+  if(DAY_MARKERS.has(date)) return DAY_MARKERS.get(date);
+  const entries=[];
   ALL.forEach(e=>{
-    if(e.lat==null||e.lng==null) return;
+    if(e.date!==date || e.lat==null || e.lng==null) return;
     const g=eventGroup(e);
     const icon=L.divIcon({
       className:'',
       html:`<div class="edot" style="background:${g.color};border-color:${g.color};color:${textOn(g.color)}">${e.time||'TBA'}</div>`,
-      iconSize:[54,22],iconAnchor:[27,11]
+      iconSize:[52,20],iconAnchor:[26,10]
     });
     const m=L.marker([e.lat,e.lng],{icon});
+    const img=e.image?`<img class="pimg" loading="lazy" src="${esc(e.image)}" alt="">`:'';
     const desc=e.desc?`<div class="prow pdesc">${esc(e.desc)}</div>`:'';
-    // same hashtag markup/classes the list cards use, so styling matches
     const tags=(e.categories||[]).slice(0,3).map(t=>`<span class="tag">#${esc(t)}</span>`).join('');
     const link=e.url&&e.url!=='#'?`<a class="plink" href="${esc(e.url)}" target="_blank" rel="noopener">► DETAILS</a>`:'';
     const actions=`<div class="pactions">${link}<span class="ptags">${tags}</span></div>`;
-    // venue links out to the marker's coordinates on Google Maps
     const mapsUrl=`https://www.google.com/maps/search/?api=1&query=${e.lat},${e.lng}`;
-    const venue=`<div class="prow pvenue">◈ <a class="pvenue-link" href="${mapsUrl}" target="_blank" rel="noopener">${esc(e.venue||'VENUE TBA')}</a></div>`;
+    const venue=`<div class="prow pvenue">◈ <a href="${mapsUrl}" target="_blank" rel="noopener">${esc(e.venue||'VENUE TBA')}</a></div>`;
+    const when=e.time?(e.time+(e.endTime?'–'+e.endTime:'')):'TBA';
     const skey=eventKey(e), son=isStarred(skey);
     const star=`<button type="button" class="starbtn popstar${son?' starred':''}" data-key="${esc(skey)}"
-      aria-pressed="${son?'true':'false'}" aria-label="${son?'Remove from starred':'Add to starred'}"
-      title="${son?'Starred — click to remove':'Click to star'}">${son?'★':'☆'}</button>`;
+      aria-pressed="${son?'true':'false'}" aria-label="${son?'Remove from starred':'Add to starred'}">${son?'★':'☆'}</button>`;
     m.bindPopup(
-      star+
-      `<div class="ptitle">► ${esc(e.title)}</div>`+
+      star+img+`<div class="pbody"><div class="ptitle">${esc(e.title)}</div>`+
       venue+
-      `<div class="prow ptime">◷ ${dayLabel(e.date)} @ ${e.time||'TBA'}${e.paid?' · TICKETED':' · FREE'}</div>`+
-      desc+actions,
-      {maxWidth:240,minWidth:190,autoPan:true}
+      `<div class="prow ptime">◷ ${dayLabel(e.date)} @ ${esc(when)} · ${e.paid?'TICKETED':'FREE'}</div>`+
+      desc+actions+`</div>`,
+      {maxWidth:250,minWidth:210,autoPan:true}
     );
-    MARKERS[e.id]=m;
+    entries.push({ev:e,marker:m});
   });
-  markersBuilt=true;
+  DAY_MARKERS.set(date,entries);
+  return entries;
 }
 function renderMap(){
-  if(!map) return;
-  const idx=+document.getElementById('slider').value;
-  const sel=DATES[idx];
+  if(!map) return 0;
+  const sel=DATES[dayIdx];
+  if(dayLayer){ map.removeLayer(dayLayer); dayLayer=null; }
   let cnt=0;
-  ALL.forEach(e=>{
-    const m=MARKERS[e.id];
-    if(!m) return;
-    const show = e.date===sel && matches(e);
-    if(show){ if(!map.hasLayer(m)) m.addTo(map); cnt++; }
-    else if(map.hasLayer(m)) map.removeLayer(m);
-  });
-  document.getElementById('cdate').textContent = sel?('► '+dayLabel(sel)):'──';
-  // festival mode: yellow date + themed logo while the selected date is in the Feesten window
+  if(sel){
+    dayLayer=L.layerGroup();
+    buildDayMarkers(sel).forEach(({ev,marker})=>{
+      if(matches(ev)){ dayLayer.addLayer(marker); cnt++; }
+    });
+    dayLayer.addTo(map);
+  }
+  // festival mode
   const fest=inFeesten(sel);
-  document.getElementById('cdate').classList.toggle('feesten',fest);
   const logo=document.getElementById('logo');
   logo.classList.toggle('feesten',fest);
-  logo.textContent = fest ? 'GHENT//EVENT\\\\SE FEESTEN' : '▶ GHENT // EVENTS ◼';
-  if(fest && !wasFeesten) partyConfetti();   // surprise burst on crossing into the Feesten window
+  logo.innerHTML = fest ? 'GHENT<span class="lx">//</span>SE&nbsp;FEESTEN' : 'GHENT<span class="lx">//</span>EVENT';
+  if(fest && !wasFeesten) partyConfetti();
   wasFeesten=fest;
+  renderRail();
   return cnt;
 }
 
-// ── Badge reflects whatever the active view is showing ──────────────────────
+// ── Badge ──────────────────────────────────────────────────────────────────
 function renderBadge(){
   const badge=document.getElementById('badge');
+  const sel=DATES[dayIdx];
+  const fest=inFeesten(sel);
   if(view==='map'){
     const n=renderMap()||0;
-    const sel=DATES[+document.getElementById('slider').value];
-    const fest=inFeesten(sel);
     const lbl=fest?('DAY '+feestenDay(sel)):(sel?dotLbl(sel):'──');
-    badge.textContent='■ '+n+' ON '+lbl;
-    badge.classList.toggle('feesten',fest);          // gold while showing a Feesten day
+    badge.innerHTML='<b>'+n+'</b> ON '+esc(lbl);
   }else{
-    const n=ALL.filter(matches).length;
-    badge.textContent='■ '+n+' EVENTS';
-    badge.classList.remove('feesten');
+    let list=ALL.filter(matches);
+    if(listMode==='day'&&sel) list=list.filter(e=>e.date===sel);
+    badge.innerHTML='<b>'+list.length+'</b> SIGNALS';
   }
+  badge.classList.toggle('feesten',fest&&view==='map');
 }
 function renderAll(){
   if(view==='map') renderMap(); else renderFeed();
@@ -680,9 +718,10 @@ function renderAll(){
   updateRouteBtn();
 }
 
-// ── Confetti: a one-shot vanilla burst (no libs) over the header on Feesten ──
+// ── Confetti ───────────────────────────────────────────────────────────────
 function partyConfetti(){
-  const colors=['#00ff88','#ff2d78','#ffd700','#99ffcc','#b14bff'];
+  if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const colors=['#00ff88','#ff2d78','#ffd700','#7fe8c1','#b14bff'];
   const layer=document.createElement('div');
   layer.className='confetti-layer';
   for(let i=0;i<52;i++){
@@ -700,37 +739,117 @@ function partyConfetti(){
   setTimeout(()=>layer.remove(),2800);
 }
 
-// ── View toggle ─────────────────────────────────────────────────────────────
+// ── DAY RAIL ───────────────────────────────────────────────────────────────
+const railTrack=document.getElementById('railtrack');
+const railThumb=document.getElementById('railthumb');
+const railDate=document.getElementById('raildate');
+let minHits=[];   // secret gesture counter
+
+function railPct(i){
+  const n=DATES.length;
+  return n<=1 ? 0 : (i/(n-1))*100;
+}
+function buildRail(){
+  const ticks=document.getElementById('ticks');
+  ticks.innerHTML='';
+  const today=new Date().toISOString().slice(0,10);
+  DATES.forEach((d,i)=>{
+    const t=document.createElement('div');
+    t.className='tick'+(inFeesten(d)?' feest':'')+(d===today?' today':'');
+    t.style.left=railPct(i)+'%';
+    ticks.appendChild(t);
+  });
+  // Feesten gold segment + label
+  const seg=document.getElementById('feestseg');
+  const lbl=document.getElementById('feestlbl');
+  const fi=DATES.findIndex(d=>inFeesten(d));
+  let li=-1;
+  for(let i=DATES.length-1;i>=0;i--){ if(inFeesten(DATES[i])){ li=i; break; } }
+  if(fi>=0 && li>=fi){
+    const a=railPct(fi), b=railPct(li);
+    seg.style.left=a+'%'; seg.style.width=Math.max(b-a,1.5)+'%'; seg.style.display='block';
+    lbl.style.left=((a+b)/2)+'%'; lbl.style.display='block';
+  }else{ seg.style.display='none'; lbl.style.display='none'; }
+  renderRail();
+}
+function renderRail(){
+  const sel=DATES[dayIdx];
+  railThumb.style.left=railPct(dayIdx)+'%';
+  const fest=inFeesten(sel);
+  railThumb.classList.toggle('feesten',fest);
+  railDate.classList.toggle('feesten',fest);
+  railDate.innerHTML='<span class="arrowsym">►</span> '+(sel
+    ? esc(dayLabel(sel))+(fest?' · DAY '+feestenDay(sel):'')
+    : '──');
+  document.getElementById('rprev').disabled = dayIdx<=0;
+  document.getElementById('rnext').disabled = dayIdx>=DATES.length-1;
+}
+function setDay(i,opts){
+  const n=DATES.length;
+  const clamped=Math.max(0,Math.min(n-1,i));
+  const changed=clamped!==dayIdx;
+  dayIdx=clamped;
+  // secret gesture: hit the far-left 3× within 1.5s
+  if(dayIdx===0 && (!opts||!opts.silent)){
+    const now=Date.now();
+    minHits.push(now);
+    minHits=minHits.filter(t=>now-t<=1500);
+    if(minHits.length>=3){ minHits=[]; window.location.href=UNDERGHENT_URL; return; }
+  }
+  if(changed || (opts&&opts.force)) renderAll(); else renderRail();
+}
+function stepDay(d){ setDay(dayIdx+d); }
+document.getElementById('rprev').addEventListener('click',()=>stepDay(-1));
+document.getElementById('rnext').addEventListener('click',()=>stepDay(1));
+
+// drag / tap on the track
+function idxFromClientX(x){
+  const r=railTrack.getBoundingClientRect();
+  const f=Math.max(0,Math.min(1,(x-r.left)/r.width));
+  return Math.round(f*(DATES.length-1));
+}
+let dragging=false;
+const railMid=document.getElementById('railmid');
+railMid.addEventListener('pointerdown',e=>{
+  if(!DATES.length) return;
+  dragging=true;
+  railMid.setPointerCapture(e.pointerId);
+  setDay(idxFromClientX(e.clientX));
+});
+railMid.addEventListener('pointermove',e=>{
+  if(!dragging) return;
+  setDay(idxFromClientX(e.clientX),{silent:true});
+});
+railMid.addEventListener('pointerup',e=>{
+  if(!dragging) return;
+  dragging=false;
+  setDay(idxFromClientX(e.clientX));   // counts for the secret gesture
+});
+railMid.addEventListener('pointercancel',()=>{dragging=false;});
+// keyboard
+window.addEventListener('keydown',e=>{
+  if(e.target&&/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
+  if(e.key==='ArrowLeft') stepDay(-1);
+  else if(e.key==='ArrowRight') stepDay(1);
+});
+
+// ── View toggle ────────────────────────────────────────────────────────────
 function setView(v){
   view=v;
-  // scope to the view toggle only — never the ★ filter button (also class .tg)
   document.querySelectorAll('#toggle .tg').forEach(b=>b.classList.toggle('on',b.dataset.view===v));
   document.getElementById('mapview').style.display = v==='map'?'flex':'none';
   document.getElementById('listview').style.display = v==='list'?'block':'none';
-  if(v==='map' && map){ buildMarkers(); setTimeout(()=>{map.invalidateSize();renderAll();},0); }
+  if(v==='map' && map){ setTimeout(()=>{map.invalidateSize();renderAll();},0); }
   else renderAll();
 }
 document.querySelectorAll('#toggle .tg').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
 
-// ── Search ──────────────────────────────────────────────────────────────────
+// ── Search ─────────────────────────────────────────────────────────────────
 document.getElementById('search').addEventListener('input',e=>{
   q=e.target.value.trim().toLowerCase(); renderAll();
 });
 
-// ── Slider: scrub date + the secret gesture (3 min-hits within 1.5s) ─────────
-const slider=document.getElementById('slider');
-let minHits=[];
-slider.addEventListener('input',()=>{
-  renderBadge();
-  if(+slider.value===0){
-    const now=Date.now();
-    minHits.push(now);
-    minHits=minHits.filter(t=>now-t<=1500);
-    if(minHits.length>=3){ minHits=[]; window.location.href=UNDERGHENT_URL; }
-  }
-});
-
-// ── Map init ────────────────────────────────────────────────────────────────
+// ── Map init ───────────────────────────────────────────────────────────────
 function initMap(){
   map=L.map('map',{center:[51.0515,3.7200],zoom:14,zoomControl:true});
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
@@ -738,7 +857,7 @@ function initMap(){
   }).addTo(map);
 }
 
-// ── Load both tabs in parallel, map, merge, dedupe, render ──────────────────
+// ── Load ───────────────────────────────────────────────────────────────────
 async function fetchCSV(url){
   const r=await fetch(url,{cache:'no-store'});
   if(!r.ok) throw new Error('HTTP '+r.status);
@@ -758,18 +877,16 @@ async function load(){
   if(fbRes.status==='rejected') console.warn('FB tab failed:',fbRes.reason);
   if(feRes.status==='rejected') console.warn('Feesten tab failed:',feRes.reason);
 
-  const fbAll = fbRows.map(r=>mapRow(r,'fb'));
-  const feAll = feRows.map(r=>mapRow(r,'feesten'));
+  const fbAll = fbRows.map(r=>mapRow(r,'fb')).filter(Boolean);
+  const feAll = feRows.map(r=>mapRow(r,'feesten')).filter(Boolean);
   const fbEvents = fbAll.filter(e=>e.date);
   const feEvents = feAll.filter(e=>e.date);
-  const skipped  = (fbAll.length-fbEvents.length)+(feAll.length-feEvents.length);
 
-  let live=false;
   if(fbEvents.length || feEvents.length){
-    const merged=[...feEvents,...fbEvents];          // feesten first → preferred on tie
+    const merged=[...feEvents,...fbEvents];
     const {kept,removed}=dedupe(merged);
-    ALL=kept; live=true;
-    console.log(`[ghentevent] fb:${fbEvents.length} feesten:${feEvents.length} merged:${merged.length} deduped:${removed} skipped:${skipped} → ${ALL.length}`);
+    ALL=kept;
+    console.log(`[ghentevent] fb:${fbEvents.length} feesten:${feEvents.length} deduped:${removed} → ${ALL.length}`);
     status.textContent=`◉ LIVE · FB ${fbEvents.length} · FEESTEN ${feEvents.length} · ${ALL.length} EVENTS`;
   }else{
     ALL=SAMPLE;
@@ -779,25 +896,23 @@ async function load(){
 
   ALL.sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999')||a.time.localeCompare(b.time));
   DATES=[...new Set(ALL.filter(e=>e.date).map(e=>e.date))].sort();
-  slider.max=Math.max(0,DATES.length-1);
-  slider.value=defaultDateIndex();
+  dayIdx=defaultDateIndex();
+  DAY_MARKERS.clear();
 
   renderChips();
-  buildMarkers();
+  buildRail();
   renderAll();
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-//  STARRING + ROUTE BUILDER  (root index.html / GHENTEVENT only)
-//  localStorage keys: "underghent.starred.v1" (array of keys),
-//                     "underghent.starredFilter.v1" ("1"/"0")
+//  STARRING + ROUTE BUILDER
+//  localStorage: "underghent.starred.v1", "underghent.starredFilter.v1"
 // ════════════════════════════════════════════════════════════════════════════
 const LS_STARRED='underghent.starred.v1';
 const LS_STARFILTER='underghent.starredFilter.v1';
 const TRAVELMODE='walking';
 const DEFAULT_START='Gent-Sint-Pieters';
 
-// Stable key: real source id when present, else a title|date|venue composite
 function eventKey(ev){ return ev.sid || `${ev.title}|${ev.date}|${ev.venue}`; }
 
 function loadStarred(){
@@ -809,18 +924,13 @@ function saveStarred(){    try{ localStorage.setItem(LS_STARRED,JSON.stringify([
 function saveStarFilter(){ try{ localStorage.setItem(LS_STARFILTER, starFilterOn?'1':'0'); }catch(e){} }
 
 function isStarred(key){ return STARRED.has(key); }
-function getStarred(){ return [...STARRED]; }
 
 function setStarVisual(btn,on){
   btn.textContent = on?'★':'☆';
   btn.classList.toggle('starred',on);
   btn.setAttribute('aria-pressed', on?'true':'false');
   btn.setAttribute('aria-label', on?'Remove from starred':'Add to starred');
-  btn.setAttribute('title', on?'Starred — click to remove':'Click to star');
 }
-// Toggle + persist, reflect on every star button currently in the DOM (list +
-// open popup), refresh the route button, and — only when the ★ filter is on —
-// re-render both views since the visible set changed.
 function toggleStar(key){
   if(STARRED.has(key)) STARRED.delete(key); else STARRED.add(key);
   saveStarred();
@@ -831,29 +941,25 @@ function toggleStar(key){
   if(starFilterOn) renderAll(); else renderBadge();
 }
 
-// starred events present in the current dataset
 function starredEvents(){ return ALL.filter(e=>isStarred(eventKey(e))); }
 function starredDays(){ return [...new Set(starredEvents().filter(e=>e.date).map(e=>e.date))].sort(); }
 function soonestDay(days){
   const today=new Date().toISOString().slice(0,10);
   return days.find(d=>d>=today) || days[0];
 }
-
-// ── Route overlay button (greyed out when nothing is starred) ───────────────
 function updateRouteBtn(){
   const btn=document.getElementById('routebtn');
   if(btn) btn.disabled = starredEvents().length===0;
 }
 
-// ── Route modal ─────────────────────────────────────────────────────────────
 function openRouteModal(){
   if(!starredEvents().length) return;
   const days=starredDays();
   const wrap=document.getElementById('rm-daywrap');
   const sel=document.getElementById('rm-day');
-  if(days.length>1){                                  // day selector only when starred events span >1 day
+  if(days.length>1){
     sel.innerHTML=days.map(d=>`<option value="${esc(d)}">${esc(dayLabel(d))}</option>`).join('');
-    sel.value=soonestDay(days);                       // default soonest upcoming day
+    sel.value=soonestDay(days);
     wrap.style.display='block';
   }else{
     wrap.style.display='none';
@@ -873,8 +979,7 @@ function buildRoute(){
   if(days.length>1) chosen=document.getElementById('rm-day').value;
   else if(days.length===1) chosen=days[0];
   if(chosen) evs=evs.filter(e=>e.date===chosen);
-  evs.sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));   // chronological by start time
-  // prefer the event's own coordinates; otherwise "<venue>, Gent"
+  evs.sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
   const waypoints=evs.map(e=>
     (e.lat!=null&&e.lng!=null) ? `${e.lat},${e.lng}` : `${e.venue||'Gent'}, Gent`);
   const url='https://www.google.com/maps/dir/?api=1'
@@ -883,7 +988,7 @@ function buildRoute(){
     +'&waypoints='+waypoints.map(encodeURIComponent).join('|')
     +'&travelmode='+TRAVELMODE;
   window.open(url,'_blank','noopener');
-  if(waypoints.length>9){                             // non-blocking: route already opened above
+  if(waypoints.length>9){
     const n=document.getElementById('rm-notice');
     n.textContent='⚠ '+waypoints.length+' STOPS — GOOGLE MAPS MAY TRUNCATE VERY LONG ROUTES.';
     n.style.display='block';
@@ -892,9 +997,7 @@ function buildRoute(){
   }
 }
 
-// ── Wire star/route UI once the map + DOM exist ─────────────────────────────
 function initStarUI(){
-  // header ★ filter toggle
   const ff=document.getElementById('starfilter');
   ff.classList.toggle('on',starFilterOn);
   ff.setAttribute('aria-pressed',starFilterOn?'true':'false');
@@ -905,8 +1008,6 @@ function initStarUI(){
     renderAll();
   });
 
-  // route overlay button — floated bottom-right inside the map container, above
-  // the tiles but clear of the zoom (top-left) and attribution (bottom-right) controls
   const rb=document.createElement('button');
   rb.id='routebtn'; rb.type='button'; rb.className='routebtn'; rb.textContent='▶ ROUTE';
   rb.title='Build a walking route through your starred events';
@@ -914,14 +1015,11 @@ function initStarUI(){
   if(map){
     map.getContainer().appendChild(rb);
     if(window.L&&L.DomEvent){ L.DomEvent.disableClickPropagation(rb); L.DomEvent.disableScrollPropagation(rb); }
-    // popups are recreated on each open → delegate star clicks on the map container,
-    // toggling without closing the popup
     map.getContainer().addEventListener('click',e=>{
       const b=e.target.closest('.popstar'); if(!b) return;
       e.preventDefault(); e.stopPropagation();
       toggleStar(b.dataset.key);
     });
-    // sync the popup star to current state whenever a popup opens
     map.on('popupopen',e=>{
       const el=e.popup.getElement();
       const b=el&&el.querySelector('.popstar');
@@ -930,19 +1028,16 @@ function initStarUI(){
   }
   updateRouteBtn();
 
-  // list star clicks (delegated; #feed persists across re-renders). stopPropagation
-  // + preventDefault so the card's own navigation never fires.
   document.getElementById('feed').addEventListener('click',e=>{
     const b=e.target.closest('.liststar'); if(!b) return;
     e.preventDefault(); e.stopPropagation();
     toggleStar(b.dataset.key);
   });
 
-  // modal controls
   document.getElementById('rm-cancel').addEventListener('click',closeRouteModal);
   document.getElementById('rm-build').addEventListener('click',buildRoute);
   document.getElementById('routemodal').addEventListener('click',e=>{
-    if(e.target.id==='routemodal') closeRouteModal();    // click backdrop to dismiss
+    if(e.target.id==='routemodal') closeRouteModal();
   });
   document.getElementById('rm-geo').addEventListener('click',()=>{
     const btn=document.getElementById('rm-geo');
@@ -952,16 +1047,39 @@ function initStarUI(){
       pos=>{ document.getElementById('rm-start').value=
                pos.coords.latitude.toFixed(5)+','+pos.coords.longitude.toFixed(5);
              btn.textContent='USE MY LOCATION'; btn.disabled=false; },
-      ()=>{ btn.textContent='USE MY LOCATION'; btn.disabled=false; },   // denied/unavailable: skip silently
+      ()=>{ btn.textContent='USE MY LOCATION'; btn.disabled=false; },
       {enableHighAccuracy:false,timeout:8000,maximumAge:60000}
     );
   });
+}
+
+// ── Logo "tune-in" on load ─────────────────────────────────────────────────
+function tuneIn(){
+  if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const el=document.getElementById('logo');
+  const FINAL='GHENT//EVENT';
+  const CHARS='▓▒░<>/\\|#@%&';
+  let frame=0;
+  const t=setInterval(()=>{
+    frame++;
+    const reveal=Math.floor(frame*1.4);
+    let out='';
+    for(let i=0;i<FINAL.length;i++){
+      out += i<reveal ? FINAL[i] : CHARS[(Math.random()*CHARS.length)|0];
+    }
+    el.textContent=out;
+    if(reveal>=FINAL.length){
+      clearInterval(t);
+      el.innerHTML='GHENT<span class="lx">//</span>EVENT';
+    }
+  },42);
 }
 
 initMap();
 loadStarred();
 initStarUI();
 setView('map');
+tuneIn();
 load();
 </script>
 </body>

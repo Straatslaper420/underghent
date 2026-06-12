@@ -2,7 +2,7 @@ import type { Enricher, EnricherResult, PipelineContext } from '../../types/enri
 import type { CanonicalEvent } from '../../types/canonical.js'
 
 const SPLIT_PATTERN = /\s+(?:feat\.?|b2b|vs\.?|presents?|&|\+|×|x)\s+/i
-const DELIMITER_PATTERN = /[•|\/\n]+/
+const DELIMITER_PATTERN = /[\u2022|\/\n]+/
 const NOISE_WORDS = new Set([
   'live', 'dj set', 'dj', 'all night long', 'doors open', 'presents',
   'b2b', 'feat', 'featuring', 'tickets', 'more', '+more', 'and more',
@@ -18,7 +18,7 @@ function extractArtists(text: string): string[] {
       if (!s || s.length < 2 || s.length > 60) return false
       if (NOISE_WORDS.has(s.toLowerCase())) return false
       // Must start with a letter or digit
-      if (!/^[a-zA-ZÀ-ÿ0-9]/.test(s)) return false
+      if (!/^[a-zA-Z\u00c0-\u00ff0-9]/.test(s)) return false
       return true
     })
 
