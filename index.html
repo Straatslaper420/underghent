@@ -123,8 +123,6 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .leaflet-popup-tip-container{display:none}
 .leaflet-popup-close-button{color:var(--pink)!important;font-size:17px!important;
   right:5px!important;top:3px!important;z-index:6}
-.pimg{width:100%;height:92px;object-fit:cover;display:block;border-bottom:1px solid var(--line);
-  filter:saturate(.9)}
 .pbody{padding:11px 13px 12px}
 .ptitle{font-size:11px;font-weight:700;color:var(--txt);letter-spacing:.04em;line-height:1.45;
   margin-bottom:7px;padding-right:14px}
@@ -199,6 +197,25 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .popstar.starred{border-color:var(--gold)}
 .cstar{display:flex;align-items:center;flex-shrink:0;padding:0 12px;border-left:1px dashed var(--line)}
 .liststar{font-size:22px;padding:4px}
+
+/* ── Loader ─────────────────────────────────────────────────────────────── */
+#loader{position:fixed;inset:0;z-index:10002;background:rgba(11,13,17,.94);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  transition:opacity .4s ease}
+#loader.bye{opacity:0;pointer-events:none}
+#eq{display:flex;gap:5px;align-items:flex-end;height:46px}
+#eq i{width:9px;background:var(--green);box-shadow:0 0 10px rgba(0,255,136,.5);
+  animation:eqb 0.9s ease-in-out infinite}
+#eq i:nth-child(2){background:var(--pink);box-shadow:0 0 10px rgba(255,45,120,.5);animation-delay:.12s}
+#eq i:nth-child(3){background:var(--gold);box-shadow:0 0 10px rgba(255,215,0,.5);animation-delay:.24s}
+#eq i:nth-child(4){background:var(--mint);box-shadow:0 0 10px rgba(127,232,193,.5);animation-delay:.36s}
+#eq i:nth-child(5){background:var(--green);box-shadow:0 0 10px rgba(0,255,136,.5);animation-delay:.48s}
+@keyframes eqb{0%,100%{height:8px}50%{height:46px}}
+#loadmsg{font-size:10px;letter-spacing:.26em;color:var(--txt);text-align:center;
+  animation:loadblink 1.6s ease-in-out infinite}
+@keyframes loadblink{0%,100%{opacity:1}50%{opacity:.45}}
+#loadsub{font-size:8px;letter-spacing:.3em;color:var(--dim)}
+@media (prefers-reduced-motion:reduce){#eq i,#loadmsg{animation:none}#eq i{height:24px}}
 
 /* ── Confetti ───────────────────────────────────────────────────────────── */
 .confetti-layer{position:fixed;inset:0 0 auto 0;height:0;z-index:10001;pointer-events:none}
@@ -284,6 +301,13 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
     <div id="feed"></div>
     <div id="status"></div>
   </div>
+</div>
+
+<!-- LOADER -->
+<div id="loader" aria-live="polite">
+  <div id="eq"><i></i><i></i><i></i><i></i><i></i></div>
+  <div id="loadmsg">BRIBING THE DOORMAN…</div>
+  <div id="loadsub">GHENT//EVENT · TUNING IN</div>
 </div>
 
 <!-- ROUTE MODAL -->
@@ -427,6 +451,15 @@ function isPaid(row){
   if(/gratis|free|gratuit/.test(price)) return false;
   return /[1-9]/.test(price) || /€|eur/.test(price);
 }
+// Show the actual price when we have one; fall back to TICKETED/FREE.
+function priceLabel(e){
+  const p=String(e.price||'').trim();
+  if(p){
+    if(/gratis|free|gratuit|^0([,.]0+)?$/i.test(p)) return 'FREE';
+    return esc(p);
+  }
+  return e.paid?'TICKETED':'FREE';
+}
 function mapRow(row,source){
   if(isTruthyCell(row.hide)) return null;                            // human kill-switch
   const sid = pick(row,['event_id','facebook_id','gf_node_id']);
@@ -448,6 +481,7 @@ function mapRow(row,source){
     going: toInt(pick(row,['going'])),
     interested: toInt(pick(row,['interested'])),
     paid: isPaid(row),
+    price: pick(row,['price','gf_price']),
     organizer: pick(row,['organizers','gf_organizer']),
     source
   };
@@ -468,17 +502,28 @@ function similar(a,b){
   return total?2*inter/total:0;
 }
 function dedupe(events){
-  const kept=[], byDate={};
+  const kept=[], byDate={}, seen=new Set();
+  let removed=0;
   events.forEach(e=>{
     if(!e.date){ kept.push(e); return; }
+    // PASS 1 — exact fingerprint within the same source. Kills literally
+    // duplicated sheet rows (the fb tab held pairs identical except for a
+    // regenerated event_id, which doubled every fb event in the counters).
+    // Venue is part of the key: two boat tours, same title/time, different
+    // jetty = two real events.
+    const fp=e.source+'|'+normTitle(e.title)+'|'+e.date+'|'+(e.time||'')+'|'+normTitle(e.venue||'');
+    if(seen.has(fp)){ removed++; return; }
+    seen.add(fp);
     (byDate[e.date]=byDate[e.date]||[]).push(e);
   });
-  let removed=0;
   Object.values(byDate).forEach(group=>{
     const local=[];
     group.forEach(e=>{
       const nt=normTitle(e.title);
-      const dupIdx=local.findIndex(k=>similar(normTitle(k.title),nt)>=0.85);
+      // CROSS-SOURCE only: each tab is already deduped upstream (feesten by
+      // node id). Same-source same-day similar titles are real distinct events
+      // (e.g. a guided tour running 3× on one day) — never merge those.
+      const dupIdx=local.findIndex(k=>k.source!==e.source && similar(normTitle(k.title),nt)>=0.85);
       if(dupIdx>=0){
         removed++;
         if(local[dupIdx].source!=='feesten' && e.source==='feesten') local[dupIdx]=e;
@@ -590,7 +635,7 @@ function cardHtml(e){
     <div class="cbody">
       <div class="ttl">${esc(e.title)}</div>
       <div class="meta"><span class="venue">◈ ${esc(e.venue||'VENUE TBA')}</span>${e.address?' · '+esc(e.address):''}<br>
-      <span class="time">◷ ${esc(when)}</span> · ${e.paid?'TICKETED':'FREE'}</div>
+      <span class="time">◷ ${esc(when)}</span> · ${priceLabel(e)}</div>
       ${e.desc?`<div class="desc">${esc(e.desc)}</div>`:''}
       <div class="tags">${tags}${stat}</div>
     </div>
@@ -650,7 +695,6 @@ function buildDayMarkers(date){
       iconSize:[52,20],iconAnchor:[26,10]
     });
     const m=L.marker([e.lat,e.lng],{icon});
-    const img=e.image?`<img class="pimg" loading="lazy" src="${esc(e.image)}" alt="">`:'';
     const desc=e.desc?`<div class="prow pdesc">${esc(e.desc)}</div>`:'';
     const tags=(e.categories||[]).slice(0,3).map(t=>`<span class="tag">#${esc(t)}</span>`).join('');
     const link=e.url&&e.url!=='#'?`<a class="plink" href="${esc(e.url)}" target="_blank" rel="noopener">► DETAILS</a>`:'';
@@ -662,9 +706,9 @@ function buildDayMarkers(date){
     const star=`<button type="button" class="starbtn popstar${son?' starred':''}" data-key="${esc(skey)}"
       aria-pressed="${son?'true':'false'}" aria-label="${son?'Remove from starred':'Add to starred'}">${son?'★':'☆'}</button>`;
     m.bindPopup(
-      star+img+`<div class="pbody"><div class="ptitle">${esc(e.title)}</div>`+
+      star+`<div class="pbody"><div class="ptitle">${esc(e.title)}</div>`+
       venue+
-      `<div class="prow ptime">◷ ${dayLabel(e.date)} @ ${esc(when)} · ${e.paid?'TICKETED':'FREE'}</div>`+
+      `<div class="prow ptime">◷ ${dayLabel(e.date)} @ ${esc(when)} · ${priceLabel(e)}</div>`+
       desc+actions+`</div>`,
       {maxWidth:250,minWidth:210,autoPan:true}
     );
@@ -697,14 +741,16 @@ function renderMap(){
 }
 
 // ── Badge ──────────────────────────────────────────────────────────────────
-function renderBadge(){
+function renderBadge(mapCnt){
   const badge=document.getElementById('badge');
   const sel=DATES[dayIdx];
   const fest=inFeesten(sel);
   if(view==='map'){
-    const n=renderMap()||0;
+    const n=(mapCnt!=null?mapCnt:renderMap())||0;
+    // events that match today's filters but have no coords → can't be on the map
+    const off=sel?ALL.filter(e=>e.date===sel&&(e.lat==null||e.lng==null)&&matches(e)).length:0;
     const lbl=fest?('DAY '+feestenDay(sel)):(sel?dotLbl(sel):'──');
-    badge.innerHTML='<b>'+n+'</b> ON '+esc(lbl);
+    badge.innerHTML='<b>'+n+'</b> ON '+esc(lbl)+(off?' <span style="color:var(--dim)">+'+off+' OFF-MAP</span>':'');
   }else{
     let list=ALL.filter(matches);
     if(listMode==='day'&&sel) list=list.filter(e=>e.date===sel);
@@ -713,8 +759,8 @@ function renderBadge(){
   badge.classList.toggle('feesten',fest&&view==='map');
 }
 function renderAll(){
-  if(view==='map') renderMap(); else renderFeed();
-  renderBadge();
+  if(view==='map'){ renderBadge(renderMap()); }
+  else { renderFeed(); renderBadge(); }
   updateRouteBtn();
 }
 
@@ -789,11 +835,11 @@ function setDay(i,opts){
   const clamped=Math.max(0,Math.min(n-1,i));
   const changed=clamped!==dayIdx;
   dayIdx=clamped;
-  // secret gesture: hit the far-left 3× within 1.5s
-  if(dayIdx===0 && (!opts||!opts.silent)){
+  // secret doorway: slam the rail to the far-left 3× within 2s → UNDERGHENT
+  if(dayIdx===0 && (!opts||(!opts.silent&&!opts.nohit))){
     const now=Date.now();
     minHits.push(now);
-    minHits=minHits.filter(t=>now-t<=1500);
+    minHits=minHits.filter(t=>now-t<=2000);
     if(minHits.length>=3){ minHits=[]; window.location.href=UNDERGHENT_URL; return; }
   }
   if(changed || (opts&&opts.force)) renderAll(); else renderRail();
@@ -814,7 +860,7 @@ railMid.addEventListener('pointerdown',e=>{
   if(!DATES.length) return;
   dragging=true;
   railMid.setPointerCapture(e.pointerId);
-  setDay(idxFromClientX(e.clientX));
+  setDay(idxFromClientX(e.clientX),{nohit:true}); // gesture counts on release only
 });
 railMid.addEventListener('pointermove',e=>{
   if(!dragging) return;
@@ -868,7 +914,31 @@ function defaultDateIndex(){
   const i=DATES.findIndex(d=>d>=today);
   return i>=0?i:0;
 }
+// ── Loader overlay ─────────────────────────────────────────────────────────
+const LOAD_MSGS=[
+  'BRIBING THE DOORMAN…','UNTANGLING THE CABLES…','WAKING UP THE DJ…',
+  'POLISHING THE COBBLESTONES…','HERDING PIGEONS OFF THE STAGE…',
+  'COUNTING DISCO BALLS…','SOUNDCHECK… ÉÉN… TWEE…','CHILLING THE BEERS…',
+  'CONVINCING THE DRAGON TO COME DOWN…','TAPPING INTO THE CITY SIGNAL…'
+];
+let loadMsgTimer=null;
+function startLoader(){
+  const msg=document.getElementById('loadmsg');
+  let i=Math.floor(Math.random()*LOAD_MSGS.length);
+  msg.textContent=LOAD_MSGS[i];
+  loadMsgTimer=setInterval(()=>{ i=(i+1)%LOAD_MSGS.length; msg.textContent=LOAD_MSGS[i]; },1400);
+}
+function stopLoader(){
+  clearInterval(loadMsgTimer);
+  const el=document.getElementById('loader');
+  el.classList.add('bye');
+  setTimeout(()=>el.remove(),450);
+}
 async function load(){
+  startLoader();
+  try{ await loadData(); } finally{ stopLoader(); }
+}
+async function loadData(){
   const status=document.getElementById('status');
   const [fbRes,feRes]=await Promise.allSettled([fetchCSV(FB_CSV_URL),fetchCSV(FEESTEN_CSV_URL)]);
 
