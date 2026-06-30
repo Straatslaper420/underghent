@@ -42,6 +42,10 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .badge{font-size:9.5px;color:var(--dim);letter-spacing:.18em;white-space:nowrap}
 .badge b{color:var(--green);font-weight:700}
 .badge.feesten b{color:var(--gold)}
+.badge .offmaplink{cursor:pointer;color:var(--dim);border-bottom:1px dotted var(--dim);
+  padding-bottom:1px;transition:color .12s,border-color .12s,text-shadow .12s}
+.badge .offmaplink:hover,.badge .offmaplink:focus{color:var(--pink);border-color:var(--pink);
+  text-shadow:0 0 8px rgba(255,45,120,.35);outline:none}
 
 /* ── Control bar ────────────────────────────────────────────────────────── */
 #bar{flex-shrink:0;background:var(--bg);border-bottom:1px solid var(--line);
@@ -154,11 +158,16 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 
 /* ── List view ──────────────────────────────────────────────────────────── */
 #feed{max-width:660px;margin:0 auto;padding:14px 14px 50px}
-#listmode{display:flex;gap:6px;margin-bottom:14px}
+#listmode{display:flex;gap:6px;margin-bottom:14px;align-items:center;flex-wrap:wrap}
 .lm{font-size:9px;letter-spacing:.14em;padding:7px 11px;border:1px solid var(--line);
   background:var(--panel);color:var(--dim);cursor:pointer;font-family:inherit}
 .lm.on{border-color:var(--green);color:var(--green)}
 .lmnav{margin-left:auto;display:flex;gap:6px}
+.lmlabel{font-size:8px;letter-spacing:.24em;color:var(--dim);padding:0 1px 0 6px;align-self:center}
+.lmday{min-width:30px;text-align:center;padding:7px 8px;letter-spacing:.06em}
+.lmday.on{border-color:var(--gold);color:var(--gold);box-shadow:0 0 10px rgba(255,215,0,.3)}
+.lmoff{margin-left:auto;border-color:var(--line)}
+.lmoff.on{border-color:var(--pink);color:var(--pink);box-shadow:0 0 10px rgba(255,45,120,.25)}
 .daygroup{margin-bottom:24px}
 .dayhdr{position:sticky;top:0;z-index:5;background:var(--bg);
   display:flex;align-items:center;gap:9px;
@@ -365,6 +374,7 @@ let activeGroups = new Set();
 let q = '';
 let view = 'map';
 let listMode = 'day';         // 'day' (follows the rail) | 'all'
+let offMapOnly = false;       // list-only: show events with no map coords
 let starFilterOn = false;
 const STARRED = new Set();
 let wasFeesten = false;
@@ -648,15 +658,22 @@ function renderFeed(){
   const feed=document.getElementById('feed');
   const sel=DATES[dayIdx];
   let list=ALL.filter(matches);
+  if(offMapOnly) list=list.filter(e=>e.lat==null||e.lng==null);
   if(listMode==='day' && sel) list=list.filter(e=>e.date===sel);
 
-  // mode bar: DAY (rail-linked, with ◀ ▶) vs ALL DAYS
+  // mode bar: ALL DAYS · the Gentse Feesten days (1…N) · OFF-MAP toggle.
+  // Non-feesten days are reached by sliding the map rail (for now).
+  const feestDates=DATES.filter(inFeesten);
+  const dayBtns=feestDates.map(d=>{
+    const on=listMode==='day' && DATES[dayIdx]===d;
+    return `<button class="lm lmday${on?' on':''}" data-lmday="${esc(d)}"
+      title="${esc(dayLabel(d))}">${feestenDay(d)}</button>`;
+  }).join('');
   const modeBar=`<div id="listmode">
-    <button class="lm${listMode==='day'?' on':''}" data-lm="day">${sel?esc(dayLabel(sel)):'DAY'}</button>
     <button class="lm${listMode==='all'?' on':''}" data-lm="all">ALL DAYS</button>
-    ${listMode==='day'?`<span class="lmnav">
-      <button class="lm" data-lnav="-1" aria-label="Previous day">◀</button>
-      <button class="lm" data-lnav="1" aria-label="Next day">▶</button></span>`:''}
+    ${dayBtns?`<span class="lmlabel">FEESTEN DAY</span>${dayBtns}`:''}
+    <button class="lm lmoff${offMapOnly?' on':''}" data-lmoff="1"
+      title="Show only events that have no map location">⚐ OFF-MAP</button>
   </div>`;
 
   if(!list.length){
@@ -674,11 +691,22 @@ function renderFeed(){
   wireListMode();
 }
 function wireListMode(){
+  // ALL DAYS — clears day scope and off-map filter
   document.querySelectorAll('#listmode .lm[data-lm]').forEach(b=>{
-    b.addEventListener('click',()=>{ listMode=b.dataset.lm; renderAll(); });
+    b.addEventListener('click',()=>{ listMode=b.dataset.lm; offMapOnly=false; renderAll(); });
   });
-  document.querySelectorAll('#listmode .lm[data-lnav]').forEach(b=>{
-    b.addEventListener('click',()=>stepDay(parseInt(b.dataset.lnav,10)));
+  // Feesten day number — jump to that day, clear off-map filter
+  document.querySelectorAll('#listmode .lm[data-lmday]').forEach(b=>{
+    b.addEventListener('click',()=>{
+      const i=DATES.indexOf(b.dataset.lmday);
+      if(i<0) return;
+      listMode='day'; offMapOnly=false;
+      setDay(i,{force:true,nohit:true});
+    });
+  });
+  // OFF-MAP — toggle the coords-less filter (layers on the current day scope)
+  document.querySelectorAll('#listmode .lm[data-lmoff]').forEach(b=>{
+    b.addEventListener('click',()=>{ offMapOnly=!offMapOnly; renderAll(); });
   });
 }
 
@@ -750,7 +778,9 @@ function renderBadge(mapCnt){
     // events that match today's filters but have no coords → can't be on the map
     const off=sel?ALL.filter(e=>e.date===sel&&(e.lat==null||e.lng==null)&&matches(e)).length:0;
     const lbl=fest?('DAY '+feestenDay(sel)):(sel?dotLbl(sel):'──');
-    badge.innerHTML='<b>'+n+'</b> ON '+esc(lbl)+(off?' <span style="color:var(--dim)">+'+off+' OFF-MAP</span>':'');
+    badge.innerHTML='<b>'+n+'</b> ON '+esc(lbl)+(off
+      ? ' <span class="offmaplink" role="button" tabindex="0" title="Show these off-map events in a list">+'+off+' OFF-MAP</span>'
+      : '');
   }else{
     let list=ALL.filter(matches);
     if(listMode==='day'&&sel) list=list.filter(e=>e.date===sel);
@@ -763,6 +793,21 @@ function renderAll(){
   else { renderFeed(); renderBadge(); }
   updateRouteBtn();
 }
+
+// Jump to the LIST showing only off-map events (no coords) for the current scope.
+function showOffMap(){
+  offMapOnly=true;
+  if(view!=='list') setView('list'); else renderAll();
+}
+// The badge "+N OFF-MAP" text acts as a button (delegated; badge is re-rendered).
+(function wireBadgeOffMap(){
+  const badge=document.getElementById('badge');
+  if(!badge) return;
+  badge.addEventListener('click',e=>{ if(e.target.closest('.offmaplink')) showOffMap(); });
+  badge.addEventListener('keydown',e=>{
+    if((e.key==='Enter'||e.key===' ')&&e.target.closest('.offmaplink')){ e.preventDefault(); showOffMap(); }
+  });
+})();
 
 // ── Confetti ───────────────────────────────────────────────────────────────
 function partyConfetti(){
@@ -1151,6 +1196,7 @@ initStarUI();
 setView('map');
 tuneIn();
 load();
+/* off-map filter + feesten day list selector — v5.1 */
 </script>
 </body>
 </html>
