@@ -123,24 +123,24 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 /* ── Popups ─────────────────────────────────────────────────────────────── */
 .leaflet-popup-content-wrapper{background:var(--panel2)!important;border:1px solid var(--line)!important;
   border-radius:0!important;box-shadow:0 8px 30px rgba(0,0,0,.7)!important;padding:0!important;position:relative}
-.leaflet-popup-content{margin:0!important;color:var(--txt);width:auto!important}
+.leaflet-popup-content{margin:0!important;color:var(--txt);width:248px!important}
 .leaflet-popup-tip-container{display:none}
 .leaflet-popup-close-button{color:var(--pink)!important;font-size:17px!important;
   right:5px!important;top:3px!important;z-index:6}
-.pbody{padding:11px 13px 12px}
-.ptitle{font-size:11px;font-weight:700;color:var(--txt);letter-spacing:.04em;line-height:1.45;
-  margin-bottom:7px;padding-right:14px}
-.prow{font-size:8.5px;margin-bottom:3px;letter-spacing:.06em;line-height:1.55;color:var(--dim)}
+.pbody{padding:12px 14px 13px;box-sizing:border-box}
+.ptitle{font-size:13px;font-weight:700;color:var(--txt);letter-spacing:.02em;line-height:1.35;
+  margin-bottom:8px;padding-right:30px;word-break:normal;overflow-wrap:anywhere}
+.prow{font-size:10px;margin-bottom:4px;letter-spacing:.04em;line-height:1.5;color:var(--dim)}
 .pvenue a{color:var(--pink);text-decoration:underline;text-underline-offset:2px}
 .ptime{color:var(--gold)}
 .pdesc{color:var(--txt);opacity:.75;margin-top:6px;line-height:1.6;
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .pactions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:9px}
-.plink{display:inline-block;font-size:8px;color:var(--green);border:1px solid var(--green);
-  padding:4px 8px;text-decoration:none;letter-spacing:.14em;transition:background .12s,color .12s}
+.plink{display:inline-block;font-size:9px;color:var(--green);border:1px solid var(--green);
+  padding:5px 9px;text-decoration:none;letter-spacing:.12em;transition:background .12s,color .12s}
 .plink:hover{background:var(--green);color:#06231a}
 .ptags{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
-.tag{font-size:7.5px;letter-spacing:.06em;color:var(--dim);border:1px solid var(--line);padding:2px 5px}
+.tag{font-size:8.5px;letter-spacing:.05em;color:var(--dim);border:1px solid var(--line);padding:3px 6px}
 .tag.stat{color:var(--mint);border-color:#1d3a30}
 
 /* ── Zoom / attribution ─────────────────────────────────────────────────── */
@@ -201,7 +201,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   color:#39414f;padding:2px;font-size:16px;transition:color .1s,text-shadow .1s}
 .starbtn:hover{color:var(--gold)}
 .starbtn.starred{color:var(--gold);text-shadow:0 0 7px rgba(255,215,0,.6)}
-.popstar{position:absolute;top:26px;right:5px;z-index:6;width:22px;height:22px;font-size:12px;
+.popstar{position:absolute;top:5px;right:26px;z-index:6;width:20px;height:20px;font-size:12px;
   display:flex;align-items:center;justify-content:center;background:var(--panel2);border:1px solid var(--line)}
 .popstar.starred{border-color:var(--gold)}
 .cstar{display:flex;align-items:center;flex-shrink:0;padding:0 12px;border-left:1px dashed var(--line)}
