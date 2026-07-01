@@ -9,6 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
 <style>
 /* ════════════════════════════════════════════════════════════════════════
    GHENT//EVENT v5 — "festival signal on an underground carrier"
@@ -119,6 +121,17 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   animation:dotin .22s ease-out}
 @keyframes dotin{from{opacity:0;transform:translateY(5px) scale(.85)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.edot{animation:none}}
+/* Cluster bubble — squares with many stacked events collapse into a count that
+   spiderfies on click, so every pin stays reachable. */
+.eclust{width:34px;height:34px;border-radius:50%;background:var(--panel2);
+  border:1px solid var(--green);color:var(--green);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.02em;
+  box-shadow:0 0 12px rgba(0,255,136,.4),0 2px 8px rgba(0,0,0,.55)}
+.eclust.big{width:42px;height:42px;font-size:12px;border-color:var(--gold);color:var(--gold);
+  box-shadow:0 0 14px rgba(255,215,0,.45),0 2px 8px rgba(0,0,0,.55)}
+.leaflet-cluster-anim .leaflet-marker-icon,.leaflet-cluster-anim .leaflet-marker-shadow{
+  transition:transform .25s ease-out,opacity .25s ease-in}
 
 /* ── Popups ─────────────────────────────────────────────────────────────── */
 .leaflet-popup-content-wrapper{background:var(--panel2)!important;border:1px solid var(--line)!important;
@@ -127,9 +140,10 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .leaflet-popup-tip-container{display:none}
 .leaflet-popup-close-button{color:var(--pink)!important;font-size:17px!important;
   right:5px!important;top:3px!important;z-index:6}
-.pbody{padding:12px 14px 13px;box-sizing:border-box}
+.pwrap{display:flex;align-items:stretch}
+.pbody{padding:12px 14px 13px;box-sizing:border-box;flex:1;min-width:0}
 .ptitle{font-size:13px;font-weight:700;color:var(--txt);letter-spacing:.02em;line-height:1.35;
-  margin-bottom:8px;padding-right:30px;word-break:normal;overflow-wrap:anywhere}
+  margin-bottom:8px;padding-right:18px;word-break:normal;overflow-wrap:anywhere}
 .prow{font-size:10px;margin-bottom:4px;letter-spacing:.04em;line-height:1.5;color:var(--dim)}
 .pvenue a{color:var(--pink);text-decoration:underline;text-underline-offset:2px}
 .ptime{color:var(--gold)}
@@ -201,9 +215,12 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   color:#39414f;padding:2px;font-size:16px;transition:color .1s,text-shadow .1s}
 .starbtn:hover{color:var(--gold)}
 .starbtn.starred{color:var(--gold);text-shadow:0 0 7px rgba(255,215,0,.6)}
-.popstar{position:absolute;top:5px;right:26px;z-index:6;width:20px;height:20px;font-size:12px;
-  display:flex;align-items:center;justify-content:center;background:var(--panel2);border:1px solid var(--line)}
-.popstar.starred{border-color:var(--gold)}
+.popstar{position:static;flex-shrink:0;align-self:stretch;width:46px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--panel);border:0;border-left:1px dashed var(--line);
+  font-size:24px;line-height:1;color:#39414f;cursor:pointer;font-family:inherit}
+.popstar:hover{color:var(--gold)}
+.popstar.starred{color:var(--gold);text-shadow:0 0 8px rgba(255,215,0,.6)}
 .cstar{display:flex;align-items:center;flex-shrink:0;padding:0 12px;border-left:1px dashed var(--line)}
 .liststar{font-size:22px;padding:4px}
 
@@ -434,6 +451,12 @@ function inFeesten(d){ return !!d && d>=FEESTEN_START && d<=FEESTEN_END; }
 function feestenDay(d){ return Math.round((new Date(d+'T12:00:00')-new Date(FEESTEN_START+'T12:00:00'))/864e5)+1; }
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function fmtStat(n){return n>=1000?(n/1000).toFixed(1).replace(/\.0$/,'')+'k':String(n);}
+// Time label: a real clock time, else "ALL DAY" for drop-in events (page said
+// "Hele dag"), else "TIME TBA" when the source truly lists no time.
+function whenLabel(e){
+  if(e.time) return e.time+(e.endTime?'–'+e.endTime:'');
+  return e.allDay?'ALL DAY':'TIME TBA';
+}
 
 // ── CSV parsing (RFC-4180-ish) ─────────────────────────────────────────────
 function parseCSV(text){
@@ -518,6 +541,7 @@ function mapRow(row,source){
     date: normDate(pick(row,['date_start','gf_date_start'])),
     time: normTime(pick(row,['hour_start','gf_time_start'])),
     endTime: normTime(pick(row,['hour_end','gf_time_end'])),
+    allDay: isTruthyCell(row.gf_all_day),
     lat: toNum(pick(row,['latitude_override','latitude','gf_lat'])),
     lng: toNum(pick(row,['longitude_override','longitude','gf_lng'])),
     desc: pick(row,['description','gf_description','details']),
@@ -675,7 +699,7 @@ function cardHtml(e){
   const stat=(e.going||e.interested)
     ? `<span class="tag stat">▲ ${fmtStat(e.going||0)} GOING · ${fmtStat(e.interested||0)} INT</span>` : '';
   const edge=eventGroup(e).color;
-  const when=e.time?(e.time+(e.endTime?'–'+e.endTime:'')):'TIME TBA';
+  const when=whenLabel(e);
   return `<a class="card" style="border-left-color:${edge}"${href}>
     <div class="thumb">${thumb}</div>
     <div class="cbody">
@@ -755,7 +779,7 @@ function buildDayMarkers(date){
     const g=eventGroup(e);
     const icon=L.divIcon({
       className:'',
-      html:`<div class="edot" style="background:${g.color};border-color:${g.color};color:${textOn(g.color)}">${e.time||'TBA'}</div>`,
+      html:`<div class="edot" style="background:${g.color};border-color:${g.color};color:${textOn(g.color)}">${e.time||(e.allDay?'ALL DAY':'TBA')}</div>`,
       iconSize:[52,20],iconAnchor:[26,10]
     });
     const m=L.marker([e.lat,e.lng],{icon});
@@ -765,15 +789,15 @@ function buildDayMarkers(date){
     const actions=`<div class="pactions">${link}<span class="ptags">${tags}</span></div>`;
     const mapsUrl=`https://www.google.com/maps/search/?api=1&query=${e.lat},${e.lng}`;
     const venue=`<div class="prow pvenue">◈ <a href="${mapsUrl}" target="_blank" rel="noopener">${esc(e.venue||'VENUE TBA')}</a></div>`;
-    const when=e.time?(e.time+(e.endTime?'–'+e.endTime:'')):'TBA';
+    const when=whenLabel(e);
     const skey=eventKey(e), son=isStarred(skey);
     const star=`<button type="button" class="starbtn popstar${son?' starred':''}" data-key="${esc(skey)}"
       aria-pressed="${son?'true':'false'}" aria-label="${son?'Remove from starred':'Add to starred'}">${son?'★':'☆'}</button>`;
     m.bindPopup(
-      star+`<div class="pbody"><div class="ptitle">${esc(e.title)}</div>`+
+      `<div class="pwrap"><div class="pbody"><div class="ptitle">${esc(e.title)}</div>`+
       venue+
       `<div class="prow ptime">◷ ${dayLabel(e.date)} @ ${esc(when)} · ${priceLabel(e)}</div>`+
-      desc+actions+`</div>`,
+      desc+actions+`</div>`+star+`</div>`,
       {maxWidth:250,minWidth:210,autoPan:true}
     );
     entries.push({ev:e,marker:m});
@@ -787,7 +811,16 @@ function renderMap(){
   if(dayLayer){ map.removeLayer(dayLayer); dayLayer=null; }
   let cnt=0;
   if(sel){
-    dayLayer=L.layerGroup();
+    // Gentse Feesten crams up to ~150 events onto a single square, so plain
+    // markers stack and hide each other (that's why some starred pins seemed to
+    // vanish). Cluster overlapping ones into a count that spiderfies on click.
+    dayLayer = (window.L && L.markerClusterGroup) ? L.markerClusterGroup({
+      maxClusterRadius:44, showCoverageOnHover:false, spiderfyOnMaxZoom:true,
+      spiderfyDistanceMultiplier:1.6, chunkedLoading:true, removeOutsideVisibleBounds:true,
+      iconCreateFunction:c=>{ const n=c.getChildCount();
+        return L.divIcon({html:'<div class="eclust'+(n>=25?' big':'')+'">'+n+'</div>',
+          className:'', iconSize:[n>=25?42:34,n>=25?42:34]}); }
+    }) : L.layerGroup();
     buildDayMarkers(sel).forEach(({ev,marker})=>{
       if(matches(ev)){ dayLayer.addLayer(marker); cnt++; }
     });
@@ -820,7 +853,15 @@ function renderBadge(mapCnt){
   }else{
     let list=ALL.filter(matches);
     if(listMode==='day'&&sel) list=list.filter(e=>e.date===sel);
-    badge.innerHTML='<b>'+list.length+'</b> SIGNALS';
+    // How many of these signals have no map coords → can't be shown on the map.
+    const off=list.filter(e=>e.lat==null||e.lng==null).length;
+    if(offMapOnly){
+      badge.innerHTML='<b>'+off+'</b> OFF-MAP SIGNAL'+(off===1?'':'S');
+    }else{
+      badge.innerHTML='<b>'+list.length+'</b> SIGNALS'+(off
+        ? ' <span class="offmaplink" role="button" tabindex="0" title="Show only these off-map events">+'+off+' OFF-MAP</span>'
+        : '');
+    }
   }
   badge.classList.toggle('feesten',fest&&view==='map');
 }

@@ -3,8 +3,10 @@
  *
  * Subcommands (see package.json scripts):
  *   scrape   crawl day pages + detail pages → write data/feesten.json
+ *   geocode  read data/feesten.json → backfill coords for off-map events
+ *            that have an address (Nominatim, cached) → write it back
  *   export   read data/feesten.json → full-refresh the `feesten` tab
- *   run      scrape, then export
+ *   run      scrape, geocode, then export
  *   dev      alias of scrape
  *
  * Env (.env):
@@ -23,6 +25,7 @@ import { fileURLToPath } from 'url'
 import { scrapeListings } from './scrape.js'
 import { fetchDetail } from './detail.js'
 import { concurrentMap } from './http.js'
+import { geocodeMissing } from './geocode.js'
 import { fullRefreshToTab } from './sheets.js'
 import type { FeestenEvent } from './types.js'
 
@@ -57,6 +60,22 @@ async function scrape(): Promise<FeestenEvent[]> {
   writeFileSync(JSON_OUT, JSON.stringify(events, null, 2), 'utf-8')
   console.log(`\n✓ Wrote ${events.length} events → ${JSON_OUT}`)
   return events
+}
+
+async function geocodeStage(events?: FeestenEvent[]): Promise<FeestenEvent[]> {
+  let evs = events
+  if (!evs) {
+    if (!existsSync(JSON_OUT)) {
+      console.error(`\n✗ ${JSON_OUT} not found — run "npm run scrape" first.`)
+      process.exit(1)
+    }
+    evs = JSON.parse(readFileSync(JSON_OUT, 'utf-8')) as FeestenEvent[]
+  }
+  console.log('\n[geo] Backfilling coordinates for off-map events with an address…')
+  await geocodeMissing(evs)
+  writeFileSync(JSON_OUT, JSON.stringify(evs, null, 2), 'utf-8')
+  console.log(`✓ Wrote geocoded events → ${JSON_OUT}`)
+  return evs
 }
 
 async function exportToSheet(): Promise<void> {
@@ -102,9 +121,13 @@ async function main() {
         console.error('\n✗ No events scraped — aborting.')
         process.exit(1)
       }
-      console.log('\n⏭  Inspect data/feesten.json, then run: npm run export')
+      console.log('\n⏭  Inspect data/feesten.json, then run: npm run geocode (optional) → npm run export')
       break
     }
+    case 'geocode':
+      await geocodeStage()
+      console.log('\n⏭  Inspect data/feesten.json, then run: npm run export')
+      break
     case 'export':
       await exportToSheet()
       break
@@ -114,11 +137,12 @@ async function main() {
         console.error('\n✗ No events scraped — aborting.')
         process.exit(1)
       }
+      await geocodeStage(events)
       await exportToSheet()
       break
     }
     default:
-      console.error(`Unknown command "${cmd}". Use: scrape | export | run | dev`)
+      console.error(`Unknown command "${cmd}". Use: scrape | geocode | export | run | dev`)
       process.exit(1)
   }
 }

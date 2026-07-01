@@ -34,6 +34,7 @@ export interface FeestenEvent {
   endDateStart: string | null // ISO date of latest day, if multi-day
   timeEnd: string | null // "HH:MM" (last showtime), if more than one time
   allTimes: string[] // every showtime listed on the page, normalized
+  allDay: boolean // true when the page lists "Hele dag" instead of a clock time
 
   // ── pricing detail ──────────────────────────────────────────
   priceDetail: string | null // full price description text

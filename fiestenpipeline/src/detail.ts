@@ -77,33 +77,60 @@ export function parseDetail(html: string, detailUrl: string, days: number[]): Fe
   // ── title ────────────────────────────────────────────────────────────────
   const title = clean($('h1').first().text())
 
-  // ── coordinates from the Google Maps daddr link ──────────────────────────
+  // ── location: read from the EVENT-location block (.group-location-sidebar) ─
+  // A page can list two addresses: an "Info + Reservatie" organiser address
+  // (first in document order) and the actual event location, which is the one
+  // that carries the Google Maps link. The old code grabbed the first address
+  // by mistake, so pins landed on the organiser's HQ (e.g. a SUP tour showed
+  // the company office instead of the launch quay). Scope everything to the
+  // sidebar block, falling back to the whole document when it's absent.
+  const sidebar = $('.group-location-sidebar').first()
+  const hasSidebar = sidebar.length > 0
+  const locText = (sel: string): string => {
+    if (hasSidebar) {
+      const v = clean(sidebar.find(sel).first().text())
+      if (v) return v
+    }
+    return clean($(sel).first().text())
+  }
+
+  // ── coordinates from the Google Maps daddr link (event block first) ───────
   let lat: number | null = null
   let lng: number | null = null
-  const mapsHref = $('.gf-google-maps-link a').first().attr('href') ?? ''
+  const mapsHref =
+    (hasSidebar ? sidebar.find('.gf-google-maps-link a').first().attr('href') : '') ||
+    $('.gf-google-maps-link a').first().attr('href') ||
+    ''
   const coordM = mapsHref.match(/daddr=(-?\d+\.\d+),(-?\d+\.\d+)/)
+  let daddrAddress: string | null = null
   if (coordM) {
     lat = Number(coordM[1])
     lng = Number(coordM[2])
+  } else if (mapsHref) {
+    // daddr holds a TEXT address (e.g. "Tegenover Bijlokekaai 7, 9000, Gent")
+    // rather than coordinates — keep it so the geocoder can still place it.
+    const m = mapsHref.match(/[?&]daddr=([^&]+)/)
+    if (m) daddrAddress = clean(decodeURIComponent(m[1]).replace(/\s*,\s*,/g, ', '))
   }
 
-  // ── venue + address (location group) ──────────────────────────────────────
+  // ── venue + address (from the event-location block) ───────────────────────
   // The "skip to location" link carries the full venue name ("STAM Stadsmuseum
   // Gent"); the sidebar h3.location-name is sometimes just an acronym ("STAM").
   const venue =
     clean($('.field--name-gf-skip-to-location a').first().text()) ||
     clean($('a.location').first().text()) ||
-    clean($('.location-name').first().text()) ||
+    locText('.location-name') ||
     null
 
-  const street = clean($('.field--name-address.location-address').first().text())
-  const postal = clean($('.field--name-postalcode.location-postalcode').first().text())
-  const locality = clean($('.field--name-locality.location-locality').first().text())
+  const street = locText('.field--name-address.location-address')
+  const postal = locText('.field--name-postalcode.location-postalcode')
+  const locality = locText('.field--name-locality.location-locality')
   const addressParts: string[] = []
   if (street) addressParts.push(street)
   const cityLine = [postal, locality].filter(Boolean).join(' ')
   if (cityLine) addressParts.push(cityLine)
-  const address = addressParts.length ? addressParts.join(', ') : null
+  let address = addressParts.length ? addressParts.join(', ') : null
+  if (!address && daddrAddress) address = daddrAddress
 
   const venuePhone =
     clean($('.field--name-phone.location-phone').first().text()).replace(/^tel:/i, '') || null
@@ -111,9 +138,15 @@ export function parseDetail(html: string, detailUrl: string, days: number[]): Fe
   const venueUrl = absUrl($('.field--name-url.location-url a').first().attr('href'))
 
   // ── timing: every showtime listed ────────────────────────────────────────
+  // Drop-in events (expos, treasure hunts) list "Hele dag" instead of a clock
+  // time — capture that as an all-day flag so the frontend can label them
+  // properly rather than showing a misleading "TIME TBA".
   const allTimes: string[] = []
+  let allDay = false
   $('.field--name-gf-event-time .field__item').each((_, el) => {
-    const t = normalizeTime(clean($(el).text()))
+    const raw = clean($(el).text())
+    if (/hele\s*dag/i.test(raw)) { allDay = true; return }
+    const t = normalizeTime(raw)
     if (t) allTimes.push(t)
   })
   const timeStart = allTimes[0] ?? null
@@ -239,6 +272,7 @@ export function parseDetail(html: string, detailUrl: string, days: number[]): Fe
     endDateStart,
     timeEnd,
     allTimes,
+    allDay,
 
     priceDetail,
     reductionGroups,

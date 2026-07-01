@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "scrape": "tsx src/run.ts scrape",
-    "export": "tsx src/run.ts export",
-    "run":    "tsx src/run.ts run",
-    "dev":    "tsx src/run.ts dev"
+    "scrape":  "tsx src/run.ts scrape",
+    "geocode": "tsx src/run.ts geocode",
+    "export":  "tsx src/run.ts export",
+    "run":     "tsx src/run.ts run",
+    "dev":     "tsx src/run.ts dev"
   },
   "dependencies": {
     "cheerio":    "^1.0.0",

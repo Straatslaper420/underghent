@@ -48,6 +48,7 @@ const GF_EXTRA: Array<[string, (e: FeestenEvent) => string]> = [
   ['gf_time_start',         e => s(e.timeStart)],
   ['gf_time_end',           e => s(e.timeEnd)],
   ['gf_all_times',          e => e.allTimes.join(', ')],
+  ['gf_all_day',            e => (e.allDay ? 'true' : '')],
   ['gf_lat',                e => s(e.lat)],
   ['gf_lng',                e => s(e.lng)],
   ['gf_categories',         e => e.categories.join(', ')],
