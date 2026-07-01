@@ -258,6 +258,33 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .rm-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
 .rm-notice{font-size:8px;color:var(--gold);border:1px solid var(--gold);padding:6px 8px;
   margin-top:12px;line-height:1.5;letter-spacing:.05em}
+/* ── Live parking list ─────────────────────────────────────────────────────*/
+.rm-park-head{display:flex;align-items:center;justify-content:space-between;margin:16px 0 6px}
+.rm-park-head span{font-size:8px;color:var(--dim);letter-spacing:.22em}
+.rm-mini{background:var(--panel);border:1px solid var(--line);color:var(--dim);font-family:inherit;
+  font-size:9px;letter-spacing:.06em;padding:3px 7px;cursor:pointer;flex-shrink:0}
+.rm-mini:hover{border-color:var(--gold);color:var(--gold)}
+.rm-parking{max-height:196px;overflow-y:auto;border:1px solid var(--line);background:var(--panel2)}
+.rm-parking .rm-pmsg{font-size:9px;color:var(--dim);letter-spacing:.1em;padding:12px 10px;text-align:center}
+.rm-prow{display:flex;align-items:center;gap:8px;padding:7px 9px;border-bottom:1px solid var(--line)}
+.rm-prow:last-child{border-bottom:none}
+.rm-prow:hover{background:var(--panel)}
+.rm-pdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.rm-pinfo{flex:1;min-width:0;cursor:pointer}
+.rm-pname{font-size:10px;color:var(--txt);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rm-pinfo:hover .rm-pname{color:var(--gold)}
+.rm-pmeta{font-size:8px;color:var(--dim);letter-spacing:.04em;margin-top:2px}
+.rm-pfree{color:var(--green)} .rm-pbusy{color:var(--gold)} .rm-pfull{color:var(--pink)}
+.rm-pclosed{color:var(--dim)}
+.rm-pacts{display:flex;gap:4px;flex-shrink:0}
+.rm-pbtn{background:var(--panel);border:1px solid var(--line);color:var(--dim);font-family:inherit;
+  font-size:8px;letter-spacing:.06em;padding:3px 5px;cursor:pointer;text-decoration:none;line-height:1.4}
+.rm-pbtn:hover{border-color:var(--green);color:var(--green)}
+.rm-pmap:hover{border-color:var(--gold);color:var(--gold)}
+.rm-check{display:flex;align-items:flex-start;gap:8px;margin-top:16px;font-size:9px;color:var(--dim);
+  letter-spacing:.08em;line-height:1.5;cursor:pointer}
+.rm-check input{margin-top:1px;accent-color:var(--green);flex-shrink:0}
+.rm-check:hover{color:var(--txt)}
 
 @media (max-width:560px){
   #logo{font-size:11px;letter-spacing:.22em}
@@ -334,6 +361,15 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
       <label class="rm-lbl" for="rm-day">DAY</label>
       <select id="rm-day" class="rm-input"></select>
     </div>
+    <div class="rm-park-head">
+      <span>▣ LIVE PARKING · GENT</span>
+      <button id="rm-park-refresh" type="button" class="rm-mini">↻ REFRESH</button>
+    </div>
+    <div id="rm-parking" class="rm-parking"><div class="rm-pmsg">TAP TO LOAD LIVE OCCUPANCY…</div></div>
+    <label class="rm-check">
+      <input type="checkbox" id="rm-split"/>
+      <span>SPLIT INTO ONE-WAY LEGS — opens each stop as its own route in a separate tab. Cycle tabs to navigate point-to-point.</span>
+    </label>
     <div id="rm-notice" class="rm-notice" style="display:none"></div>
     <div class="rm-actions">
       <button id="rm-cancel" type="button" class="rm-btn">CANCEL</button>
@@ -1028,6 +1064,103 @@ const LS_STARFILTER='underghent.starredFilter.v1';
 const TRAVELMODE='walking';
 const DEFAULT_START='Gent-Sint-Pieters';
 
+// ── Live parking occupancy (Stad Gent open data) ───────────────────────────
+const PARKING_URL='https://data.stad.gent/api/explore/v2.1/catalog/datasets/'
+  +'bezetting-parkeergarages-real-time/records?limit=25';
+let PARKINGS=[];          // last fetched rows
+let parkLoadedAt=0;       // epoch ms of last successful load
+
+function parkAddress(p){
+  // roadName lives inside the stringified locationanddimension blob.
+  try{
+    const d=JSON.parse(p.locationanddimension||'{}');
+    const rn=(d.roadName||'').replace(/\s*\n\s*/g,', ').trim();
+    if(rn && rn!=='?' && !/^\?/.test(rn)) return rn;
+  }catch(_){}
+  return (p.name||'Parking')+', Gent';
+}
+function parkMapUrl(p){
+  const loc=p.location;
+  if(loc&&loc.lat!=null&&loc.lon!=null)
+    return 'https://www.google.com/maps/search/?api=1&query='+loc.lat+','+loc.lon;
+  return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(parkAddress(p));
+}
+function renderParkingMsg(txt){
+  const box=document.getElementById('rm-parking');
+  if(box) box.innerHTML='<div class="rm-pmsg">'+esc(txt)+'</div>';
+}
+async function loadParkings(force){
+  const box=document.getElementById('rm-parking');
+  if(!box) return;
+  if(!force && PARKINGS.length && Date.now()-parkLoadedAt<60000){ renderParkings(); return; }
+  renderParkingMsg('LOADING LIVE OCCUPANCY…');
+  try{
+    const res=await fetch(PARKING_URL,{cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    PARKINGS=(data.results||[]).filter(p=>p&&p.name);
+    parkLoadedAt=Date.now();
+    renderParkings();
+  }catch(err){
+    console.warn('Parking fetch failed:',err);
+    renderParkingMsg('LIVE PARKING UNAVAILABLE — TRY REFRESH.');
+  }
+}
+function renderParkings(){
+  const box=document.getElementById('rm-parking');
+  if(!box) return;
+  if(!PARKINGS.length){ renderParkingMsg('NO PARKING DATA.'); return; }
+  // Open + most free first; closed sink to the bottom.
+  const rows=[...PARKINGS].sort((a,b)=>{
+    const oa=(a.isopennow&&!a.temporaryclosed)?0:1, ob=(b.isopennow&&!b.temporaryclosed)?0:1;
+    if(oa!==ob) return oa-ob;
+    return (b.availablecapacity||0)-(a.availablecapacity||0);
+  });
+  box.innerHTML=rows.map((p,i)=>{
+    const open=p.isopennow&&!p.temporaryclosed;
+    const occ=(typeof p.occupation==='number')?p.occupation:null;
+    const free=p.availablecapacity, tot=p.totalcapacity;
+    let dot='var(--dim)',cls='rm-pclosed',meta;
+    if(!open){ meta='CLOSED'; }
+    else{
+      if(occ==null){ dot='var(--dim)'; cls='rm-pbusy'; }
+      else if(occ<70){ dot='var(--green)'; cls='rm-pfree'; }
+      else if(occ<90){ dot='var(--gold)'; cls='rm-pbusy'; }
+      else{ dot='var(--pink)'; cls='rm-pfull'; }
+      meta=(free!=null?free:'?')+(tot!=null?'/'+tot:'')+' FREE'
+           +(occ!=null?' · '+occ+'% FULL':'');
+    }
+    return '<div class="rm-prow">'
+      +'<span class="rm-pdot" style="background:'+dot+'"></span>'
+      +'<div class="rm-pinfo" data-i="'+i+'" data-act="both" title="Set as start & end (park &amp; return)">'
+        +'<div class="rm-pname">'+esc(p.name)+'</div>'
+        +'<div class="rm-pmeta '+cls+'">'+esc(meta)+'</div>'
+      +'</div>'
+      +'<div class="rm-pacts">'
+        +'<button type="button" class="rm-pbtn" data-i="'+i+'" data-act="start">START</button>'
+        +'<button type="button" class="rm-pbtn" data-i="'+i+'" data-act="end">END</button>'
+        +'<a class="rm-pbtn rm-pmap" href="'+esc(parkMapUrl(p))+'" target="_blank" rel="noopener" title="Open in Google Maps">🗺</a>'
+      +'</div>'
+    +'</div>';
+  }).join('');
+}
+function applyParking(i,act){
+  const rows=[...PARKINGS].sort((a,b)=>{
+    const oa=(a.isopennow&&!a.temporaryclosed)?0:1, ob=(b.isopennow&&!b.temporaryclosed)?0:1;
+    if(oa!==ob) return oa-ob;
+    return (b.availablecapacity||0)-(a.availablecapacity||0);
+  });
+  const p=rows[i]; if(!p) return;
+  const addr=parkAddress(p);
+  const s=document.getElementById('rm-start'), e=document.getElementById('rm-end');
+  if(act==='start'||act==='both') s.value=addr;
+  if(act==='end'||act==='both')   e.value=addr;
+  const flash=(el)=>{ if(!el) return; el.style.borderColor='var(--green)';
+    setTimeout(()=>{ el.style.borderColor=''; },550); };
+  if(act==='start'||act==='both') flash(s);
+  if(act==='end'||act==='both')   flash(e);
+}
+
 function eventKey(ev){ return ev.sid || `${ev.title}|${ev.date}|${ev.venue}`; }
 
 function loadStarred(){
@@ -1082,6 +1215,7 @@ function openRouteModal(){
   document.getElementById('rm-notice').style.display='none';
   document.getElementById('routemodal').style.display='flex';
   document.getElementById('rm-start').focus();
+  loadParkings(false);
 }
 function closeRouteModal(){ document.getElementById('routemodal').style.display='none'; }
 
@@ -1097,6 +1231,27 @@ function buildRoute(){
   evs.sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
   const waypoints=evs.map(e=>
     (e.lat!=null&&e.lng!=null) ? `${e.lat},${e.lng}` : `${e.venue||'Gent'}, Gent`);
+  const n=document.getElementById('rm-notice');
+  const split=document.getElementById('rm-split').checked;
+
+  if(split){
+    // One one-way leg per hop: start→stop1, stop1→stop2, …, lastStop→end.
+    const pts=[start,...waypoints,end];
+    let opened=0,blocked=0;
+    for(let i=0;i<pts.length-1;i++){
+      const w=window.open(mapsDir(pts[i],pts[i+1]),'_blank','noopener');
+      if(w) opened++; else blocked++;
+    }
+    if(blocked){
+      n.textContent='⚠ OPENED '+opened+' OF '+(pts.length-1)+' LEGS — ALLOW POP-UPS FOR THIS SITE, THEN RETRY.';
+      n.style.display='block';
+    }else{
+      n.textContent='▶ '+opened+' ONE-WAY LEGS OPENED IN SEPARATE TABS — CYCLE TABS TO WALK POINT TO POINT.';
+      n.style.display='block';
+    }
+    return;
+  }
+
   const url='https://www.google.com/maps/dir/?api=1'
     +'&origin='+encodeURIComponent(start)
     +'&destination='+encodeURIComponent(end)
@@ -1104,12 +1259,17 @@ function buildRoute(){
     +'&travelmode='+TRAVELMODE;
   window.open(url,'_blank','noopener');
   if(waypoints.length>9){
-    const n=document.getElementById('rm-notice');
-    n.textContent='⚠ '+waypoints.length+' STOPS — GOOGLE MAPS MAY TRUNCATE VERY LONG ROUTES.';
+    n.textContent='⚠ '+waypoints.length+' STOPS — GOOGLE MAPS MAY TRUNCATE VERY LONG ROUTES. TRY SPLIT INTO LEGS.';
     n.style.display='block';
   }else{
     closeRouteModal();
   }
+}
+function mapsDir(origin,dest){
+  return 'https://www.google.com/maps/dir/?api=1'
+    +'&origin='+encodeURIComponent(origin)
+    +'&destination='+encodeURIComponent(dest)
+    +'&travelmode='+TRAVELMODE;
 }
 
 function initStarUI(){
@@ -1151,6 +1311,13 @@ function initStarUI(){
 
   document.getElementById('rm-cancel').addEventListener('click',closeRouteModal);
   document.getElementById('rm-build').addEventListener('click',buildRoute);
+  document.getElementById('rm-park-refresh').addEventListener('click',()=>loadParkings(true));
+  document.getElementById('rm-parking').addEventListener('click',e=>{
+    const t=e.target.closest('[data-act]'); if(!t) return;
+    if(t.classList.contains('rm-pmap')) return;   // let the map link open normally
+    e.preventDefault();
+    applyParking(parseInt(t.dataset.i,10), t.dataset.act);
+  });
   document.getElementById('routemodal').addEventListener('click',e=>{
     if(e.target.id==='routemodal') closeRouteModal();
   });
