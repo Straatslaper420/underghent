@@ -123,13 +123,19 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 @media (prefers-reduced-motion:reduce){.edot{animation:none}}
 /* Cluster bubble — squares with many stacked events collapse into a count that
    spiderfies on click, so every pin stays reachable. */
-.eclust{width:34px;height:34px;border-radius:50%;background:var(--panel2);
-  border:1px solid var(--green);color:var(--green);
+.eclust{width:34px;height:34px;border-radius:50%;position:relative;
   display:flex;align-items:center;justify-content:center;
-  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.02em;
-  box-shadow:0 0 12px rgba(0,255,136,.4),0 2px 8px rgba(0,0,0,.55)}
-.eclust.big{width:42px;height:42px;font-size:12px;border-color:var(--gold);color:var(--gold);
-  box-shadow:0 0 14px rgba(255,215,0,.45),0 2px 8px rgba(0,0,0,.55)}
+  border:1px solid rgba(0,0,0,.45);
+  box-shadow:0 0 12px rgba(0,255,136,.28),0 2px 8px rgba(0,0,0,.55)}
+/* dark inner disc keeps the count legible over the genre-mix donut */
+.eclust::before{content:'';position:absolute;inset:5px;border-radius:50%;
+  background:var(--panel2);box-shadow:inset 0 0 0 1px rgba(0,0,0,.35)}
+.eclust-n{position:relative;z-index:1;color:var(--green);
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.02em}
+.eclust.big{width:42px;height:42px;
+  box-shadow:0 0 14px rgba(255,215,0,.32),0 2px 8px rgba(0,0,0,.55)}
+.eclust.big::before{inset:6px}
+.eclust.big .eclust-n{font-size:12px;color:var(--gold)}
 .leaflet-cluster-anim .leaflet-marker-icon,.leaflet-cluster-anim .leaflet-marker-shadow{
   transition:transform .25s ease-out,opacity .25s ease-in}
 
@@ -783,6 +789,7 @@ function buildDayMarkers(date){
       iconSize:[52,20],iconAnchor:[26,10]
     });
     const m=L.marker([e.lat,e.lng],{icon});
+    m._grp=g.color;   // genre colour → lets the cluster bubble show a mini genre-mix donut
     const desc=e.desc?`<div class="prow pdesc">${esc(e.desc)}</div>`:'';
     const tags=(e.categories||[]).slice(0,3).map(t=>`<span class="tag">#${esc(t)}</span>`).join('');
     const link=e.url&&e.url!=='#'?`<a class="plink" href="${esc(e.url)}" target="_blank" rel="noopener">► DETAILS</a>`:'';
@@ -817,9 +824,18 @@ function renderMap(){
     dayLayer = (window.L && L.markerClusterGroup) ? L.markerClusterGroup({
       maxClusterRadius:44, showCoverageOnHover:false, spiderfyOnMaxZoom:true,
       spiderfyDistanceMultiplier:1.6, chunkedLoading:true, removeOutsideVisibleBounds:true,
-      iconCreateFunction:c=>{ const n=c.getChildCount();
-        return L.divIcon({html:'<div class="eclust'+(n>=25?' big':'')+'">'+n+'</div>',
-          className:'', iconSize:[n>=25?42:34,n>=25?42:34]}); }
+      iconCreateFunction:c=>{ const n=c.getChildCount(), big=n>=25;
+        // Tally the genre colour of every event under this cluster, then paint the
+        // bubble ring as a conic-gradient pie so the mix is readable at a glance.
+        const tally={};
+        c.getAllChildMarkers().forEach(m=>{ const col=m._grp||'#ff2d78'; tally[col]=(tally[col]||0)+1; });
+        const parts=Object.entries(tally).sort((a,b)=>b[1]-a[1]);
+        let acc=0; const stops=parts.map(([col,ct])=>{
+          const a=(acc/n)*360; acc+=ct; const b=(acc/n)*360;
+          return col+' '+a.toFixed(1)+'deg '+b.toFixed(1)+'deg'; });
+        const bg=parts.length? 'conic-gradient('+stops.join(',')+')' : '';
+        return L.divIcon({html:'<div class="eclust'+(big?' big':'')+'" style="background:'+bg+'"><span class="eclust-n">'+n+'</span></div>',
+          className:'', iconSize:[big?42:34,big?42:34]}); }
     }) : L.layerGroup();
     buildDayMarkers(sel).forEach(({ev,marker})=>{
       if(matches(ev)){ dayLayer.addLayer(marker); cnt++; }
