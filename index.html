@@ -455,13 +455,14 @@ function dayLabel(d){
 const FEESTEN_START='2026-07-17', FEESTEN_END='2026-07-26';
 function inFeesten(d){ return !!d && d>=FEESTEN_START && d<=FEESTEN_END; }
 function feestenDay(d){ return Math.round((new Date(d+'T12:00:00')-new Date(FEESTEN_START+'T12:00:00'))/864e5)+1; }
-// Bucket date: events starting 00:00–06:59 belong to the *previous* day (that's
-// when people are still out from the night before / next-day acts haven't begun).
+// Bucket date: the source already rolls 00:00–05:59 events onto the previous day
+// (6am cutoff). We extend that cutoff to 7am, so ONLY the 06:00–06:59 hour still
+// needs correcting onto the previous day. Everything else is left as-is.
 function bucketDate(e){
   if(!e.date) return e.date;
   if(e.time && /^\d/.test(e.time)){
     const h=parseInt(e.time,10);
-    if(!isNaN(h) && h<7){
+    if(h===6){
       const d=new Date(e.date+'T12:00:00'); d.setDate(d.getDate()-1);
       return d.toISOString().slice(0,10);
     }
