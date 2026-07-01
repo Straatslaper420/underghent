@@ -26,6 +26,7 @@ import { scrapeListings } from './scrape.js'
 import { fetchDetail } from './detail.js'
 import { concurrentMap } from './http.js'
 import { geocodeMissing } from './geocode.js'
+import { applyVenueCoordFixes } from './corrections.js'
 import { fullRefreshToTab } from './sheets.js'
 import type { FeestenEvent } from './types.js'
 
@@ -56,6 +57,8 @@ async function scrape(): Promise<FeestenEvent[]> {
     CONCURRENCY,
   )
 
+  applyVenueCoordFixes(events)
+
   mkdirSync(DATA_DIR, { recursive: true })
   writeFileSync(JSON_OUT, JSON.stringify(events, null, 2), 'utf-8')
   console.log(`\n✓ Wrote ${events.length} events → ${JSON_OUT}`)
@@ -73,6 +76,7 @@ async function geocodeStage(events?: FeestenEvent[]): Promise<FeestenEvent[]> {
   }
   console.log('\n[geo] Backfilling coordinates for off-map events with an address…')
   await geocodeMissing(evs)
+  applyVenueCoordFixes(evs) // re-assert known-good coords in case a scrape wrote a bad one
   writeFileSync(JSON_OUT, JSON.stringify(evs, null, 2), 'utf-8')
   console.log(`✓ Wrote geocoded events → ${JSON_OUT}`)
   return evs

@@ -455,6 +455,19 @@ function dayLabel(d){
 const FEESTEN_START='2026-07-17', FEESTEN_END='2026-07-26';
 function inFeesten(d){ return !!d && d>=FEESTEN_START && d<=FEESTEN_END; }
 function feestenDay(d){ return Math.round((new Date(d+'T12:00:00')-new Date(FEESTEN_START+'T12:00:00'))/864e5)+1; }
+// Bucket date: events starting 00:00–06:59 belong to the *previous* day (that's
+// when people are still out from the night before / next-day acts haven't begun).
+function bucketDate(e){
+  if(!e.date) return e.date;
+  if(e.time && /^\d/.test(e.time)){
+    const h=parseInt(e.time,10);
+    if(!isNaN(h) && h<7){
+      const d=new Date(e.date+'T12:00:00'); d.setDate(d.getDate()-1);
+      return d.toISOString().slice(0,10);
+    }
+  }
+  return e.date;
+}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function fmtStat(n){return n>=1000?(n/1000).toFixed(1).replace(/\.0$/,'')+'k':String(n);}
 // Time label: a real clock time, else "ALL DAY" for drop-in events (page said
@@ -725,7 +738,7 @@ function renderFeed(){
   const sel=DATES[dayIdx];
   let list=ALL.filter(matches);
   if(offMapOnly) list=list.filter(e=>e.lat==null||e.lng==null);
-  if(listMode==='day' && sel) list=list.filter(e=>e.date===sel);
+  if(listMode==='day' && sel) list=list.filter(e=>e.dkey===sel);
 
   // mode bar: ALL DAYS · the Gentse Feesten days (1…N) · OFF-MAP toggle.
   // Non-feesten days are reached by sliding the map rail (for now).
@@ -747,7 +760,7 @@ function renderFeed(){
     wireListMode(); return;
   }
   const groups={};
-  list.forEach(e=>{(groups[e.date||'TBA']=groups[e.date||'TBA']||[]).push(e);});
+  list.forEach(e=>{(groups[e.dkey||'TBA']=groups[e.dkey||'TBA']||[]).push(e);});
   const keys=Object.keys(groups).sort((a,b)=>a==='TBA'?1:b==='TBA'?-1:a.localeCompare(b));
   feed.innerHTML=modeBar+keys.map(k=>{
     const cards=groups[k].map(cardHtml).join('');
@@ -781,7 +794,7 @@ function buildDayMarkers(date){
   if(DAY_MARKERS.has(date)) return DAY_MARKERS.get(date);
   const entries=[];
   ALL.forEach(e=>{
-    if(e.date!==date || e.lat==null || e.lng==null) return;
+    if(e.dkey!==date || e.lat==null || e.lng==null) return;
     const g=eventGroup(e);
     const icon=L.divIcon({
       className:'',
@@ -861,14 +874,14 @@ function renderBadge(mapCnt){
   if(view==='map'){
     const n=(mapCnt!=null?mapCnt:renderMap())||0;
     // events that match today's filters but have no coords → can't be on the map
-    const off=sel?ALL.filter(e=>e.date===sel&&(e.lat==null||e.lng==null)&&matches(e)).length:0;
+    const off=sel?ALL.filter(e=>e.dkey===sel&&(e.lat==null||e.lng==null)&&matches(e)).length:0;
     const lbl=fest?('DAY '+feestenDay(sel)):(sel?dotLbl(sel):'──');
     badge.innerHTML='<b>'+n+'</b> ON '+esc(lbl)+(off
       ? ' <span class="offmaplink" role="button" tabindex="0" title="Show these off-map events in a list">+'+off+' OFF-MAP</span>'
       : '');
   }else{
     let list=ALL.filter(matches);
-    if(listMode==='day'&&sel) list=list.filter(e=>e.date===sel);
+    if(listMode==='day'&&sel) list=list.filter(e=>e.dkey===sel);
     // How many of these signals have no map coords → can't be shown on the map.
     const off=list.filter(e=>e.lat==null||e.lng==null).length;
     if(offMapOnly){
@@ -1102,8 +1115,9 @@ async function loadData(){
     status.textContent='◌ DEMO DATA · live sheets unreachable';
   }
 
+  ALL.forEach(e=>{ e.dkey=bucketDate(e); });
   ALL.sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999')||a.time.localeCompare(b.time));
-  DATES=[...new Set(ALL.filter(e=>e.date).map(e=>e.date))].sort();
+  DATES=[...new Set(ALL.filter(e=>e.dkey).map(e=>e.dkey))].sort();
   dayIdx=defaultDateIndex();
   DAY_MARKERS.clear();
 
