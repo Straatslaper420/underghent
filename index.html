@@ -570,6 +570,13 @@ const SAMPLE = [
   {id:'s1',sid:'s1',title:'Techno Night',venue:'Decadance Club',address:'Overpoortstraat',date:'2026-06-12',time:'23:00',endTime:'',lat:51.0501,lng:3.7145,desc:'Deep techno with resident DJs till dawn.',image:null,url:'#',categories:['MUSIC','NIGHTLIFE'],going:312,interested:840,paid:true,organizer:'Decadance',source:'fb'},
   {id:'s2',sid:'s2',title:'Street Food Fest',venue:'Korenmarkt',address:'Korenmarkt',date:'2026-06-12',time:'12:00',endTime:'',lat:51.0534,lng:3.7211,desc:'International street food and local craft beers.',image:null,url:'#',categories:['FOOD','FESTIVAL'],going:1450,interested:5200,paid:false,organizer:'Gent Smaakt',source:'feesten'},
   {id:'s3',sid:'s3',title:'Jazz Festival',venue:'Handelsbeurs',address:'Kouter 29',date:'2026-06-14',time:'16:00',endTime:'',lat:51.0558,lng:3.7198,desc:'Official start of the Ghent Jazz Festival.',image:null,url:'#',categories:['MUSIC','FESTIVAL'],going:3100,interested:9800,paid:true,organizer:'Jazz Gent',source:'feesten'},
+  // Test square: Baudelopark (Trefpunt), two stages ~55m apart so the square
+  // overview modal has something real to show — coordinates are approximate,
+  // swap in the real ones once they're in the sheet.
+  {id:'s4',sid:'s4',title:'Trefpunt Opening DJ',venue:'Baudelopark Podium 1',address:'Baudelopark',date:'2026-06-12',time:'19:00',endTime:'',lat:51.0630,lng:3.7301,desc:'Warm-up set to open Trefpunt\'s Baudelopark stage.',image:null,url:'#',categories:['MUSIC'],going:210,interested:480,paid:false,organizer:'Trefpunt',source:'feesten'},
+  {id:'s5',sid:'s5',title:'Baudelo Band Night',venue:'Baudelopark Podium 1',address:'Baudelopark',date:'2026-06-12',time:'21:00',endTime:'',lat:51.0630,lng:3.7302,desc:'Local bands back to back on the main Baudelopark stage.',image:null,url:'#',categories:['MUSIC'],going:340,interested:790,paid:false,organizer:'Trefpunt',source:'feesten'},
+  {id:'s6',sid:'s6',title:'Kids Corner Workshop',venue:'Baudelopark Podium 2',address:'Baudelopark',date:'2026-06-12',time:'14:00',endTime:'',lat:51.0633,lng:3.7309,desc:'Family-friendly crafts corner on the second Baudelopark stage.',image:null,url:'#',categories:['ACTIVE'],going:60,interested:140,paid:false,organizer:'Trefpunt',source:'feesten'},
+  {id:'s7',sid:'s7',title:'Storytelling Hour',venue:'Baudelopark Podium 2',address:'Baudelopark',date:'2026-06-12',time:'16:30',endTime:'',lat:51.0634,lng:3.7310,desc:'Storytelling session for kids and families.',image:null,url:'#',categories:['WORD'],going:45,interested:90,paid:false,organizer:'Trefpunt',source:'feesten'},
 ];
 
 // ── State ──────────────────────────────────────────────────────────────────
@@ -967,33 +974,22 @@ function wireListMode(){
 }
 
 // ── MAP: per-day marker layers (built lazily, cached) ──────────────────────
-// ── Stage / square clustering ────────────────────────────────────────────
-// Two fixed real-world radii (metres, not zoom-dependent pixels) so clusters
+// ── Stage clustering ──────────────────────────────────────────────────────
+// A fixed real-world radius (metres, not zoom-dependent pixels) so clusters
 // stay geographically stable at any zoom — no spiderfy, no pixel jitter.
-//   STAGE  — events within this distance share one exact spot (one podium /
-//            one door). Collapses into a plain count bubble; click → mini
-//            list popup of that stage's events, ordered by start hour.
-//   SQUARE — stage-groups within this looser distance share one square/park.
-//            Only becomes a NAMED square bubble when the square holds MORE
-//            THAN ONE stage; a lone stage on a square just gets the plain
-//            stage bubble above. Click → full multi-column overview modal.
-// Tune these against real Gentse Feesten data once the live sheet is wired
-// up — squares vary a lot in footprint (Korenmarkt vs. a long park path).
-const STAGE_RADIUS_M  = 18;
-const SQUARE_RADIUS_M = 140;
+// Events within this distance share one exact spot (one podium / one door).
+// Collapses into a plain count bubble; click → mini list popup of that
+// stage's events, ordered by start hour.
+const STAGE_RADIUS_M = 18;
 
-// Known Gentse Feesten squares/parks, longest-name-first so a more specific
-// match wins (e.g. an address mentioning both a street and a square). This
-// is a heuristic gazetteer, not exhaustive — falls back to the venue name
-// itself when nothing matches.
-const KNOWN_SQUARES = [
-  'Sint-Pietersnieuwstraat','Sint-Jacobsnieuwstraat','Oude Beestenmarkt',
-  'Woodrow Wilsonplein','Emile Braunplein','Sint-Baafsplein','Sint-Pietersplein',
-  'Bij Sint-Jacobs','Vrijdagmarkt','Zuivelbrugstraat','Overpoortstraat',
-  'Groentenmarkt','Baudelopark','Citadelpark','Muinkpark','Patershol',
-  'Vlasmarkt','Korenmarkt','Predikherenlei','Sluizeken','Graslei','Korenlei',
-  'Ajuinlei','Kouter','Coupure','Dampoort','Rabot',
-].sort((a,b)=>b.length-a.length);
+// The "square" grouping (named bubble + multi-column overview modal) is only
+// wired up for Baudelopark right now, as a test case — matched by venue/
+// address text, not distance. Every other stage stands on its own; no other
+// location gets merged into a square. Once this is validated, this can grow
+// into a general gazetteer-driven match again.
+const TEST_SQUARE_NAME  = 'BAUDELOPARK';
+const TEST_SQUARE_MATCH = /baudelopark/i;
+function isTestSquareEvent(e){ return TEST_SQUARE_MATCH.test((e.venue||'')+' '+(e.address||'')); }
 
 function haversineM(lat1,lng1,lat2,lng2){
   const R=6371000, toRad=d=>d*Math.PI/180;
@@ -1037,15 +1033,6 @@ function deriveStageLabel(events){
   const top=Object.entries(freq).sort((a,b)=>b[1]-a[1])[0];
   return top?top[0].toUpperCase():'STAGE';
 }
-function deriveSquareName(events){
-  const text=events.map(e=>(e.address||'')+' '+(e.venue||'')).join(' ');
-  for(const name of KNOWN_SQUARES){
-    const re=new RegExp('\\b'+name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i');
-    if(re.test(text)) return name.toUpperCase();
-  }
-  return deriveStageLabel(events); // fallback: most common venue name
-}
-
 // Shared detail markup for one event — used inside the stage mini-list popup
 // and the square overview modal's per-row accordion.
 function eventDetailHtml(e){
@@ -1097,10 +1084,9 @@ function buildStageClusterMarker(members,lat,lng){
   return m;
 }
 function squareIconWidth(name){ return Math.max(64,Math.min(150,22+name.length*6.2)); }
-function buildSquareClusterMarker(stagesInSquare,lat,lng){
+function buildSquareClusterMarker(stagesInSquare,lat,lng,name){
   const total=stagesInSquare.reduce((n,s)=>n+s.members.length,0);
   const tier=clusterTier(total);
-  const name=deriveSquareName(stagesInSquare.flatMap(s=>s.members.map(m=>m.ev)));
   const w=squareIconWidth(name);
   const icon=L.divIcon({
     html:`<div class="esquare ${tier.cls}"><span class="esquare-name">${esc(name)}</span><span class="esquare-n">${total}</span></div>`,
@@ -1207,23 +1193,30 @@ function renderMap(){
     // Gentse Feesten crams up to ~150 events onto a single square, so plain
     // markers stack and hide each other. Group by real-world distance instead
     // of Leaflet's zoom-dependent pixel clustering, so bubbles stay put as you
-    // zoom (no spiderfy): tight radius = one stage, loose radius = one square.
+    // zoom (no spiderfy): each stage (tight radius) gets its own count bubble.
     dayLayer=L.layerGroup();
     const dayMarkers=buildDayMarkers(sel).filter(({ev})=>matches(ev));
     cnt=dayMarkers.length;
-    const stages=clusterByRadius(dayMarkers,STAGE_RADIUS_M,x=>[x.ev.lat,x.ev.lng])
-      .map(members=>({members,lat:avg(members.map(m=>m.ev.lat)),lng:avg(members.map(m=>m.ev.lng))}));
-    const squares=clusterByRadius(stages,SQUARE_RADIUS_M,s=>[s.lat,s.lng]);
-    squares.forEach(stagesInSquare=>{
-      if(stagesInSquare.length===1){
-        const s=stagesInSquare[0];
-        if(s.members.length===1){ dayLayer.addLayer(s.members[0].marker); return; }
-        dayLayer.addLayer(buildStageClusterMarker(s.members,s.lat,s.lng));
-        return;
-      }
-      const centLat=avg(stagesInSquare.map(s=>s.lat)), centLng=avg(stagesInSquare.map(s=>s.lng));
-      dayLayer.addLayer(buildSquareClusterMarker(stagesInSquare,centLat,centLng));
+    const toStage=members=>({members,lat:avg(members.map(m=>m.ev.lat)),lng:avg(members.map(m=>m.ev.lng))});
+
+    // Test square carve-out: Baudelopark events are pulled out and always
+    // rendered as ONE named square (with the multi-column overview modal),
+    // regardless of how many stages/coords they resolve to. Everything else
+    // stays a plain per-stage bubble — no other location gets merged into a
+    // square right now.
+    const squareMarkers=dayMarkers.filter(x=>isTestSquareEvent(x.ev));
+    const plainMarkers=dayMarkers.filter(x=>!isTestSquareEvent(x.ev));
+
+    clusterByRadius(plainMarkers,STAGE_RADIUS_M,x=>[x.ev.lat,x.ev.lng]).map(toStage).forEach(s=>{
+      if(s.members.length===1){ dayLayer.addLayer(s.members[0].marker); return; }
+      dayLayer.addLayer(buildStageClusterMarker(s.members,s.lat,s.lng));
     });
+
+    if(squareMarkers.length){
+      const bStages=clusterByRadius(squareMarkers,STAGE_RADIUS_M,x=>[x.ev.lat,x.ev.lng]).map(toStage);
+      const centLat=avg(bStages.map(s=>s.lat)), centLng=avg(bStages.map(s=>s.lng));
+      dayLayer.addLayer(buildSquareClusterMarker(bStages,centLat,centLng,TEST_SQUARE_NAME));
+    }
     dayLayer.addTo(map);
   }
   // festival mode
