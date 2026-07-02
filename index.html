@@ -112,7 +112,8 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   box-shadow:0 0 12px rgba(0,255,136,.55);transition:background .15s, box-shadow .15s}
 #railthumb.feesten{background:var(--gold);box-shadow:0 0 14px rgba(255,215,0,.7)}
 
-/* Date popup — floats above the day rail, over the map; glows whenever the day changes */
+/* Date popup — floats above the day rail, over the map; glows whenever the day
+   changes. `left` is set in JS to track the rail thumb's actual x position. */
 #datepop{position:absolute;left:50%;bottom:100%;margin-bottom:9px;transform:translateX(-50%);
   background:var(--panel2);border:1px solid var(--green);color:var(--txt);
   font-size:10.5px;letter-spacing:.24em;white-space:nowrap;padding:6px 14px;
@@ -190,24 +191,29 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .eclust.t3{width:46px;height:46px;box-shadow:0 0 16px rgba(255,77,46,.45),0 2px 8px rgba(0,0,0,.55)}
 .eclust.t3::before{inset:6px}
 .eclust.t3 .eclust-n{font-size:12.5px;color:#ff4d2e}
-/* Stage bubble — a cluster whose members are ALL the same real-world spot
-   (can't be split further by zooming), so it gets a name, not just a number,
-   to read clearly as "one place" rather than an ordinary merged cluster.
-   Same genre-mix ring + tiered colour scale as .eclust. */
-.estage{min-width:54px;padding:4px 10px 5px;border-radius:13px;position:relative;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+/* Stage bubble — only appears in the last ~10% of zoom (see STAGE_NAME_ZOOM),
+   when a cluster's members are ALL the same real-world spot and can't be
+   split further. At that point it's clearly "one place" so it shows its name
+   instead of a bare number; the count moves to a small corner badge so it
+   doesn't read as just another numbered cluster. Below that zoom, single-
+   stage clusters look exactly like .eclust — plain number, no name. */
+.estage{min-width:50px;padding:5px 13px;border-radius:11px;position:relative;
+  display:flex;align-items:center;justify-content:center;
   border:1px solid rgba(0,0,0,.5);cursor:pointer;box-shadow:0 2px 9px rgba(0,0,0,.55)}
-.estage::before{content:'';position:absolute;inset:3px;border-radius:10px;
+.estage::before{content:'';position:absolute;inset:3px;border-radius:8px;
   background:var(--panel2);box-shadow:inset 0 0 0 1px rgba(0,0,0,.3)}
-.estage-name{position:relative;z-index:1;font-size:7px;letter-spacing:.06em;font-weight:700;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:118px;color:var(--txt)}
-.estage-n{position:relative;z-index:1;font-size:11.5px;font-weight:800;line-height:1.05;color:#fff}
+.estage-name{position:relative;z-index:1;font-size:9px;letter-spacing:.03em;font-weight:700;
+  white-space:nowrap;color:var(--txt)}
+.estage-badge{position:absolute;top:-7px;right:-7px;z-index:2;min-width:16px;height:16px;
+  padding:0 3px;border-radius:50%;background:var(--panel);border:1px solid rgba(0,0,0,.5);
+  display:flex;align-items:center;justify-content:center;
+  font-size:8px;font-weight:800;line-height:1;color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.6)}
 .estage.t1{box-shadow:0 0 9px rgba(255,215,0,.3),0 2px 9px rgba(0,0,0,.55)}
-.estage.t1 .estage-n{color:var(--gold)}
+.estage.t1 .estage-badge{color:var(--gold);border-color:var(--gold)}
 .estage.t2{box-shadow:0 0 11px rgba(255,157,46,.36),0 2px 9px rgba(0,0,0,.55)}
-.estage.t2 .estage-n{color:#ff9d2e}
+.estage.t2 .estage-badge{color:#ff9d2e;border-color:#ff9d2e}
 .estage.t3{box-shadow:0 0 13px rgba(255,77,46,.42),0 2px 9px rgba(0,0,0,.55)}
-.estage.t3 .estage-n{color:#ff4d2e}
+.estage.t3 .estage-badge{color:#ff4d2e;border-color:#ff4d2e}
 /* Square bubble — a named square/park that hosts more than one stage. Bigger
    pill shape so the name fits; same tiered colour scale as .eclust. */
 .esquare{min-width:60px;padding:4px 11px 5px;border-radius:15px;position:relative;
@@ -499,19 +505,21 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
       </div>
       <button class="railbtn" id="rnext" aria-label="Next day">▶</button>
     </div>
-    <div id="stroke" aria-label="URGENT.FM live radio and announcements">
-      <div id="radio-controls">
-        <button id="radio-btn" type="button" aria-pressed="false" title="Play URGENT.FM live radio">◎ URGENT.FM</button>
-        <input type="range" id="vol-slider" min="0" max="1" step="0.02" value="0.2" class="muted" aria-label="Radio volume">
-      </div>
-      <div id="ticker-wrap"><span id="ticker-inner"></span></div>
-    </div>
   </div>
 
   <!-- LIST VIEW -->
   <div id="listview">
     <div id="feed"></div>
     <div id="status"></div>
+  </div>
+
+  <!-- URGENT.FM strip — shared by both views, so it's always visible -->
+  <div id="stroke" aria-label="URGENT.FM live radio and announcements">
+    <div id="radio-controls">
+      <button id="radio-btn" type="button" aria-pressed="false" title="Play URGENT.FM live radio">◎ URGENT.FM</button>
+      <input type="range" id="vol-slider" min="0" max="1" step="0.02" value="0.2" class="muted" aria-label="Radio volume">
+    </div>
+    <div id="ticker-wrap"><span id="ticker-inner"></span></div>
   </div>
 </div>
 
@@ -1011,6 +1019,11 @@ const TEST_SQUARE_NAME  = 'BAUDELOPARK';
 const TEST_SQUARE_MATCH = /baudelopark/i;
 function isTestSquareEvent(e){ return TEST_SQUARE_MATCH.test((e.venue||'')+' '+(e.address||'')); }
 
+// A stage only trades its plain number for a named pill once you're basically
+// at street level — roughly the last 10% of this map's 0–19 zoom range.
+// Below that, a single-stage cluster looks exactly like any other cluster.
+const STAGE_NAME_ZOOM = 18;
+
 function haversineM(lat1,lng1,lat2,lng2){
   const R=6371000, toRad=d=>d*Math.PI/180;
   const dLat=toRad(lat2-lat1), dLng=toRad(lng2-lng1);
@@ -1052,6 +1065,33 @@ function deriveStageLabel(events){
   events.forEach(e=>{ const v=(e.venue||e.address||'').trim(); if(v) freq[v]=(freq[v]||0)+1; });
   const top=Object.entries(freq).sort((a,b)=>b[1]-a[1])[0];
   return top?top[0].toUpperCase():'STAGE';
+}
+// The on-map stage pill only has room for ~12 characters. A blind slice cuts
+// off exactly the part that actually identifies the stage (a podium number,
+// "Tent 2", etc.) and keeps generic filler instead — so rank words by how
+// much identifying weight they carry and keep the highest-weight ones that
+// fit, in their original order.
+function shortStageLabel(label){
+  const raw=(label||'').trim();
+  if(raw.length<=12) return raw;
+  const words=raw.split(/\s+/).filter(Boolean);
+  const weight=w=>{
+    if(/^\d+$/.test(w)) return 3;                              // a bare number: "2"
+    if(/^(podium|stage|tent|stand|zaal|hall|kiosk|dj|bar)$/i.test(w)) return 3; // stage-type word
+    if(/^[a-z]?\d+[a-z]?$/i.test(w)) return 3;                 // "A1", "2B"
+    return 1;                                                  // generic word
+  };
+  const ranked=words.map((w,i)=>({w,i,score:weight(w)}))
+    .sort((a,b)=>b.score-a.score||a.i-b.i);
+  const picked=[];
+  let len=0;
+  for(const item of ranked){
+    const add=item.w.length+(picked.length?1:0);
+    if(len+add>12) continue;
+    picked.push(item); len+=add;
+  }
+  if(!picked.length) return raw.slice(0,12);
+  return picked.sort((a,b)=>a.i-b.i).map(p=>p.w).join(' ').slice(0,12);
 }
 // Shared detail markup for one event — used inside the stage mini-list popup
 // and the square overview modal's per-row accordion.
@@ -1119,20 +1159,23 @@ function genreRingBg(children){
   return parts.length?'conic-gradient('+stops.join(',')+')':'';
 }
 // Leaflet.markercluster icon factory — called for every merged bubble at the
-// current zoom. Genuine single-stage clusters (one real place) get a named
-// pill; anything else (a temporary zoom-driven merge of several different
-// places) gets a plain numbered circle, same as an ordinary map cluster.
+// current zoom. Almost every cluster just shows a plain number (same as any
+// map cluster). Only once you're zoomed in past STAGE_NAME_ZOOM does a
+// genuine single-stage cluster (one real place, can't be split further)
+// swap to a named pill, with the count demoted to a small corner badge so it
+// doesn't read as "just another cluster."
 function buildClusterIcon(c){
   const children=c.getAllChildMarkers();
   const n=c.getChildCount();
   const bg=genreRingBg(children);
   const tier=clusterTier(n);
-  if(isSingleStage(children)){
-    const label=deriveStageLabel(children.map(m=>m._ev));
+  const zoomedIn=map && map.getZoom()>=STAGE_NAME_ZOOM;
+  if(zoomedIn && isSingleStage(children)){
+    const label=shortStageLabel(deriveStageLabel(children.map(m=>m._ev)));
     const w=stageIconWidth(label);
     return L.divIcon({
-      html:`<div class="estage ${tier.cls}" style="background:${bg}"><span class="estage-name">${esc(label)}</span><span class="estage-n">${n}</span></div>`,
-      className:'', iconSize:[w,34], iconAnchor:[w/2,17]
+      html:`<div class="estage ${tier.cls}" style="background:${bg}"><span class="estage-name">${esc(label)}</span><span class="estage-badge">${n}</span></div>`,
+      className:'', iconSize:[w,28], iconAnchor:[w/2,14]
     });
   }
   return L.divIcon({
@@ -1378,6 +1421,7 @@ function partyConfetti(){
 const railTrack=document.getElementById('railtrack');
 const railThumb=document.getElementById('railthumb');
 const datePop=document.getElementById('datepop');
+const dayRailEl=document.getElementById('dayrail');
 let minHits=[];   // secret gesture counter
 let _lastRailDateHTML=null; // tracks datepop content so the glow only fires on real change
 
@@ -1408,9 +1452,23 @@ function buildRail(){
   }else{ seg.style.display='none'; lbl.style.display='none'; }
   renderRail();
 }
+// The popup used to sit fixed at the rail's horizontal centre regardless of
+// which day was selected. It should instead float above wherever the thumb
+// actually is — computed from real layout so it stays correct whatever the
+// prev/next button widths or rail padding happen to be.
+function positionDatePop(){
+  const thumbRect=railThumb.getBoundingClientRect();
+  const railRect=dayRailEl.getBoundingClientRect();
+  if(!railRect.width) return;
+  const popHalfW=(datePop.getBoundingClientRect().width||0)/2;
+  let centerX=thumbRect.left+thumbRect.width/2-railRect.left;
+  centerX=Math.max(popHalfW,Math.min(railRect.width-popHalfW,centerX));
+  datePop.style.left=centerX+'px';
+}
 function renderRail(){
   const sel=DATES[dayIdx];
   railThumb.style.left=railPct(dayIdx)+'%';
+  positionDatePop();
   const fest=inFeesten(sel);
   railThumb.classList.toggle('feesten',fest);
   datePop.classList.toggle('feesten',fest);
@@ -1443,6 +1501,7 @@ function setDay(i,opts){
   }
   if(changed || (opts&&opts.force)) renderAll(); else renderRail();
 }
+window.addEventListener('resize',positionDatePop);
 function stepDay(d){ setDay(dayIdx+d); }
 document.getElementById('rprev').addEventListener('click',()=>stepDay(-1));
 document.getElementById('rnext').addEventListener('click',()=>stepDay(1));
