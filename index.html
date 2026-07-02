@@ -85,9 +85,13 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 #listview{flex:1;min-height:0;overflow-y:auto;display:none}
 
 /* ── Day rail ───────────────────────────────────────────────────────────── */
+/* z-index:900 — Leaflet's own internal panes top out around 700 (popupPane).
+   Since #map doesn't establish its own stacking context, those panes can
+   otherwise outrank a plain sibling; a high explicit z-index here keeps the
+   whole rail (and the date popup floating above it) on top at every zoom. */
 #dayrail{flex-shrink:0;height:var(--rail-h);background:var(--panel2);
   border-top:1px solid var(--line);display:flex;align-items:center;gap:6px;
-  padding:0 10px;user-select:none;touch-action:none;position:relative}
+  padding:0 10px;user-select:none;touch-action:none;position:relative;z-index:900}
 .railbtn{flex-shrink:0;width:28px;height:26px;background:var(--panel);border:1px solid var(--line);
   color:var(--green);font-family:inherit;font-size:11px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;transition:background .12s,color .12s}
@@ -197,13 +201,13 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
    instead of a bare number; the count moves to a small corner badge so it
    doesn't read as just another numbered cluster. Below that zoom, single-
    stage clusters look exactly like .eclust — plain number, no name. */
-.estage{min-width:50px;padding:5px 13px;border-radius:11px;position:relative;
+.estage{min-width:58px;padding:6px 17px;border-radius:12px;position:relative;
   display:flex;align-items:center;justify-content:center;
   border:1px solid rgba(0,0,0,.5);cursor:pointer;box-shadow:0 2px 9px rgba(0,0,0,.55)}
-.estage::before{content:'';position:absolute;inset:3px;border-radius:8px;
+.estage::before{content:'';position:absolute;inset:4px;border-radius:8px;
   background:var(--panel2);box-shadow:inset 0 0 0 1px rgba(0,0,0,.3)}
 .estage-name{position:relative;z-index:1;font-size:9px;letter-spacing:.03em;font-weight:700;
-  white-space:nowrap;color:var(--txt)}
+  white-space:nowrap;color:var(--txt);padding:0 1px}
 .estage-badge{position:absolute;top:-7px;right:-7px;z-index:2;min-width:16px;height:16px;
   padding:0 3px;border-radius:50%;background:var(--panel);border:1px solid rgba(0,0,0,.5);
   display:flex;align-items:center;justify-content:center;
@@ -235,6 +239,9 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .stagepop-hdr{display:flex;align-items:baseline;justify-content:space-between;gap:8px;
   padding:10px 13px;border-bottom:1px solid var(--line);
   font-size:10.5px;font-weight:700;letter-spacing:.1em;color:var(--txt)}
+.stagepop-hdr a{color:inherit;text-decoration:underline;text-decoration-color:var(--line);
+  text-underline-offset:2px;transition:color .12s,text-decoration-color .12s}
+.stagepop-hdr a:hover{color:var(--gold);text-decoration-color:var(--gold)}
 .stagepop-n{font-size:8px;letter-spacing:.08em;color:var(--dim);font-weight:400}
 .stagepop-list{max-height:280px;overflow-y:auto}
 .sqrow{border-left:3px solid var(--line);border-bottom:1px solid var(--line)}
@@ -244,12 +251,15 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .sqrow-main:hover{background:var(--panel)}
 .sqrow-time{font-size:9.5px;color:var(--gold);letter-spacing:.04em;flex-shrink:0;width:40px}
 .sqrow-title{flex:1;min-width:0;font-size:10.5px;color:var(--txt);letter-spacing:.02em;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:font-size .15s,font-weight .15s}
+.sqrow-star{flex-shrink:0;font-size:14px;transition:font-size .15s}
 .sqrow-price{font-size:8px;color:var(--dim);letter-spacing:.05em;flex-shrink:0}
 .sqrow-detail{padding:2px 12px 12px}
-.sqrow-detail .ptitle{display:flex;align-items:center;justify-content:space-between;gap:8px;
-  padding-right:0}
-.sqrow-detail .starbtn{font-size:15px}
+/* Open state: the row you just tapped grows its title + star a touch so it
+   reads clearly as "this one, expanded" instead of repeating info you can
+   already see in the row (time/title/star/price stay put, nothing duplicated). */
+.sqrow.open .sqrow-title{font-size:12.5px;font-weight:700;color:var(--gold)}
+.sqrow.open .sqrow-star{font-size:19px}
 
 /* ── Popups ─────────────────────────────────────────────────────────────── */
 .leaflet-popup-content-wrapper{background:var(--panel2)!important;border:1px solid var(--line)!important;
@@ -450,6 +460,9 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .sq-colhdr{flex-shrink:0;padding:10px 12px;font-size:9.5px;font-weight:700;letter-spacing:.08em;
   color:var(--txt);background:var(--panel);border-bottom:1px solid var(--line);
   position:sticky;top:0}
+.sq-colhdr a{color:inherit;text-decoration:underline;text-decoration-color:var(--line);
+  text-underline-offset:2px;transition:color .12s,text-decoration-color .12s}
+.sq-colhdr a:hover{color:var(--gold);text-decoration-color:var(--gold)}
 .sq-coln{color:var(--dim);font-weight:400;margin-left:4px}
 .sq-collist{flex:1;overflow-y:auto;min-height:0}
 @media (max-width:560px){
@@ -613,7 +626,7 @@ let DATES = [];               // sorted unique dates
 let dayIdx = 0;               // selected index into DATES
 let activeCats = new Set();
 let activeGroups = new Set();
-let activePrice = new Set();  // FREE / PAID / UNKNOWN — multi-select, empty = all
+let priceFilter = 'ALL';      // one cycling button: ALL → FREE → PAID → UNKNOWN → ALL
 let q = '';
 let view = 'map';
 let listMode = 'day';         // 'day' (follows the rail) | 'all'
@@ -733,15 +746,20 @@ function priceLabel(e){
   }
   return e.paid?'TICKETED':'FREE';
 }
-// Bucket for the FREE / PAID / ? filter — distinct from priceLabel's display
-// fallback: an event with no price text and no ticket link is genuinely
-// unknown, not assumed free.
+// Bucket for the FREE / PAID / ? filter. Must agree with what priceLabel()
+// actually displays, or the filter silently hides events tagged "FREE" on
+// screen (this was the bug: most free events simply leave price blank rather
+// than writing "gratis", so treating blank-as-unknown emptied the FREE
+// filter). Blank price + not paid = FREE, same call priceLabel already makes.
+// UNKNOWN is now the narrower case: some price text was given but it's
+// neither a clear "free" nor a confirmed paid signal (e.g. "on request").
 function priceBucket(e){
-  if(e.paid) return 'PAID';
   const p=String(e.price||'').trim();
-  if(!p) return 'UNKNOWN';
-  if(/gratis|free|gratuit|^0([,.]0+)?$/i.test(p)) return 'FREE';
-  return 'UNKNOWN';
+  if(p){
+    if(/gratis|free|gratuit|^0([,.]0+)?$/i.test(p)) return 'FREE';
+    return e.paid ? 'PAID' : 'UNKNOWN';
+  }
+  return e.paid ? 'PAID' : 'FREE';
 }
 function mapRow(row,source){
   if(isTruthyCell(row.hide)) return null;                            // human kill-switch
@@ -849,7 +867,7 @@ function matches(e){
     const inType =cats.some(c=>activeCats.has(c));
     if(!inGroup && !inType) return false;
   }
-  if(activePrice.size && !activePrice.has(priceBucket(e))) return false;
+  if(priceFilter!=='ALL' && priceBucket(e)!==priceFilter) return false;
   if(q){
     const hay=(e.title+' '+e.venue+' '+(e.desc||'')+' '+(e.organizer||'')+' '+
       (e.address||'')+' '+cats.join(' ')).toLowerCase();
@@ -874,19 +892,21 @@ function renderChips(){
   allEl.textContent='ALL';
   allEl.onclick=()=>{ activeCats.clear(); activeGroups.clear(); renderChips(); renderAll(); };
   wrap.appendChild(allEl);
-  const PRICE_DEFS=[{key:'FREE',label:'FREE'},{key:'PAID',label:'PAID'},{key:'UNKNOWN',label:'?'}];
-  PRICE_DEFS.forEach(p=>{
-    const on=activePrice.has(p.key);
-    const el=document.createElement('div');
-    el.className='chip price'+(on?' on':'');
-    el.textContent=p.label;
-    el.title=p.key==='UNKNOWN'?'Price unknown':p.key;
-    el.onclick=()=>{
-      if(activePrice.has(p.key)) activePrice.delete(p.key); else activePrice.add(p.key);
-      renderChips(); renderAll();
-    };
-    wrap.appendChild(el);
-  });
+  // One button cycles ALL → FREE → PAID → ? → ALL, rather than separate
+  // always-visible chips — price is a single, mutually-exclusive attribute
+  // per event, so a cycle button reads clearer than a multi-select group.
+  const PRICE_CYCLE=['ALL','FREE','PAID','UNKNOWN'];
+  const PRICE_LABEL={ALL:'PRICE: ALL',FREE:'PRICE: FREE',PAID:'PRICE: PAID',UNKNOWN:'PRICE: ?'};
+  const priceEl=document.createElement('div');
+  priceEl.className='chip price'+(priceFilter!=='ALL'?' on':'');
+  priceEl.textContent=PRICE_LABEL[priceFilter];
+  priceEl.title='Click to cycle: ALL → FREE → PAID → ?';
+  priceEl.onclick=()=>{
+    const i=PRICE_CYCLE.indexOf(priceFilter);
+    priceFilter=PRICE_CYCLE[(i+1)%PRICE_CYCLE.length];
+    renderChips(); renderAll();
+  };
+  wrap.appendChild(priceEl);
   const sep=document.createElement('div');
   sep.className='chipsep';
   wrap.appendChild(sep);
@@ -1049,6 +1069,7 @@ function clusterByRadius(items,radiusM,getLatLng){
   return [...groups.values()];
 }
 function avg(arr){ return arr.reduce((a,b)=>a+b,0)/arr.length; }
+function gmapsUrl(lat,lng){ return 'https://www.google.com/maps/search/?api=1&query='+lat+','+lng; }
 
 // Fixed-step colour/size scale: white (small) → gold → orange → red-orange
 // (biggest). Keep in sync with the .eclust/.esquare t0–t3 CSS classes.
@@ -1093,43 +1114,46 @@ function shortStageLabel(label){
   if(!picked.length) return raw.slice(0,12);
   return picked.sort((a,b)=>a.i-b.i).map(p=>p.w).join(' ').slice(0,12);
 }
-// Shared detail markup for one event — used inside the stage mini-list popup
-// and the square overview modal's per-row accordion.
-function eventDetailHtml(e){
+// Expanded-row content — the row itself already shows time, title, star and
+// price, and the popup header already names the stage/venue, so this only
+// ever adds information that ISN'T visible yet: description, tags, the link.
+function eventNewInfoHtml(e){
   const desc=e.desc?`<div class="prow pdesc">${esc(e.desc)}</div>`:'';
   const tags=(e.categories||[]).slice(0,3).map(t=>`<span class="tag">#${esc(t)}</span>`).join('');
   const link=e.url&&e.url!=='#'?`<a class="plink" href="${esc(e.url)}" target="_blank" rel="noopener">► DETAILS</a>`:'';
-  const actions=`<div class="pactions">${link}<span class="ptags">${tags}</span></div>`;
-  const mapsUrl=(e.lat!=null&&e.lng!=null)?`https://www.google.com/maps/search/?api=1&query=${e.lat},${e.lng}`:null;
-  const venue=`<div class="prow pvenue">◈ ${mapsUrl?`<a href="${mapsUrl}" target="_blank" rel="noopener">${esc(e.venue||'VENUE TBA')}</a>`:esc(e.venue||'VENUE TBA')}</div>`;
-  const when=whenLabel(e);
-  const key=eventKey(e), on=isStarred(key);
-  const star=`<button type="button" class="starbtn sqstar${on?' starred':''}" data-key="${esc(key)}"
-    aria-pressed="${on?'true':'false'}" aria-label="${on?'Remove from starred':'Add to starred'}">${on?'★':'☆'}</button>`;
-  return `<div class="ptitle">${esc(e.title)} ${star}</div>${venue}
-    <div class="prow ptime">◷ ${esc(dayLabel(e.date))} @ ${esc(when)} · ${priceLabel(e)}</div>${desc}${actions}`;
+  const actions=(link||tags)?`<div class="pactions">${link}<span class="ptags">${tags}</span></div>`:'';
+  return desc+actions;
 }
-// One row in a stage list — click toggles an inline detail panel (accordion),
-// so browsing stays a flat scrollable list instead of opening more popups.
+// One row in a stage list. The star lives right in the row (left of the
+// price) so you never have to expand a row just to star it. Clicking the row
+// itself (not the star) toggles an inline accordion of NEW info only — the
+// title grows and the star grows slightly with it, so the open row still
+// reads as "this one, expanded" rather than repeating what's already shown.
 function stageRowHtml(e){
-  const key=eventKey(e);
+  const key=eventKey(e), on=isStarred(key);
   const when=whenLabel(e);
   const edge=eventGroup(e).color;
+  const star=`<button type="button" class="starbtn sqstar sqrow-star${on?' starred':''}" data-key="${esc(key)}"
+    aria-pressed="${on?'true':'false'}" aria-label="${on?'Remove from starred':'Add to starred'}">${on?'★':'☆'}</button>`;
   return `<div class="sqrow" style="border-left-color:${edge}">
     <div class="sqrow-main" data-key="${esc(key)}" role="button" tabindex="0">
       <span class="sqrow-time">${esc(when)}</span>
       <span class="sqrow-title">${esc(e.title)}</span>
+      ${star}
       <span class="sqrow-price">${priceLabel(e)}</span>
     </div>
-    <div class="sqrow-detail" hidden>${eventDetailHtml(e)}</div>
+    <div class="sqrow-detail" hidden>${eventNewInfoHtml(e)}</div>
   </div>`;
 }
-function stageListPopupHtml(members){
+function stageListPopupHtml(members,lat,lng){
   const sorted=[...members].sort((a,b)=>(a.ev.time||'99:99').localeCompare(b.ev.time||'99:99'));
   const label=deriveStageLabel(sorted.map(m=>m.ev));
   const rows=sorted.map(m=>stageRowHtml(m.ev)).join('');
+  const nameHtml=(lat!=null&&lng!=null)
+    ? `<a href="${gmapsUrl(lat,lng)}" target="_blank" rel="noopener" title="Open this stage in Google Maps">${esc(label)}</a>`
+    : esc(label);
   return `<div class="stagepop">
-    <div class="stagepop-hdr"><span>${esc(label)}</span><span class="stagepop-n">${sorted.length} EVENT${sorted.length===1?'':'S'}</span></div>
+    <div class="stagepop-hdr"><span>${nameHtml}</span><span class="stagepop-n">${sorted.length} EVENT${sorted.length===1?'':'S'}</span></div>
     <div class="stagepop-list">${rows}</div>
   </div>`;
 }
@@ -1144,7 +1168,7 @@ function isSingleStage(markers){
   return markers.every(m=>{ const p=m.getLatLng(); return haversineM(p0.lat,p0.lng,p.lat,p.lng)<=STAGE_RADIUS_M; });
 }
 function squareIconWidth(name){ return Math.max(64,Math.min(150,22+name.length*6.2)); }
-function stageIconWidth(name){ return Math.max(52,Math.min(130,16+name.length*5.4)); }
+function stageIconWidth(name){ return Math.max(60,Math.min(150,34+name.length*6.6)); }
 // Genre-mix tally → a conic-gradient ring, same idea as the original design:
 // paint the proportion of each genre colour under this cluster/stage around
 // its edge so the mix reads at a glance, underneath the dark centre disc.
@@ -1175,7 +1199,7 @@ function buildClusterIcon(c){
     const w=stageIconWidth(label);
     return L.divIcon({
       html:`<div class="estage ${tier.cls}" style="background:${bg}"><span class="estage-name">${esc(label)}</span><span class="estage-badge">${n}</span></div>`,
-      className:'', iconSize:[w,28], iconAnchor:[w/2,14]
+      className:'', iconSize:[w,32], iconAnchor:[w/2,16]
     });
   }
   return L.divIcon({
@@ -1207,8 +1231,11 @@ function openSquareModal(stagesInSquare,squareName){
   ).join('');
   document.getElementById('sqm-cols').innerHTML=labeled.map(s=>{
     const sorted=[...s.members].sort((a,b)=>(a.ev.time||'99:99').localeCompare(b.ev.time||'99:99'));
+    const nameHtml=(s.lat!=null&&s.lng!=null)
+      ? `<a href="${gmapsUrl(s.lat,s.lng)}" target="_blank" rel="noopener" title="Open this stage in Google Maps">${esc(s.label)}</a>`
+      : esc(s.label);
     return `<div class="sq-col" id="${s.id}">
-      <div class="sq-colhdr">${esc(s.label)}<span class="sq-coln">${s.members.length}</span></div>
+      <div class="sq-colhdr">${nameHtml}<span class="sq-coln">${s.members.length}</span></div>
       <div class="sq-collist">${sorted.map(m=>stageRowHtml(m.ev)).join('')}</div>
     </div>`;
   }).join('');
@@ -1237,14 +1264,16 @@ function initSquareUI(){
   // Accordion rows + star buttons live inside Leaflet popups (map container)
   // AND the square modal (body-level) — one delegated listener covers both.
   document.addEventListener('click',e=>{
+    // Star first: it lives inside .sqrow-main, so without this check clicking
+    // it would also toggle the row's accordion.
+    const star=e.target.closest('.sqstar');
+    if(star){ e.preventDefault(); e.stopPropagation(); toggleStar(star.dataset.key); return; }
     const row=e.target.closest('.sqrow-main');
     if(row){
-      const detail=row.parentElement.querySelector('.sqrow-detail');
-      if(detail) detail.hidden=!detail.hidden;
-      return;
+      const wrap=row.parentElement;
+      const detail=wrap.querySelector('.sqrow-detail');
+      if(detail){ detail.hidden=!detail.hidden; wrap.classList.toggle('open',!detail.hidden); }
     }
-    const star=e.target.closest('.sqstar');
-    if(star){ e.preventDefault(); e.stopPropagation(); toggleStar(star.dataset.key); }
   });
 }
 
@@ -1321,8 +1350,9 @@ function renderMap(){
       const children=cluster.getAllChildMarkers();
       if(isSingleStage(children)){
         const evs=children.map(m=>({ev:m._ev,marker:m}));
+        const cll=cluster.getLatLng();
         L.popup({maxWidth:290,minWidth:230,autoPan:true,className:'stagepopwrap'})
-          .setLatLng(cluster.getLatLng()).setContent(stageListPopupHtml(evs)).openOn(map);
+          .setLatLng(cll).setContent(stageListPopupHtml(evs,cll.lat,cll.lng)).openOn(map);
       }else{
         cluster.zoomToBounds({padding:[20,20]});
       }
