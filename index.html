@@ -9,6 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
 <style>
 /* ════════════════════════════════════════════════════════════════════════
    GHENT//EVENT v5 — "festival signal on an underground carrier"
@@ -188,6 +190,24 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .eclust.t3{width:46px;height:46px;box-shadow:0 0 16px rgba(255,77,46,.45),0 2px 8px rgba(0,0,0,.55)}
 .eclust.t3::before{inset:6px}
 .eclust.t3 .eclust-n{font-size:12.5px;color:#ff4d2e}
+/* Stage bubble — a cluster whose members are ALL the same real-world spot
+   (can't be split further by zooming), so it gets a name, not just a number,
+   to read clearly as "one place" rather than an ordinary merged cluster.
+   Same genre-mix ring + tiered colour scale as .eclust. */
+.estage{min-width:54px;padding:4px 10px 5px;border-radius:13px;position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  border:1px solid rgba(0,0,0,.5);cursor:pointer;box-shadow:0 2px 9px rgba(0,0,0,.55)}
+.estage::before{content:'';position:absolute;inset:3px;border-radius:10px;
+  background:var(--panel2);box-shadow:inset 0 0 0 1px rgba(0,0,0,.3)}
+.estage-name{position:relative;z-index:1;font-size:7px;letter-spacing:.06em;font-weight:700;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:118px;color:var(--txt)}
+.estage-n{position:relative;z-index:1;font-size:11.5px;font-weight:800;line-height:1.05;color:#fff}
+.estage.t1{box-shadow:0 0 9px rgba(255,215,0,.3),0 2px 9px rgba(0,0,0,.55)}
+.estage.t1 .estage-n{color:var(--gold)}
+.estage.t2{box-shadow:0 0 11px rgba(255,157,46,.36),0 2px 9px rgba(0,0,0,.55)}
+.estage.t2 .estage-n{color:#ff9d2e}
+.estage.t3{box-shadow:0 0 13px rgba(255,77,46,.42),0 2px 9px rgba(0,0,0,.55)}
+.estage.t3 .estage-n{color:#ff4d2e}
 /* Square bubble — a named square/park that hosts more than one stage. Bigger
    pill shape so the name fits; same tiered colour scale as .eclust. */
 .esquare{min-width:60px;padding:4px 11px 5px;border-radius:15px;position:relative;
@@ -1073,17 +1093,53 @@ function stageListPopupHtml(members){
     <div class="stagepop-list">${rows}</div>
   </div>`;
 }
-function buildStageClusterMarker(members,lat,lng){
-  const n=members.length, tier=clusterTier(n);
-  const icon=L.divIcon({
-    html:`<div class="eclust ${tier.cls}"><span class="eclust-n">${n}</span></div>`,
-    className:'', iconSize:[tier.size,tier.size]
-  });
-  const m=L.marker([lat,lng],{icon});
-  m.bindPopup(stageListPopupHtml(members),{maxWidth:290,minWidth:230,autoPan:true,className:'stagepopwrap'});
-  return m;
+// Is this cluster's whole membership really just ONE real-world spot? (all
+// within STAGE_RADIUS_M of the first child.) If so, zooming in further can
+// never split it apart — that's exactly when we want a named stage bubble
+// instead of a plain "keeps merging" cluster, and a click should open the
+// mini list instead of trying (and failing) to zoom closer.
+function isSingleStage(markers){
+  if(markers.length<=1) return true;
+  const p0=markers[0].getLatLng();
+  return markers.every(m=>{ const p=m.getLatLng(); return haversineM(p0.lat,p0.lng,p.lat,p.lng)<=STAGE_RADIUS_M; });
 }
 function squareIconWidth(name){ return Math.max(64,Math.min(150,22+name.length*6.2)); }
+function stageIconWidth(name){ return Math.max(52,Math.min(130,16+name.length*5.4)); }
+// Genre-mix tally → a conic-gradient ring, same idea as the original design:
+// paint the proportion of each genre colour under this cluster/stage around
+// its edge so the mix reads at a glance, underneath the dark centre disc.
+function genreRingBg(children){
+  const n=children.length;
+  const tally={};
+  children.forEach(m=>{ const col=m._grp||'#ff2d78'; tally[col]=(tally[col]||0)+1; });
+  const parts=Object.entries(tally).sort((a,b)=>b[1]-a[1]);
+  let acc=0; const stops=parts.map(([col,ct])=>{
+    const a=(acc/n)*360; acc+=ct; const b=(acc/n)*360;
+    return col+' '+a.toFixed(1)+'deg '+b.toFixed(1)+'deg'; });
+  return parts.length?'conic-gradient('+stops.join(',')+')':'';
+}
+// Leaflet.markercluster icon factory — called for every merged bubble at the
+// current zoom. Genuine single-stage clusters (one real place) get a named
+// pill; anything else (a temporary zoom-driven merge of several different
+// places) gets a plain numbered circle, same as an ordinary map cluster.
+function buildClusterIcon(c){
+  const children=c.getAllChildMarkers();
+  const n=c.getChildCount();
+  const bg=genreRingBg(children);
+  const tier=clusterTier(n);
+  if(isSingleStage(children)){
+    const label=deriveStageLabel(children.map(m=>m._ev));
+    const w=stageIconWidth(label);
+    return L.divIcon({
+      html:`<div class="estage ${tier.cls}" style="background:${bg}"><span class="estage-name">${esc(label)}</span><span class="estage-n">${n}</span></div>`,
+      className:'', iconSize:[w,34], iconAnchor:[w/2,17]
+    });
+  }
+  return L.divIcon({
+    html:`<div class="eclust ${tier.cls}" style="background:${bg}"><span class="eclust-n">${n}</span></div>`,
+    className:'', iconSize:[tier.size,tier.size]
+  });
+}
 function buildSquareClusterMarker(stagesInSquare,lat,lng,name){
   const total=stagesInSquare.reduce((n,s)=>n+s.members.length,0);
   const tier=clusterTier(total);
@@ -1162,6 +1218,7 @@ function buildDayMarkers(date){
     });
     const m=L.marker([e.lat,e.lng],{icon});
     m._grp=g.color;   // genre colour → lets the cluster bubble show a mini genre-mix donut
+    m._ev=e;          // underlying event → lets a single-stage cluster derive its name
     const desc=e.desc?`<div class="prow pdesc">${esc(e.desc)}</div>`:'';
     const tags=(e.categories||[]).slice(0,3).map(t=>`<span class="tag">#${esc(t)}</span>`).join('');
     const link=e.url&&e.url!=='#'?`<a class="plink" href="${esc(e.url)}" target="_blank" rel="noopener">► DETAILS</a>`:'';
@@ -1191,26 +1248,43 @@ function renderMap(){
   let cnt=0;
   if(sel){
     // Gentse Feesten crams up to ~150 events onto a single square, so plain
-    // markers stack and hide each other. Group by real-world distance instead
-    // of Leaflet's zoom-dependent pixel clustering, so bubbles stay put as you
-    // zoom (no spiderfy): each stage (tight radius) gets its own count bubble.
-    dayLayer=L.layerGroup();
+    // markers stack and hide each other. Leaflet.markercluster handles the
+    // merging/splitting as you zoom (pixel-based, so it's naturally dynamic);
+    // we only override two things: no spiderfy (ever), and a cluster whose
+    // members are all genuinely the same spot opens our mini list popup
+    // instead of trying (and failing) to zoom in any closer.
     const dayMarkers=buildDayMarkers(sel).filter(({ev})=>matches(ev));
     cnt=dayMarkers.length;
     const toStage=members=>({members,lat:avg(members.map(m=>m.ev.lat)),lng:avg(members.map(m=>m.ev.lng))});
 
     // Test square carve-out: Baudelopark events are pulled out and always
-    // rendered as ONE named square (with the multi-column overview modal),
-    // regardless of how many stages/coords they resolve to. Everything else
-    // stays a plain per-stage bubble — no other location gets merged into a
-    // square right now.
+    // rendered as ONE fixed named square (with the multi-column overview
+    // modal), regardless of zoom or how many stages it resolves to. Every
+    // other location just joins the normal zoom-adaptive clustering below.
     const squareMarkers=dayMarkers.filter(x=>isTestSquareEvent(x.ev));
     const plainMarkers=dayMarkers.filter(x=>!isTestSquareEvent(x.ev));
 
-    clusterByRadius(plainMarkers,STAGE_RADIUS_M,x=>[x.ev.lat,x.ev.lng]).map(toStage).forEach(s=>{
-      if(s.members.length===1){ dayLayer.addLayer(s.members[0].marker); return; }
-      dayLayer.addLayer(buildStageClusterMarker(s.members,s.lat,s.lng));
+    dayLayer=L.layerGroup();
+
+    const clusterGroup=(window.L&&L.markerClusterGroup)?L.markerClusterGroup({
+      maxClusterRadius:44, showCoverageOnHover:false,
+      spiderfyOnMaxZoom:false, zoomToBoundsOnClick:false,
+      chunkedLoading:true, removeOutsideVisibleBounds:true,
+      iconCreateFunction:buildClusterIcon
+    }):L.layerGroup();
+    plainMarkers.forEach(({marker})=>clusterGroup.addLayer(marker));
+    clusterGroup.on('clusterclick',e=>{
+      const cluster=e.layer;
+      const children=cluster.getAllChildMarkers();
+      if(isSingleStage(children)){
+        const evs=children.map(m=>({ev:m._ev,marker:m}));
+        L.popup({maxWidth:290,minWidth:230,autoPan:true,className:'stagepopwrap'})
+          .setLatLng(cluster.getLatLng()).setContent(stageListPopupHtml(evs)).openOn(map);
+      }else{
+        cluster.zoomToBounds({padding:[20,20]});
+      }
     });
+    dayLayer.addLayer(clusterGroup);
 
     if(squareMarkers.length){
       const bStages=clusterByRadius(squareMarkers,STAGE_RADIUS_M,x=>[x.ev.lat,x.ev.lng]).map(toStage);
