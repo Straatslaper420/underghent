@@ -9,8 +9,6 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
 <style>
 /* ════════════════════════════════════════════════════════════════════════
    GHENT//EVENT v5 — "festival signal on an underground carrier"
@@ -23,7 +21,7 @@
   --bg:#0b0d11; --panel:#11141a; --panel2:#0e1016; --line:#232833;
   --txt:#c9d1de; --dim:#5d6675;
   --green:#00ff88; --pink:#ff2d78; --gold:#ffd700; --mint:#7fe8c1;
-  --rail-h:74px;
+  --rail-h:40px;
 }
 html,body{height:100%;overflow:hidden;background:var(--bg);
   font-family:'JetBrains Mono','Courier New',monospace;color:var(--txt)}
@@ -75,6 +73,9 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   transition:color .12s,border-color .12s}
 .chip:hover{border-color:var(--txt);color:var(--txt)}
 .chip.on{border-color:var(--pink);color:var(--pink);box-shadow:0 0 10px rgba(255,45,120,.25)}
+.chip.price.on{border-color:var(--mint);color:#06231a;background:var(--mint);
+  box-shadow:0 0 10px rgba(127,232,193,.3)}
+.chipsep{width:1px;align-self:stretch;background:var(--line);margin:0 2px;flex-shrink:0}
 
 /* ── Views ──────────────────────────────────────────────────────────────── */
 #mapview{flex:1;min-height:0;display:flex;flex-direction:column;position:relative}
@@ -85,14 +86,14 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 #dayrail{flex-shrink:0;height:var(--rail-h);background:var(--panel2);
   border-top:1px solid var(--line);display:flex;align-items:center;gap:6px;
   padding:0 10px;user-select:none;touch-action:none;position:relative}
-.railbtn{flex-shrink:0;width:34px;height:38px;background:var(--panel);border:1px solid var(--line);
-  color:var(--green);font-family:inherit;font-size:13px;cursor:pointer;
+.railbtn{flex-shrink:0;width:28px;height:26px;background:var(--panel);border:1px solid var(--line);
+  color:var(--green);font-family:inherit;font-size:11px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;transition:background .12s,color .12s}
 .railbtn:hover{background:var(--green);color:#06231a}
 .railbtn:disabled{opacity:.25;cursor:default;color:var(--dim);background:var(--panel)}
-#railmid{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:7px;
+#railmid{flex:1;min-width:0;display:flex;align-items:center;
   padding:0 4px;cursor:pointer}
-#railtrack{position:relative;height:18px}
+#railtrack{position:relative;height:18px;width:100%}
 #railtrack .trackline{position:absolute;left:0;right:0;top:50%;height:2px;
   margin-top:-1px;background:var(--line)}
 #feestseg{position:absolute;top:50%;height:4px;margin-top:-2px;background:var(--gold);
@@ -108,10 +109,54 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   background:var(--green);transform:rotate(45deg);cursor:grab;
   box-shadow:0 0 12px rgba(0,255,136,.55);transition:background .15s, box-shadow .15s}
 #railthumb.feesten{background:var(--gold);box-shadow:0 0 14px rgba(255,215,0,.7)}
-#raildate{font-size:10.5px;letter-spacing:.26em;color:var(--txt);text-align:center;white-space:nowrap;
-  overflow:hidden;text-overflow:ellipsis}
-#raildate .arrowsym{color:var(--green)}
-#raildate.feesten{color:var(--gold);text-shadow:0 0 10px rgba(255,215,0,.4)}
+
+/* Date popup — floats above the day rail, over the map; glows whenever the day changes */
+#datepop{position:absolute;left:50%;bottom:100%;margin-bottom:9px;transform:translateX(-50%);
+  background:var(--panel2);border:1px solid var(--green);color:var(--txt);
+  font-size:10.5px;letter-spacing:.24em;white-space:nowrap;padding:6px 14px;
+  box-shadow:0 0 12px rgba(0,255,136,.3);pointer-events:none;z-index:5;
+  transition:border-color .3s,color .3s}
+#datepop::after{content:'';position:absolute;left:50%;top:100%;transform:translateX(-50%);
+  border:5px solid transparent;border-top-color:var(--green)}
+#datepop .arrowsym{color:var(--green)}
+#datepop.feesten{border-color:var(--gold);color:var(--gold);text-shadow:0 0 8px rgba(255,215,0,.4)}
+#datepop.feesten::after{border-top-color:var(--gold)}
+#datepop.feesten .arrowsym{color:var(--gold)}
+@keyframes datepop-glow{
+  0%{box-shadow:0 0 6px var(--glow,rgba(0,255,136,.2))}
+  40%{box-shadow:0 0 22px var(--glow,rgba(0,255,136,.9))}
+  100%{box-shadow:0 0 12px var(--glow,rgba(0,255,136,.3))}
+}
+#datepop.lit{animation:datepop-glow .6s ease-out}
+
+/* ── Bottom stroke — URGENT.FM radio + programme/announcement ticker ──────── */
+#stroke{flex-shrink:0;height:26px;background:var(--panel2);border-top:1px solid var(--line);
+  display:flex;align-items:center;gap:9px;padding:0 10px;overflow:hidden}
+#radio-controls{display:flex;align-items:center;gap:6px;flex-shrink:0}
+#radio-btn{white-space:nowrap;padding:0 7px;height:18px;border:1px solid var(--line);
+  background:none;color:var(--dim);font-family:inherit;font-size:8.5px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;cursor:pointer;
+  transition:border-color .15s,color .15s}
+#radio-btn:hover{border-color:var(--green);color:var(--green)}
+#radio-btn.is-live{border-color:var(--green);color:var(--green);box-shadow:0 0 8px rgba(0,255,136,.3)}
+/* radio-btn dot blink on first unmute — carried over from underghent.html */
+@keyframes radio-dot-blink{0%,100%{opacity:1}50%{opacity:.15}}
+.radio-dot-blink{animation:radio-dot-blink .5s infinite}
+#vol-slider{-webkit-appearance:none;appearance:none;width:46px;height:3px;
+  background:rgba(255,255,255,.08);outline:none;cursor:pointer;border:none;
+  opacity:.55;transition:opacity .2s}
+#vol-slider:hover{opacity:1}
+#vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:8px;height:8px;
+  background:var(--green);cursor:pointer}
+#vol-slider::-moz-range-thumb{width:8px;height:8px;background:var(--green);border:none;cursor:pointer}
+#vol-slider.muted{background:rgba(255,255,255,.05)}
+#vol-slider.muted::-webkit-slider-thumb{background:var(--dim)}
+#vol-slider.muted::-moz-range-thumb{background:var(--dim)}
+#ticker-wrap{flex:1;min-width:0;overflow:hidden;position:relative;height:100%;
+  display:flex;align-items:center}
+#ticker-inner{display:inline-block;white-space:nowrap;will-change:transform;
+  font-size:8.5px;letter-spacing:.09em;color:var(--dim)}
+#ticker-inner .show-name{font-weight:700}
 
 /* ── Map markers ────────────────────────────────────────────────────────── */
 .edot{border:1px solid;color:#fff;background:var(--panel);
@@ -121,28 +166,70 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   animation:dotin .22s ease-out}
 @keyframes dotin{from{opacity:0;transform:translateY(5px) scale(.85)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.edot{animation:none}}
-/* Cluster bubble — squares with many stacked events collapse into a count that
-   spiderfies on click, so every pin stays reachable. */
-.eclust{width:34px;height:34px;border-radius:50%;position:relative;
+/* Cluster bubble — a stage/coordinate with many stacked events collapses into
+   a count bubble. No spiderfy: clicking opens a mini list popup instead.
+   Count colour/size steps up with size: white (small) → yellow → orange →
+   red-orange (biggest), so scale reads at a glance. */
+.eclust{width:30px;height:30px;border-radius:50%;position:relative;
   display:flex;align-items:center;justify-content:center;
-  border:1px solid rgba(0,0,0,.45);
-  box-shadow:0 0 12px rgba(0,255,136,.28),0 2px 8px rgba(0,0,0,.55)}
+  border:1px solid rgba(0,0,0,.45);cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.55)}
 /* dark inner disc keeps the count legible over the genre-mix donut */
-.eclust::before{content:'';position:absolute;inset:5px;border-radius:50%;
+.eclust::before{content:'';position:absolute;inset:4px;border-radius:50%;
   background:var(--panel2);box-shadow:inset 0 0 0 1px rgba(0,0,0,.35)}
-.eclust-n{position:relative;z-index:1;color:var(--green);
-  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.02em}
-.eclust.big{width:42px;height:42px;
-  box-shadow:0 0 14px rgba(255,215,0,.32),0 2px 8px rgba(0,0,0,.55)}
-.eclust.big::before{inset:6px}
-.eclust.big .eclust-n{font-size:12px;color:var(--gold)}
-.leaflet-cluster-anim .leaflet-marker-icon,.leaflet-cluster-anim .leaflet-marker-shadow{
-  transition:transform .25s ease-out,opacity .25s ease-in}
+.eclust-n{position:relative;z-index:1;color:#fff;
+  font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;letter-spacing:.02em}
+.eclust.t1{width:35px;height:35px;box-shadow:0 0 11px rgba(255,215,0,.32),0 2px 8px rgba(0,0,0,.55)}
+.eclust.t1::before{inset:5px}
+.eclust.t1 .eclust-n{font-size:11px;color:var(--gold)}
+.eclust.t2{width:40px;height:40px;box-shadow:0 0 13px rgba(255,157,46,.38),0 2px 8px rgba(0,0,0,.55)}
+.eclust.t2::before{inset:5px}
+.eclust.t2 .eclust-n{font-size:11.5px;color:#ff9d2e}
+.eclust.t3{width:46px;height:46px;box-shadow:0 0 16px rgba(255,77,46,.45),0 2px 8px rgba(0,0,0,.55)}
+.eclust.t3::before{inset:6px}
+.eclust.t3 .eclust-n{font-size:12.5px;color:#ff4d2e}
+/* Square bubble — a named square/park that hosts more than one stage. Bigger
+   pill shape so the name fits; same tiered colour scale as .eclust. */
+.esquare{min-width:60px;padding:4px 11px 5px;border-radius:15px;position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  border:1px solid rgba(0,0,0,.5);background:var(--panel2);cursor:pointer;
+  box-shadow:0 2px 10px rgba(0,0,0,.6)}
+.esquare-name{position:relative;z-index:1;font-size:8px;letter-spacing:.09em;font-weight:700;
+  white-space:nowrap;color:var(--txt)}
+.esquare-n{position:relative;z-index:1;font-size:13px;font-weight:800;line-height:1.1;color:#fff}
+.esquare.t1{box-shadow:0 0 11px rgba(255,215,0,.32),0 2px 10px rgba(0,0,0,.6)}
+.esquare.t1 .esquare-n{color:var(--gold)}
+.esquare.t2{box-shadow:0 0 13px rgba(255,157,46,.38),0 2px 10px rgba(0,0,0,.6)}
+.esquare.t2 .esquare-n{color:#ff9d2e}
+.esquare.t3{box-shadow:0 0 16px rgba(255,77,46,.45),0 2px 10px rgba(0,0,0,.6)}
+.esquare.t3 .esquare-n{color:#ff4d2e}
+
+/* ── Stage mini-list popup (same-coordinate cluster click) ────────────────── */
+.stagepop{width:100%}
+.stagepop-hdr{display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+  padding:10px 13px;border-bottom:1px solid var(--line);
+  font-size:10.5px;font-weight:700;letter-spacing:.1em;color:var(--txt)}
+.stagepop-n{font-size:8px;letter-spacing:.08em;color:var(--dim);font-weight:400}
+.stagepop-list{max-height:280px;overflow-y:auto}
+.sqrow{border-left:3px solid var(--line);border-bottom:1px solid var(--line)}
+.sqrow:last-child{border-bottom:none}
+.sqrow-main{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;
+  transition:background .12s}
+.sqrow-main:hover{background:var(--panel)}
+.sqrow-time{font-size:9.5px;color:var(--gold);letter-spacing:.04em;flex-shrink:0;width:40px}
+.sqrow-title{flex:1;min-width:0;font-size:10.5px;color:var(--txt);letter-spacing:.02em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sqrow-price{font-size:8px;color:var(--dim);letter-spacing:.05em;flex-shrink:0}
+.sqrow-detail{padding:2px 12px 12px}
+.sqrow-detail .ptitle{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding-right:0}
+.sqrow-detail .starbtn{font-size:15px}
 
 /* ── Popups ─────────────────────────────────────────────────────────────── */
 .leaflet-popup-content-wrapper{background:var(--panel2)!important;border:1px solid var(--line)!important;
   border-radius:0!important;box-shadow:0 8px 30px rgba(0,0,0,.7)!important;padding:0!important;position:relative}
 .leaflet-popup-content{margin:0!important;color:var(--txt);width:248px!important}
+.stagepopwrap .leaflet-popup-content{width:288px!important}
 .leaflet-popup-tip-container{display:none}
 .leaflet-popup-close-button{color:var(--pink)!important;font-size:17px!important;
   right:5px!important;top:3px!important;z-index:6}
@@ -309,10 +396,49 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .rm-check input{margin-top:1px;accent-color:var(--green);flex-shrink:0}
 .rm-check:hover{color:var(--txt)}
 
+/* ── Square overview modal — one scrollable column per stage ───────────────── */
+.sqm-box{width:100%;max-width:920px;max-height:82vh;background:var(--bg);
+  border:1px solid var(--line);box-shadow:0 18px 60px rgba(0,0,0,.8);
+  display:flex;flex-direction:column;overflow:hidden}
+.sqm-hdr{display:flex;align-items:baseline;gap:10px;padding:14px 16px 12px;
+  border-bottom:1px solid var(--line);flex-shrink:0}
+.sqm-title{font-size:13px;font-weight:800;letter-spacing:.16em;color:var(--gold)}
+.sqm-count{font-size:9px;letter-spacing:.1em;color:var(--dim);flex:1}
+.sqm-close{background:none;border:0;color:var(--pink);font-size:16px;cursor:pointer;
+  font-family:inherit;line-height:1;padding:2px 4px}
+.sqm-tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 16px;border-bottom:1px solid var(--line);
+  flex-shrink:0;scrollbar-width:none}
+.sqm-tabs::-webkit-scrollbar{display:none}
+.sq-tab{font-size:8.5px;letter-spacing:.08em;padding:6px 10px;border:1px solid var(--line);
+  background:var(--panel);color:var(--dim);cursor:pointer;white-space:nowrap;flex-shrink:0;
+  font-family:inherit;transition:color .12s,border-color .12s}
+.sq-tab:hover{border-color:var(--txt);color:var(--txt)}
+.sq-tab.on{border-color:var(--gold);color:var(--gold);box-shadow:0 0 8px rgba(255,215,0,.28)}
+.sq-tabn{color:var(--dim);margin-left:3px}
+.sq-tab.on .sq-tabn{color:var(--gold)}
+.sqm-cols{display:flex;flex:1;min-height:0;overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x proximity}
+.sq-col{flex:0 0 250px;min-width:0;display:flex;flex-direction:column;min-height:0;
+  border-right:1px solid var(--line);scroll-snap-align:start}
+.sq-col:last-child{border-right:none}
+.sq-colhdr{flex-shrink:0;padding:10px 12px;font-size:9.5px;font-weight:700;letter-spacing:.08em;
+  color:var(--txt);background:var(--panel);border-bottom:1px solid var(--line);
+  position:sticky;top:0}
+.sq-coln{color:var(--dim);font-weight:400;margin-left:4px}
+.sq-collist{flex:1;overflow-y:auto;min-height:0}
 @media (max-width:560px){
   #logo{font-size:11px;letter-spacing:.22em}
   .thumb{width:78px}
-  :root{--rail-h:68px}
+  :root{--rail-h:36px}
+  #stroke{height:24px}
+  #radio-btn{font-size:8px;padding:0 6px}
+  #vol-slider{width:34px}
+  #datepop{font-size:9px;padding:5px 10px;letter-spacing:.18em}
+  #ticker-inner{font-size:8px}
+  .sqm-box{max-height:88vh}
+  .sq-col{flex:0 0 88vw}
+  .sqm-hdr{padding:11px 12px 10px;flex-wrap:wrap}
+  .sqm-title{font-size:12px}
 }
 </style>
 </head>
@@ -340,6 +466,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   <div id="mapview">
     <div id="map"></div>
     <div id="dayrail" aria-label="Browse dates, one day at a time">
+      <div id="datepop"><span class="arrowsym">►</span> ──</div>
       <button class="railbtn" id="rprev" aria-label="Previous day">◀</button>
       <div id="railmid">
         <div id="railtrack">
@@ -349,9 +476,15 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
           <div id="ticks"></div>
           <div id="railthumb"></div>
         </div>
-        <div id="raildate"><span class="arrowsym">►</span> ──</div>
       </div>
       <button class="railbtn" id="rnext" aria-label="Next day">▶</button>
+    </div>
+    <div id="stroke" aria-label="URGENT.FM live radio and announcements">
+      <div id="radio-controls">
+        <button id="radio-btn" type="button" aria-pressed="false" title="Play URGENT.FM live radio">◎ URGENT.FM</button>
+        <input type="range" id="vol-slider" min="0" max="1" step="0.02" value="0.2" class="muted" aria-label="Radio volume">
+      </div>
+      <div id="ticker-wrap"><span id="ticker-inner"></span></div>
     </div>
   </div>
 
@@ -361,6 +494,8 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
     <div id="status"></div>
   </div>
 </div>
+
+<audio id="radio" src="https://urgentstream.radiostudio.be/live" preload="none"></audio>
 
 <!-- LOADER -->
 <div id="loader" aria-live="polite">
@@ -401,6 +536,19 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   </div>
 </div>
 
+<!-- SQUARE OVERVIEW MODAL — one column per stage, opened from a named square cluster -->
+<div id="squaremodal" class="rm-overlay" style="display:none">
+  <div class="sqm-box">
+    <div class="sqm-hdr">
+      <div class="sqm-title" id="sqm-title">SQUARE</div>
+      <div class="sqm-count" id="sqm-count">0 EVENTS</div>
+      <button type="button" class="sqm-close" id="sqm-close" aria-label="Close">✕</button>
+    </div>
+    <div class="sqm-tabs" id="sqm-tabs"></div>
+    <div class="sqm-cols" id="sqm-cols"></div>
+  </div>
+</div>
+
 <script>
 "use strict";
 /* ──────────────────────────────────────────────────────────────────────────
@@ -430,6 +578,7 @@ let DATES = [];               // sorted unique dates
 let dayIdx = 0;               // selected index into DATES
 let activeCats = new Set();
 let activeGroups = new Set();
+let activePrice = new Set();  // FREE / PAID / UNKNOWN — multi-select, empty = all
 let q = '';
 let view = 'map';
 let listMode = 'day';         // 'day' (follows the rail) | 'all'
@@ -549,6 +698,16 @@ function priceLabel(e){
   }
   return e.paid?'TICKETED':'FREE';
 }
+// Bucket for the FREE / PAID / ? filter — distinct from priceLabel's display
+// fallback: an event with no price text and no ticket link is genuinely
+// unknown, not assumed free.
+function priceBucket(e){
+  if(e.paid) return 'PAID';
+  const p=String(e.price||'').trim();
+  if(!p) return 'UNKNOWN';
+  if(/gratis|free|gratuit|^0([,.]0+)?$/i.test(p)) return 'FREE';
+  return 'UNKNOWN';
+}
 function mapRow(row,source){
   if(isTruthyCell(row.hide)) return null;                            // human kill-switch
   const sid = pick(row,['event_id','facebook_id','gf_node_id']);
@@ -655,6 +814,7 @@ function matches(e){
     const inType =cats.some(c=>activeCats.has(c));
     if(!inGroup && !inType) return false;
   }
+  if(activePrice.size && !activePrice.has(priceBucket(e))) return false;
   if(q){
     const hay=(e.title+' '+e.venue+' '+(e.desc||'')+' '+(e.organizer||'')+' '+
       (e.address||'')+' '+cats.join(' ')).toLowerCase();
@@ -679,6 +839,22 @@ function renderChips(){
   allEl.textContent='ALL';
   allEl.onclick=()=>{ activeCats.clear(); activeGroups.clear(); renderChips(); renderAll(); };
   wrap.appendChild(allEl);
+  const PRICE_DEFS=[{key:'FREE',label:'FREE'},{key:'PAID',label:'PAID'},{key:'UNKNOWN',label:'?'}];
+  PRICE_DEFS.forEach(p=>{
+    const on=activePrice.has(p.key);
+    const el=document.createElement('div');
+    el.className='chip price'+(on?' on':'');
+    el.textContent=p.label;
+    el.title=p.key==='UNKNOWN'?'Price unknown':p.key;
+    el.onclick=()=>{
+      if(activePrice.has(p.key)) activePrice.delete(p.key); else activePrice.add(p.key);
+      renderChips(); renderAll();
+    };
+    wrap.appendChild(el);
+  });
+  const sep=document.createElement('div');
+  sep.className='chipsep';
+  wrap.appendChild(sep);
   GROUPS.forEach(g=>{
     const on=activeGroups.has(g.key);
     const el=document.createElement('div');
@@ -791,6 +967,202 @@ function wireListMode(){
 }
 
 // ── MAP: per-day marker layers (built lazily, cached) ──────────────────────
+// ── Stage / square clustering ────────────────────────────────────────────
+// Two fixed real-world radii (metres, not zoom-dependent pixels) so clusters
+// stay geographically stable at any zoom — no spiderfy, no pixel jitter.
+//   STAGE  — events within this distance share one exact spot (one podium /
+//            one door). Collapses into a plain count bubble; click → mini
+//            list popup of that stage's events, ordered by start hour.
+//   SQUARE — stage-groups within this looser distance share one square/park.
+//            Only becomes a NAMED square bubble when the square holds MORE
+//            THAN ONE stage; a lone stage on a square just gets the plain
+//            stage bubble above. Click → full multi-column overview modal.
+// Tune these against real Gentse Feesten data once the live sheet is wired
+// up — squares vary a lot in footprint (Korenmarkt vs. a long park path).
+const STAGE_RADIUS_M  = 18;
+const SQUARE_RADIUS_M = 140;
+
+// Known Gentse Feesten squares/parks, longest-name-first so a more specific
+// match wins (e.g. an address mentioning both a street and a square). This
+// is a heuristic gazetteer, not exhaustive — falls back to the venue name
+// itself when nothing matches.
+const KNOWN_SQUARES = [
+  'Sint-Pietersnieuwstraat','Sint-Jacobsnieuwstraat','Oude Beestenmarkt',
+  'Woodrow Wilsonplein','Emile Braunplein','Sint-Baafsplein','Sint-Pietersplein',
+  'Bij Sint-Jacobs','Vrijdagmarkt','Zuivelbrugstraat','Overpoortstraat',
+  'Groentenmarkt','Baudelopark','Citadelpark','Muinkpark','Patershol',
+  'Vlasmarkt','Korenmarkt','Predikherenlei','Sluizeken','Graslei','Korenlei',
+  'Ajuinlei','Kouter','Coupure','Dampoort','Rabot',
+].sort((a,b)=>b.length-a.length);
+
+function haversineM(lat1,lng1,lat2,lng2){
+  const R=6371000, toRad=d=>d*Math.PI/180;
+  const dLat=toRad(lat2-lat1), dLng=toRad(lng2-lng1);
+  const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(a));
+}
+// Single-linkage union-find clustering: chains points together whenever any
+// two members are within radiusM, which lets elongated squares/parks cluster
+// naturally without needing a real centroid shape.
+function clusterByRadius(items,radiusM,getLatLng){
+  const n=items.length;
+  const parent=Array.from({length:n},(_,i)=>i);
+  function find(x){ while(parent[x]!==x){ parent[x]=parent[parent[x]]; x=parent[x]; } return x; }
+  function union(a,b){ const ra=find(a),rb=find(b); if(ra!==rb) parent[ra]=rb; }
+  const coords=items.map(getLatLng);
+  for(let i=0;i<n;i++){
+    for(let j=i+1;j<n;j++){
+      if(haversineM(coords[i][0],coords[i][1],coords[j][0],coords[j][1])<=radiusM) union(i,j);
+    }
+  }
+  const groups=new Map();
+  items.forEach((it,i)=>{ const r=find(i); if(!groups.has(r)) groups.set(r,[]); groups.get(r).push(it); });
+  return [...groups.values()];
+}
+function avg(arr){ return arr.reduce((a,b)=>a+b,0)/arr.length; }
+
+// Fixed-step colour/size scale: white (small) → gold → orange → red-orange
+// (biggest). Keep in sync with the .eclust/.esquare t0–t3 CSS classes.
+const CLUST_TIERS=[
+  {max:7,        cls:'',   size:30},
+  {max:19,       cls:'t1', size:35},
+  {max:39,       cls:'t2', size:40},
+  {max:Infinity, cls:'t3', size:46},
+];
+function clusterTier(n){ return CLUST_TIERS.find(t=>n<=t.max); }
+
+function deriveStageLabel(events){
+  const freq={};
+  events.forEach(e=>{ const v=(e.venue||e.address||'').trim(); if(v) freq[v]=(freq[v]||0)+1; });
+  const top=Object.entries(freq).sort((a,b)=>b[1]-a[1])[0];
+  return top?top[0].toUpperCase():'STAGE';
+}
+function deriveSquareName(events){
+  const text=events.map(e=>(e.address||'')+' '+(e.venue||'')).join(' ');
+  for(const name of KNOWN_SQUARES){
+    const re=new RegExp('\\b'+name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i');
+    if(re.test(text)) return name.toUpperCase();
+  }
+  return deriveStageLabel(events); // fallback: most common venue name
+}
+
+// Shared detail markup for one event — used inside the stage mini-list popup
+// and the square overview modal's per-row accordion.
+function eventDetailHtml(e){
+  const desc=e.desc?`<div class="prow pdesc">${esc(e.desc)}</div>`:'';
+  const tags=(e.categories||[]).slice(0,3).map(t=>`<span class="tag">#${esc(t)}</span>`).join('');
+  const link=e.url&&e.url!=='#'?`<a class="plink" href="${esc(e.url)}" target="_blank" rel="noopener">► DETAILS</a>`:'';
+  const actions=`<div class="pactions">${link}<span class="ptags">${tags}</span></div>`;
+  const mapsUrl=(e.lat!=null&&e.lng!=null)?`https://www.google.com/maps/search/?api=1&query=${e.lat},${e.lng}`:null;
+  const venue=`<div class="prow pvenue">◈ ${mapsUrl?`<a href="${mapsUrl}" target="_blank" rel="noopener">${esc(e.venue||'VENUE TBA')}</a>`:esc(e.venue||'VENUE TBA')}</div>`;
+  const when=whenLabel(e);
+  const key=eventKey(e), on=isStarred(key);
+  const star=`<button type="button" class="starbtn sqstar${on?' starred':''}" data-key="${esc(key)}"
+    aria-pressed="${on?'true':'false'}" aria-label="${on?'Remove from starred':'Add to starred'}">${on?'★':'☆'}</button>`;
+  return `<div class="ptitle">${esc(e.title)} ${star}</div>${venue}
+    <div class="prow ptime">◷ ${esc(dayLabel(e.date))} @ ${esc(when)} · ${priceLabel(e)}</div>${desc}${actions}`;
+}
+// One row in a stage list — click toggles an inline detail panel (accordion),
+// so browsing stays a flat scrollable list instead of opening more popups.
+function stageRowHtml(e){
+  const key=eventKey(e);
+  const when=whenLabel(e);
+  const edge=eventGroup(e).color;
+  return `<div class="sqrow" style="border-left-color:${edge}">
+    <div class="sqrow-main" data-key="${esc(key)}" role="button" tabindex="0">
+      <span class="sqrow-time">${esc(when)}</span>
+      <span class="sqrow-title">${esc(e.title)}</span>
+      <span class="sqrow-price">${priceLabel(e)}</span>
+    </div>
+    <div class="sqrow-detail" hidden>${eventDetailHtml(e)}</div>
+  </div>`;
+}
+function stageListPopupHtml(members){
+  const sorted=[...members].sort((a,b)=>(a.ev.time||'99:99').localeCompare(b.ev.time||'99:99'));
+  const label=deriveStageLabel(sorted.map(m=>m.ev));
+  const rows=sorted.map(m=>stageRowHtml(m.ev)).join('');
+  return `<div class="stagepop">
+    <div class="stagepop-hdr"><span>${esc(label)}</span><span class="stagepop-n">${sorted.length} EVENT${sorted.length===1?'':'S'}</span></div>
+    <div class="stagepop-list">${rows}</div>
+  </div>`;
+}
+function buildStageClusterMarker(members,lat,lng){
+  const n=members.length, tier=clusterTier(n);
+  const icon=L.divIcon({
+    html:`<div class="eclust ${tier.cls}"><span class="eclust-n">${n}</span></div>`,
+    className:'', iconSize:[tier.size,tier.size]
+  });
+  const m=L.marker([lat,lng],{icon});
+  m.bindPopup(stageListPopupHtml(members),{maxWidth:290,minWidth:230,autoPan:true,className:'stagepopwrap'});
+  return m;
+}
+function squareIconWidth(name){ return Math.max(64,Math.min(150,22+name.length*6.2)); }
+function buildSquareClusterMarker(stagesInSquare,lat,lng){
+  const total=stagesInSquare.reduce((n,s)=>n+s.members.length,0);
+  const tier=clusterTier(total);
+  const name=deriveSquareName(stagesInSquare.flatMap(s=>s.members.map(m=>m.ev)));
+  const w=squareIconWidth(name);
+  const icon=L.divIcon({
+    html:`<div class="esquare ${tier.cls}"><span class="esquare-name">${esc(name)}</span><span class="esquare-n">${total}</span></div>`,
+    className:'', iconSize:[w,38], iconAnchor:[w/2,19]
+  });
+  const m=L.marker([lat,lng],{icon,zIndexOffset:600});
+  m.on('click',()=>openSquareModal(stagesInSquare,name));
+  return m;
+}
+function openSquareModal(stagesInSquare,squareName){
+  const total=stagesInSquare.reduce((n,s)=>n+s.members.length,0);
+  const labeled=stagesInSquare
+    .map((s,i)=>({...s,label:deriveStageLabel(s.members.map(m=>m.ev)),id:'sqcol'+i}))
+    .sort((a,b)=>b.members.length-a.members.length||a.label.localeCompare(b.label));
+  document.getElementById('sqm-title').textContent=squareName;
+  document.getElementById('sqm-count').textContent=total+' EVENT'+(total===1?'':'S')+' · '+labeled.length+' STAGES';
+  document.getElementById('sqm-tabs').innerHTML=labeled.map((s,i)=>
+    `<button type="button" class="sq-tab${i===0?' on':''}" data-target="${s.id}">${esc(s.label)}<span class="sq-tabn">${s.members.length}</span></button>`
+  ).join('');
+  document.getElementById('sqm-cols').innerHTML=labeled.map(s=>{
+    const sorted=[...s.members].sort((a,b)=>(a.ev.time||'99:99').localeCompare(b.ev.time||'99:99'));
+    return `<div class="sq-col" id="${s.id}">
+      <div class="sq-colhdr">${esc(s.label)}<span class="sq-coln">${s.members.length}</span></div>
+      <div class="sq-collist">${sorted.map(m=>stageRowHtml(m.ev)).join('')}</div>
+    </div>`;
+  }).join('');
+  const modal=document.getElementById('squaremodal');
+  modal.style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function closeSquareModal(){
+  document.getElementById('squaremodal').style.display='none';
+  document.body.style.overflow='';
+}
+function initSquareUI(){
+  document.getElementById('sqm-close').addEventListener('click',closeSquareModal);
+  document.getElementById('squaremodal').addEventListener('click',e=>{
+    if(e.target.id==='squaremodal') closeSquareModal();
+  });
+  document.getElementById('sqm-tabs').addEventListener('click',e=>{
+    const b=e.target.closest('.sq-tab'); if(!b) return;
+    document.querySelectorAll('#sqm-tabs .sq-tab').forEach(t=>t.classList.toggle('on',t===b));
+    const col=document.getElementById(b.dataset.target);
+    if(col) col.scrollIntoView({behavior:'smooth',inline:'start',block:'nearest'});
+  });
+  window.addEventListener('keydown',e=>{
+    if(e.key==='Escape' && document.getElementById('squaremodal').style.display!=='none') closeSquareModal();
+  });
+  // Accordion rows + star buttons live inside Leaflet popups (map container)
+  // AND the square modal (body-level) — one delegated listener covers both.
+  document.addEventListener('click',e=>{
+    const row=e.target.closest('.sqrow-main');
+    if(row){
+      const detail=row.parentElement.querySelector('.sqrow-detail');
+      if(detail) detail.hidden=!detail.hidden;
+      return;
+    }
+    const star=e.target.closest('.sqstar');
+    if(star){ e.preventDefault(); e.stopPropagation(); toggleStar(star.dataset.key); }
+  });
+}
+
 function buildDayMarkers(date){
   if(DAY_MARKERS.has(date)) return DAY_MARKERS.get(date);
   const entries=[];
@@ -833,26 +1205,24 @@ function renderMap(){
   let cnt=0;
   if(sel){
     // Gentse Feesten crams up to ~150 events onto a single square, so plain
-    // markers stack and hide each other (that's why some starred pins seemed to
-    // vanish). Cluster overlapping ones into a count that spiderfies on click.
-    dayLayer = (window.L && L.markerClusterGroup) ? L.markerClusterGroup({
-      maxClusterRadius:44, showCoverageOnHover:false, spiderfyOnMaxZoom:true,
-      spiderfyDistanceMultiplier:1.6, chunkedLoading:true, removeOutsideVisibleBounds:true,
-      iconCreateFunction:c=>{ const n=c.getChildCount(), big=n>=25;
-        // Tally the genre colour of every event under this cluster, then paint the
-        // bubble ring as a conic-gradient pie so the mix is readable at a glance.
-        const tally={};
-        c.getAllChildMarkers().forEach(m=>{ const col=m._grp||'#ff2d78'; tally[col]=(tally[col]||0)+1; });
-        const parts=Object.entries(tally).sort((a,b)=>b[1]-a[1]);
-        let acc=0; const stops=parts.map(([col,ct])=>{
-          const a=(acc/n)*360; acc+=ct; const b=(acc/n)*360;
-          return col+' '+a.toFixed(1)+'deg '+b.toFixed(1)+'deg'; });
-        const bg=parts.length? 'conic-gradient('+stops.join(',')+')' : '';
-        return L.divIcon({html:'<div class="eclust'+(big?' big':'')+'" style="background:'+bg+'"><span class="eclust-n">'+n+'</span></div>',
-          className:'', iconSize:[big?42:34,big?42:34]}); }
-    }) : L.layerGroup();
-    buildDayMarkers(sel).forEach(({ev,marker})=>{
-      if(matches(ev)){ dayLayer.addLayer(marker); cnt++; }
+    // markers stack and hide each other. Group by real-world distance instead
+    // of Leaflet's zoom-dependent pixel clustering, so bubbles stay put as you
+    // zoom (no spiderfy): tight radius = one stage, loose radius = one square.
+    dayLayer=L.layerGroup();
+    const dayMarkers=buildDayMarkers(sel).filter(({ev})=>matches(ev));
+    cnt=dayMarkers.length;
+    const stages=clusterByRadius(dayMarkers,STAGE_RADIUS_M,x=>[x.ev.lat,x.ev.lng])
+      .map(members=>({members,lat:avg(members.map(m=>m.ev.lat)),lng:avg(members.map(m=>m.ev.lng))}));
+    const squares=clusterByRadius(stages,SQUARE_RADIUS_M,s=>[s.lat,s.lng]);
+    squares.forEach(stagesInSquare=>{
+      if(stagesInSquare.length===1){
+        const s=stagesInSquare[0];
+        if(s.members.length===1){ dayLayer.addLayer(s.members[0].marker); return; }
+        dayLayer.addLayer(buildStageClusterMarker(s.members,s.lat,s.lng));
+        return;
+      }
+      const centLat=avg(stagesInSquare.map(s=>s.lat)), centLng=avg(stagesInSquare.map(s=>s.lng));
+      dayLayer.addLayer(buildSquareClusterMarker(stagesInSquare,centLat,centLng));
     });
     dayLayer.addTo(map);
   }
@@ -940,8 +1310,9 @@ function partyConfetti(){
 // ── DAY RAIL ───────────────────────────────────────────────────────────────
 const railTrack=document.getElementById('railtrack');
 const railThumb=document.getElementById('railthumb');
-const railDate=document.getElementById('raildate');
+const datePop=document.getElementById('datepop');
 let minHits=[];   // secret gesture counter
+let _lastRailDateHTML=null; // tracks datepop content so the glow only fires on real change
 
 function railPct(i){
   const n=DATES.length;
@@ -975,10 +1346,19 @@ function renderRail(){
   railThumb.style.left=railPct(dayIdx)+'%';
   const fest=inFeesten(sel);
   railThumb.classList.toggle('feesten',fest);
-  railDate.classList.toggle('feesten',fest);
-  railDate.innerHTML='<span class="arrowsym">►</span> '+(sel
+  datePop.classList.toggle('feesten',fest);
+  const html='<span class="arrowsym">►</span> '+(sel
     ? esc(dayLabel(sel))+(fest?' · DAY '+feestenDay(sel):'')
     : '──');
+  datePop.innerHTML=html;
+  // Light the popup up whenever the displayed date actually changes (drag, arrows, click-to-jump)
+  if(html!==_lastRailDateHTML){
+    _lastRailDateHTML=html;
+    datePop.style.setProperty('--glow',fest?'rgba(255,215,0,.9)':'rgba(0,255,136,.9)');
+    datePop.classList.remove('lit');
+    void datePop.offsetWidth; // restart the CSS animation
+    datePop.classList.add('lit');
+  }
   document.getElementById('rprev').disabled = dayIdx<=0;
   document.getElementById('rnext').disabled = dayIdx>=DATES.length-1;
 }
@@ -1030,6 +1410,134 @@ window.addEventListener('keydown',e=>{
   if(e.key==='ArrowLeft') stepDay(-1);
   else if(e.key==='ArrowRight') stepDay(1);
 });
+
+// ── URGENT.FM — weekly schedule (ported from underghent.html) ──────────────
+// day index: 0=Sun,1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat
+// slots: [startHour, "Show Name"] — last show of the day runs until the next day's first slot
+const SCHEDULE = {
+  0: [ [7,'Listen Up'],[11,"Boenk D'erop!"],[13,'Loman'],[14,'Tweeden Asem'],[16,'Wax Doctors'],
+       [18,'Wowsville!'],[19,'Badmeaningood'],[20,'Moustachemusic Radio'],[21,'Ghostdogsradio'],
+       [22,'Icarus.fm'],[0,'Ctrl Alt Delete / Buikgewoel'],[2,'Listen Up'] ],
+  1: [ [7,'Listen Up'],[15,'Radyo Dolmuş'],[17,'Relaas'],[18,'Sjamaandag'],[19,'Radio Taxi'],
+       [21,'Buck Up Dat Sound'],[22,'Rubadub Rhythm System'],[23,'Calamari Collective'],[1,'Listen Up'] ],
+  2: [ [7,'Listen Up'],[9,'Onder Constructie'],[12,'MIDI'],[13,'Onder Constructie'],[17,'Sonic Safari'],
+       [18,'Tapijtparel'],[19,'Boogieville / Foxy Music'],[20,'Mélange Etrange'],[21,'Liquid Flavaz'],
+       [22,'Opendex Radio'],[23,'Alt F4'],[1,'Listen Up'] ],
+  3: [ [7,'Sluimerstand'],[8,'Listen Up'],[14,'Luminous Belge'],[16,'Stardust Illuminator'],
+       [18,'Miriam FM'],[19,'40 Fingers Cartel'],[21,'Helter Skelter'],[22,'Rommelkot'],
+       [0,'Buiten Dienst'],[2,'Listen Up'] ],
+  4: [ [7,'Listen Up'],[9,'Onder Constructie'],[12,'MIDI'],[13,'Onder Constructie'],[19,'De La Chaud'],
+       [20,'Nightfalls Radio'],[22,'PHASEFOUR'],[0,'Listen Up'] ],
+  5: [ [7,'Listen Up'],[10,'Wangedrag'],[12,'Listen Up'],[13,'Hijack'],[14,'Listen Up'],
+       [15,'Landlocked Therapy'],[16,'Fragile Circus'],[18,'Freestyle Fusion'],[19,"Thank God It's Friday"],
+       [20,'FOMO'],[22,'Breaxity'],[0,'The Wrong Lane / Loaded'],[2,'Listen Up'] ],
+  6: [ [7,'Listen Up'],[11,'Rockaula'],[12,'Het Concertief Geheugen'],[13,'Kuleshov'],
+       [15,'Neon Dreams Radio'],[16,'Op De Radio'],[17,'Resonantie'],[18,'Cluster Flux'],
+       [20,'No Shit Like Deep Radio'],[22,'Charged'],[6,'Listen Up'] ],
+};
+function getCurrentShow(){
+  const now=new Date(), day=now.getDay(), hour=now.getHours();
+  const slots=SCHEDULE[day]||[];
+  const toSort=h=>h<7?h+24:h;
+  const nowSort=toSort(hour);
+  let current=null;
+  for(const [h,name] of slots){ if(toSort(h)<=nowSort) current=name; }
+  if(!current){
+    const prevSlots=SCHEDULE[(day+6)%7]||[];
+    for(const [h,name] of prevSlots){ if(h<7) current=name; }
+  }
+  return current||'Urgent.fm';
+}
+
+// ── URGENT.FM — ticker (programme + placeholder announcements) ─────────────
+// TODO: swap the placeholder announcement copy below for real Gentse Feesten
+// announcements once that content is ready.
+const tickerWrap=document.getElementById('ticker-wrap');
+const tickerInner=document.getElementById('ticker-inner');
+let tickerPos=0, tickerRAF=null, tickerUnitW=0;
+const tickerSpeed=0.4;
+let radioLive=false; // declared early so getTickerColor() works on first init
+
+function getTickerColor(){ return radioLive ? 'var(--green)' : 'var(--dim)'; }
+function updateTickerColor(){
+  const c=getTickerColor();
+  tickerInner.querySelectorAll('.show-name').forEach(el=>el.style.color=c);
+}
+function initTicker(){
+  if(!tickerWrap||!tickerInner) return;
+  if(tickerRAF) cancelAnimationFrame(tickerRAF);
+  const color=getTickerColor();
+  const show=getCurrentShow().toUpperCase();
+  const plain='GENTSE FEESTEN · 10 DAYS · ~4000 EVENTS ACROSS GHENT  ·  ANNOUNCEMENTS COMING SOON  ·  NOW ON URGENT.FM: ';
+  const unit=`${plain}<span class="show-name" style="color:${color}">${show}</span>  ·  `;
+  tickerInner.innerHTML=unit;
+  const unitW=tickerInner.scrollWidth;
+  const containerW=tickerWrap.offsetWidth;
+  const copies=unitW>0 ? Math.min(60,Math.ceil((containerW+unitW)/unitW)+2) : 3;
+  tickerInner.innerHTML=Array(copies).fill(unit).join('');
+  tickerUnitW=unitW; tickerPos=0;
+  function step(){
+    tickerPos-=tickerSpeed;
+    if(tickerPos<=-tickerUnitW) tickerPos+=tickerUnitW;
+    tickerInner.style.transform=`translateX(${tickerPos}px)`;
+    tickerRAF=requestAnimationFrame(step);
+  }
+  tickerRAF=requestAnimationFrame(step);
+}
+setInterval(initTicker,60000);
+
+// ── URGENT.FM — radio controls (ported from underghent.html) ───────────────
+const radioEl=document.getElementById('radio');
+const radioBtn=document.getElementById('radio-btn');
+const volSlider=document.getElementById('vol-slider');
+if(radioEl) radioEl.volume=0.2;
+let firstUnmute=true, blinkTimer=null;
+
+function setLive(state){
+  radioLive=state;
+  if(state){
+    radioBtn.textContent='● URGENT.FM';
+    radioBtn.classList.add('is-live');
+    volSlider.classList.remove('muted');
+  }else{
+    radioBtn.textContent='◎ URGENT.FM';
+    radioBtn.classList.remove('is-live');
+    volSlider.classList.add('muted');
+  }
+  updateTickerColor();
+}
+function reconnectRadio(){
+  if(!radioLive) return;
+  radioEl.load();
+  radioEl.volume=parseFloat(volSlider.value);
+  radioEl.play().catch(()=>{});
+  if(tickerRAF) cancelAnimationFrame(tickerRAF);
+  initTicker();
+}
+if(radioEl){
+  radioEl.addEventListener('ended',reconnectRadio);
+  radioEl.addEventListener('error',()=>{ setTimeout(reconnectRadio,3000); });
+}
+function toggleRadio(){
+  if(!radioLive){
+    setLive(true);
+    if(firstUnmute){
+      firstUnmute=false;
+      radioBtn.classList.add('radio-dot-blink');
+      blinkTimer=setTimeout(()=>{ radioBtn.classList.remove('radio-dot-blink'); },5000);
+    }
+    radioEl.volume=parseFloat(volSlider.value);
+    radioEl.play().catch(()=>{ setLive(false); });
+  }else{
+    if(blinkTimer){ clearTimeout(blinkTimer); blinkTimer=null; }
+    radioBtn.classList.remove('radio-dot-blink');
+    setLive(false);
+    radioEl.pause();
+  }
+}
+function setRadioVolume(val){ radioEl.volume=parseFloat(val); }
+if(radioBtn) radioBtn.addEventListener('click',toggleRadio);
+if(volSlider) volSlider.addEventListener('input',e=>setRadioVolume(e.target.value));
 
 // ── View toggle ────────────────────────────────────────────────────────────
 function setView(v){
@@ -1118,7 +1626,13 @@ async function loadData(){
 
   ALL.forEach(e=>{ e.dkey=bucketDate(e); });
   ALL.sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999')||a.time.localeCompare(b.time));
-  DATES=[...new Set(ALL.filter(e=>e.dkey).map(e=>e.dkey))].sort();
+  // Rail window: yesterday, today, and every future date with events — never
+  // further into the past, even if the sheet still has stale old rows.
+  const y=new Date(); y.setDate(y.getDate()-1);
+  const floorKey=y.toISOString().slice(0,10);
+  const dateSet=new Set(ALL.filter(e=>e.dkey && e.dkey>=floorKey).map(e=>e.dkey));
+  dateSet.add(floorKey); // guarantee yesterday is reachable even with zero events that day
+  DATES=[...dateSet].sort();
   dayIdx=defaultDateIndex();
   DAY_MARKERS.clear();
 
@@ -1432,9 +1946,11 @@ function tuneIn(){
 initMap();
 loadStarred();
 initStarUI();
+initSquareUI();
 setView('map');
 tuneIn();
 load();
+initTicker();
 /* off-map filter + feesten day list selector — v5.1 */
 </script>
 </body>
